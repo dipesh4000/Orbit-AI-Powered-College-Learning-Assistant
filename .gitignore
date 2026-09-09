@@ -1,0 +1,12 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+node_modules/
+frontend/dist/
+backend/data/
+backend/logs/
+*.db
+*.csv
+!.env.example
