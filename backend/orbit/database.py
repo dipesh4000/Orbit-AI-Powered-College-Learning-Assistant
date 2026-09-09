@@ -1,18 +1,20 @@
 from functools import lru_cache
+
 from sqlalchemy import (
-    create_engine,
-    MetaData,
-    Table,
-    Column,
-    Integer,
-    String,
-    Text,
-    Float,
-    Boolean,
     JSON,
-    UniqueConstraint,
+    Boolean,
+    Column,
+    Float,
+    Integer,
     LargeBinary,
+    MetaData,
+    String,
+    Table,
+    Text,
+    UniqueConstraint,
+    create_engine,
 )
+
 from .config import settings
 
 metadata = MetaData()
@@ -148,4 +150,6 @@ def get_engine():
             "Orbit requires PostgreSQL. Use a postgresql+psycopg:// URL."
         )
     url = settings.database_url.replace("postgresql://", "postgresql+psycopg://", 1)
-    return create_engine(url, pool_pre_ping=True, pool_size=5, max_overflow=5, hide_parameters=True)
+    return create_engine(
+        url, pool_pre_ping=True, pool_size=5, max_overflow=5, hide_parameters=True
+    )

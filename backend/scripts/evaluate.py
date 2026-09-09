@@ -5,7 +5,9 @@ Checks tool/source contracts, not semantic correctness. Review the saved answers
 
 import argparse
 import json
+import time
 from pathlib import Path
+
 import httpx
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,10 +16,24 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", default="http://127.0.0.1:8000")
-    parser.add_argument("--start", type=int, default=1, help="First scenario, one-based")
+    parser.add_argument(
+        "--start", type=int, default=1, help="First scenario, one-based"
+    )
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--output", default="live_evaluation.json")
+    parser.add_argument(
+        "--interval",
+        type=float,
+        default=0,
+        help="Seconds between scenarios for provider rate limits",
+    )
     args = parser.parse_args()
+    if (
+        args.start < 1
+        or (args.limit is not None and args.limit < 1)
+        or args.interval < 0
+    ):
+        parser.error("start and limit must be positive; interval must be nonnegative")
     scenarios = json.loads(
         (ROOT / "evaluation/scenarios.json").read_text(encoding="utf-8")
     )
@@ -59,10 +75,12 @@ def main():
                 for level in ["foundation", "advanced", "closed"]
             },
         }
-        selected_scenarios = scenarios[args.start - 1:]
+        selected_scenarios = scenarios[args.start - 1 :]
         if args.limit is not None:
-            selected_scenarios = selected_scenarios[:args.limit]
+            selected_scenarios = selected_scenarios[: args.limit]
         for number, scenario in enumerate(selected_scenarios, args.start):
+            if results and args.interval:
+                time.sleep(args.interval)
             if not scenario.get("follow_up"):
                 client.delete("/api/conversation").raise_for_status()
             question = scenario["question"].format(**values)
@@ -92,7 +110,9 @@ def main():
                     "http_status": response.status_code,
                 }
             )
-            print(f"{number:02}: {results[-1]['contract_result']} {question}", flush=True)
+            print(
+                f"{number:02}: {results[-1]['contract_result']} {question}", flush=True
+            )
             # Preserve completed evidence even if a later provider/network request fails.
             (ROOT / "data").mkdir(exist_ok=True)
             (ROOT / "data" / Path(args.output).name).write_text(
@@ -105,7 +125,8 @@ def main():
     print(
         f"Saved data/{Path(args.output).name}. Tool-contract passes still require answer-quality review."
     )
+    return 1 if any(row["contract_result"] == "FAIL" for row in results) else 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

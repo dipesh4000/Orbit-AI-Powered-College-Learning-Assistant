@@ -1,4 +1,7 @@
 from pathlib import Path
+from urllib.parse import urlsplit
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +19,25 @@ class Settings(BaseSettings):
     rag_threshold: float = 0.35
     cookie_secure: bool = False
     allowed_origin: str = "http://localhost:5173"
+
+    @property
+    def allowed_origins(self) -> list[str]:
+        origin = self.allowed_origin.rstrip("/")
+        result = [origin]
+        parsed = urlsplit(origin)
+        if parsed.scheme in {"http", "https"} and parsed.hostname in {
+            "localhost",
+            "127.0.0.1",
+        }:
+            alias = "127.0.0.1" if parsed.hostname == "localhost" else "localhost"
+            port = f":{parsed.port}" if parsed.port is not None else ""
+            result.append(f"{parsed.scheme}://{alias}{port}")
+        return result
+
+    @field_validator("dataset_dir", mode="after")
+    @classmethod
+    def resolve_dataset_dir(cls, value: Path) -> Path:
+        return (ROOT / value).resolve() if not value.is_absolute() else value
 
 
 settings = Settings()

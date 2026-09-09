@@ -1,7 +1,9 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
 from . import database as db
 from .rag import INSUFFICIENT
 
@@ -24,7 +26,7 @@ class Question(BaseModel):
 
     @model_validator(mode="after")
     def check_options(self):
-        if len(set(o.strip().casefold() for o in self.options)) != 4 or any(
+        if len({o.strip().casefold() for o in self.options}) != 4 or any(
             not o.strip() for o in self.options
         ):
             raise ValueError("Provide four nonempty distinct options.")
@@ -107,7 +109,7 @@ async def generate(request, user_id, services, retriever, model):
                     topic=request.topic,
                     difficulty=request.difficulty,
                     questions=questions,
-                    created_at=datetime.now(timezone.utc).isoformat(),
+                    created_at=datetime.now(UTC).isoformat(),
                 )
             )
 

@@ -1,7 +1,7 @@
 from collections import OrderedDict
+from copy import deepcopy
 from threading import RLock
 from time import monotonic
-from copy import deepcopy
 
 
 class TTLCache:

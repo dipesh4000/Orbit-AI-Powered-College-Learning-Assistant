@@ -10,11 +10,11 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from sqlalchemy import create_engine, select, func
 from orbit import database as db
-from orbit.ingest import verify, import_all, FILES
 from orbit.config import ROOT, settings
+from orbit.ingest import FILES, import_all, verify
 from orbit.services import Services
+from sqlalchemy import create_engine, func, select
 
 
 def main():

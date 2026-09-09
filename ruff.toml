@@ -1,0 +1,5 @@
+target-version = "py311"
+
+[lint.flake8-bugbear]
+# FastAPI intentionally declares dependencies as endpoint defaults.
+extend-immutable-calls = ["fastapi.Depends"]

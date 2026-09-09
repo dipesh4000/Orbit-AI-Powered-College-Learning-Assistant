@@ -1,9 +1,11 @@
 import hashlib
 import json
 from threading import RLock
+
 import numpy as np
-from .config import ROOT, settings
+
 from .cache import TTLCache
+from .config import ROOT, settings
 
 INSUFFICIENT = "Insufficient information in the available course materials."
 
@@ -80,6 +82,7 @@ class Retriever:
 def build_index():
     import faiss
     from sentence_transformers import SentenceTransformer
+
     from .ingest import rows
 
     catalog = {

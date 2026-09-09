@@ -1,115 +1,140 @@
-# Orbit — Your learning space
+# Orbit
 
-React + FastAPI college learning assistant with controlled PostgreSQL tools, deterministic demo assessment rules, local semantic retrieval, and validated practice generation.
+A college learning assistant built with React and FastAPI. Explore student progress, ask questions grounded in course materials, check demo assessment eligibility, and generate practice questions.
 
-## Current status
+## Requirements
 
-Implemented: CSV preservation/import, five real student profiles, dashboard, session isolation, multi-round LLM tools, local FAISS retrieval, course source display, grounded practice generation, and a 24-scenario live evaluation harness.
+- Python 3.11–3.13, uv, and Node.js 22 or 24 with npm. The commands below use Python 3.12 for a fresh environment; the existing Python 3.13 environment was verified.
+- A PostgreSQL/Neon database and a tool-capable Anthropic or OpenAI-compatible model.
+- The supplied CSV files in the parent of this repository (or set `DATASET_DIR`).
 
-The live app requires your Neon URL and LLM key/model in `backend/.env`. No live Neon or paid model call has been verified yet. There is no fabricated/offline chatbot fallback. Missing configuration produces an actionable error. The original UI is preserved in `frontend/prototype.html`.
+## First-time setup
 
-## Setup (PowerShell)
-
-From the repository directory:
+Run these PowerShell commands from the `Orbit` repository folder:
 
 ```powershell
 cd backend
-uv venv .venv
+uv venv .venv --python 3.12
 uv pip install --python .venv/Scripts/python.exe -r requirements.txt
-Copy-Item .env.example .env
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-Edit `.env` locally. Never commit it. Set:
+If `.venv` already exists, reuse it and run only the install command. Every Python command below uses this virtual environment directly; activation is optional.
 
-- `DATABASE_URL`: Neon connection URL, using `postgresql+psycopg://` and `sslmode=require`.
-- `LLM_PROVIDER=anthropic`, `LLM_BASE_URL=https://api.anthropic.com/v1`, your `LLM_API_KEY`, and an exact supported `LLM_MODEL`.
-- Alternatively use `LLM_PROVIDER=openai-compatible` with the provider's API base URL, key, and tool-capable model.
-- `DATASET_DIR=../..` for the existing workspace layout. Put both original CSVs and all four valid/invalid splits there.
+Edit `backend/.env` locally:
 
-Then:
+| Setting | Value |
+|---|---|
+| `DATABASE_URL` | Your `postgresql+psycopg://` Neon URL with `sslmode=require` |
+| `LLM_PROVIDER` | `anthropic` or `openai-compatible` |
+| `LLM_BASE_URL` | Your provider's API base URL |
+| `LLM_API_KEY` | Your API key |
+| `LLM_MODEL` | An exact tool-capable model ID supported by your provider |
+| `DATASET_DIR` | `../..` for this workspace; relative paths resolve from `backend/` |
+
+Keep `.env` private. It is ignored by Git. See `.env.example` for optional settings.
+
+Prepare the database and local course index from `backend/`:
 
 ```powershell
 .venv/Scripts/python.exe -m orbit.ingest --verify-only
 .venv/Scripts/python.exe -m orbit.ingest
 .venv/Scripts/python.exe -m orbit.rag
-.venv/Scripts/python.exe -m uvicorn orbit.app:app --host 127.0.0.1 --port 8000
 ```
 
-The first embedding-index build downloads a local sentence-transformer model. Subsequent retrieval uses local cached weights. Model API keys are never used for embeddings.
+The importer preserves all 27,456 source rows and is idempotent for unchanged inputs. The first index build downloads local embedding weights; subsequent retrieval uses cached weights without model API calls.
 
-In a second terminal:
+## Run the app
 
-```powershell
-cd frontend
-npm.cmd install
-npm.cmd run dev
-```
-
-Open `http://localhost:5173`. Vite proxies `/api` to FastAPI. For a single-server build, run `npm.cmd run build`, restart FastAPI, and open `http://127.0.0.1:8000`. OpenAPI is at `/docs`.
-
-Use one backend process. Sessions and bounded TTL caches are in memory. Set `COOKIE_SECURE=true` behind HTTPS. The student picker is deliberately a demo selection screen, not authentication.
-
-## Data preservation
-
-| Input | Rows | Destination |
-|---|---:|---|
-| valid_uuid_engagement.csv | 8,710 | raw_course_engagement + normalized course_progress |
-| invalid_uuid_enagagement.csv | 447 | invalid_user_id_engagement |
-| valid_uuid_submissions.csv | 17,689 | raw_hackathon_submissions + normalized question_attempts |
-| invalid_uuid_submissions.csv | 610 | invalid_user_id_submissions |
-
-All **27,456 rows** are preserved. Original files reconcile with the splits after boolean capitalization normalization (`FALSE` vs `False`). Both original CSVs are additionally stored byte-for-byte as gzip archives in `source_file_archives`, with SHA-256 hashes. Raw tables preserve all original CSV string fields, file names, source row numbers, and issues; duplicate records are not discarded. Invalid UUIDs are quarantined, not declared fraudulent or deleted. They cannot be selected as student sessions.
-
-The source data includes **1,146 empty submission payloads** (1,042 valid-ID and 104 invalid-ID rows). These are retained and marked `missing_payload`, not treated as zero-score attempts. Imported question records expand into topic rows; a multi-topic question counts once in overall history and once for each of its topics.
-
-Import is batched and transactional. Reimport of identical inputs is idempotent; a changed previously imported source fails explicitly rather than overwriting data. Use a separate database or an explicit migration for revised datasets. This importer does not implement ongoing incremental production ingestion. The CSVs and raw database copies contain student records: do not commit them.
-
-## Explicit demo assumptions
-
-- **Full marks:** preserve supplied hackathon `question_score`. Only missing full marks default to 2. Course MCQs assume 2 marks per attempted question, so `score / (attempts × 2) × 100`. No attempts or out-of-range scores produce an unavailable percentage, not an invented zero or clamped result.
-- **Scoring:** use weighted `SUM(obtained)/SUM(maximum)`. Include graded pass/fail/partiallyCorrect and explicitly unAttempted questions; exclude underReview and unscorable records. A pending item is not a failed item.
-- **Progress:** certificate or legacy completion flags yield 100%. Otherwise use distinct observed activity IDs divided by course activity count as a **demo engagement proxy**, not verified lesson completion. Anonymous views alone do not establish completion.
-- **Weak topics:** below 60% of full marks. Course mapping uses exact subject/skill matching, with `English Ability → English` and `Database Management → SQL` as explicit demo aliases. No matching evidence means no recommendation. Several courses can share a subject; this mapping does not prove question membership in a specific course.
-- **Assessment rules:** new `demo-{course_id}-foundation`, `advanced`, and `closed` assessment definitions. Foundation requires enrollment and fewer than 3 recorded attempts. Advanced additionally requires 60% demo progress and 60% course MCQ performance. Closed assessments are inactive. Unknown prerequisites are reported as unknown. These are project-authored rules, not supplied institutional policy.
-- **Attempt counts:** demo assessment attempts are stored separately and initially zero. Existing hackathon history is grouped by `(hackathon_id, round_id, attempt_id)`; it is never counted against unrelated demo assessments. Taking/submitting a formal assessment is outside this app's scope. Generated practice is saved separately and does not consume formal assessment attempts.
-- **Materials:** nine authored demo lessons cover selected Python, SQL/database, aptitude, English, Java, and AI/ML subjects. They link to 107 supplied courses. Other subjects return insufficient information until material is added. These are not original institutional lesson documents.
-
-## Seeded users
-
-Two students have the available course-MCQ scoring records; two appear in both datasets and can demonstrate course progress plus hackathon weakness/history; a fifth has rich hackathon history but missing enrollment data. The selection is deterministic and based on actual data. It does not fabricate prerequisite failures or maximum-attempt history to meet a profile description. Unit fixtures exercise branches absent from real data. `backend/data/dataset_verification.json` records selected IDs and coverage after the optional rehearsal below.
-
-## Architecture
-
-```mermaid
-flowchart TD
-  UI[React: student picker, chat, dashboard, practice] --> API[FastAPI: server-bound session]
-  API --> Orchestrator[Bounded multi-round tool loop]
-  API --> Services[Typed service layer]
-  Orchestrator --> Tools[Validated tool registry: no user_id argument]
-  Tools --> Services
-  Services --> PG[(PostgreSQL)]
-  Services --> Rules[Pure deterministic rules]
-  Tools --> RAG[Sentence-transformer embeddings + FAISS]
-  RAG --> Docs[Authored demo course materials]
-  Orchestrator --> Model[Anthropic or compatible model API]
-  Tools --> Practice[Validated grounded practice]
-  PG --> Raw[Raw records + invalid-ID tables + original archives]
-```
-
-LLM-visible tool schemas omit `user_id`; the dispatch boundary discards any injected ID and passes session identity. Tools cannot execute arbitrary SQL. Dashboard and chat use the same services. Student switching clears the session conversation. Eligibility and all its inputs bypass the cache. Other deterministic lookups have a bounded 60-second TTL; final natural-language answers are not cached. A Redis-backed session/cache store is the multi-worker upgrade path.
-
-RAG uses normalized embeddings and FAISS inner product (cosine similarity), with a configurable 0.35 threshold. Retrieval is restricted to the requested course when specified. Empty retrieval stops content generation in code. The threshold is a relevance heuristic, not proof of factual entailment. Source IDs are displayed, and generated practice references must match retrieved IDs. Logs in `backend/logs/turns.jsonl` capture chat inputs, tool inputs/outputs, final answers, errors, cache hits, and latency. Logs are local, ignored by Git, and can contain student data. The demo does not yet implement automatic log retention or a robust adversarial content-verification model.
-
-## Validation
+**Terminal 1 — backend**, starting from the repository folder:
 
 ```powershell
 cd backend
+.venv/Scripts/python.exe run.py
+```
+
+**Terminal 2 — frontend**, starting from the repository folder:
+
+```powershell
+cd frontend
+npm.cmd ci
+npm.cmd run dev
+```
+
+Open [localhost:5173](http://localhost:5173). The backend accepts both `localhost` and `127.0.0.1` on the configured development port. Vite proxies API requests to port 8000. Stop each server with `Ctrl+C`.
+
+The launcher resolves the project virtual environment and backend directory automatically. From the repository folder, `.\backend\.venv\Scripts\python.exe backend/run.py` works too. For backend auto-reload, append `--reload`.
+
+The equivalent direct command, from `backend/`, is:
+
+```powershell
+.venv/Scripts/python.exe -m uvicorn orbit.main:app --host 127.0.0.1 --port 8000
+```
+
+The older `orbit.app:app` entry point remains supported.
+
+## Run a production build locally
+
+From the repository folder:
+
+```powershell
+cd frontend
+npm.cmd ci
+npm.cmd run build
+cd ../backend
+.venv/Scripts/python.exe run.py
+```
+
+Restart an already running backend after building. Open [127.0.0.1:8000](http://127.0.0.1:8000). FastAPI serves the frontend and API together. API docs are at [/docs](http://127.0.0.1:8000/docs), and startup status is at [/api/health](http://127.0.0.1:8000/api/health). Configuration flags indicate settings are present; they do not prove external services are reachable.
+
+## Check the project
+
+From `backend/`:
+
+```powershell
 .venv/Scripts/python.exe -m pytest -q
 .venv/Scripts/python.exe scripts/verify_dataset.py
-# Requires live database + model configuration and makes model API calls:
+```
+
+Tests use isolated database fixtures. The dataset rehearsal imports into a temporary SQLite database and checks preservation; the live app uses PostgreSQL.
+
+With the backend running and the database, index, and model configured, run the next validation phase:
+
+```powershell
 .venv/Scripts/python.exe scripts/evaluate.py
 ```
 
-Unit/integration tests use isolated SQLite fixtures to validate deterministic behavior and service boundaries, not as an application database fallback. The full-dataset rehearsal imports all records into a temporary SQLite database, checks preservation and student coverage, writes an audit report, then removes that test database. PostgreSQL connectivity still requires verification against your Neon instance.
+This runs 24 live scenarios, makes model API calls, and saves `backend/data/live_evaluation.json`. Review answers for accuracy as well as automated tool-contract results.
 
-The 24 live scenarios cover DB questions, RAG, rules, multiple tools, follow-ups, missing data, cross-user requests, unauthorized SQL, and practice. The harness saves question / expected / actual / contract result, and marks semantic review required. Tool-contract passes alone are not proof of answer accuracy. Live scenarios remain pending until credentials are configured.
+For a provider with a low token quota, add `--interval 60` to pace scenarios. Temporary rate limits receive bounded retries; persistent throttling produces a clear error. The evaluation command exits with a failure code if any contract fails.
+
+Optional code-quality checks, also inside the virtual environment:
+
+```powershell
+uv pip install --python .venv/Scripts/python.exe -r requirements-dev.txt
+.venv/Scripts/python.exe -m ruff check orbit run.py tests scripts
+.venv/Scripts/python.exe -m ruff format --check orbit run.py tests scripts
+```
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Missing Python modules | Install requirements into `backend/.venv` and use its Python executable. |
+| Cannot import `orbit.app` | Update the checkout; both entry points are supported. Prefer `run.py`. |
+| Database unavailable or no students | Check `DATABASE_URL`, then run the importer. |
+| Missing course index | Run `.venv/Scripts/python.exe -m orbit.rag` from `backend/`. |
+| Model unavailable | Check provider, base URL, API key, model ID, and provider quota. |
+| Untrusted request origin | Use `http://localhost:5173` for development, matching `ALLOWED_ORIGIN`. |
+| Port already in use | Stop your earlier server. Changing the backend port also requires updating Vite's proxy. |
+| Root URL returns 404 on port 8000 | Build the frontend and restart the backend, or use the Vite address. |
+
+## Project notes
+
+Five real student profiles cover the available dataset. Assessment rules, score assumptions, and nine course lessons are explicitly authored demo material. The student picker is a demo selector, not authentication. Sessions and caches require one backend process; Redis is the upgrade path for multiple workers. Set `COOKIE_SECURE=true` when serving behind HTTPS.
+
+- [Architecture, data preservation, seeded-user rationale, and demo rules](docs/ARCHITECTURE.md)
+- [Validation evidence and remaining work](VALIDATION.md)
+- [Project requirements](ORBIT_PROJECT_INSTRUCTIONS.md)
+
+The original UI is preserved in `frontend/prototype.html`. Local data, credentials, and turn logs are ignored by Git.

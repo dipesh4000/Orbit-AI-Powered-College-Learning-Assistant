@@ -2,17 +2,19 @@
 
 import argparse
 import csv
-import hashlib
 import gzip
+import hashlib
 import json
 import math
 import uuid
 from collections import Counter
-from pathlib import Path
 from itertools import islice
-from sqlalchemy import select, func
+from pathlib import Path
+
+from sqlalchemy import func, select
+
 from . import database as db
-from .config import settings, ROOT
+from .config import ROOT, settings
 
 csv.field_size_limit(2**30)
 FILES = {
@@ -131,18 +133,18 @@ def normalize_progress(row, raw_id, data):
     ):
         if isinstance(event, dict) and event.get("chapter_activity_id") is not None:
             observed.add(str(event["chapter_activity_id"]))
-    return dict(
-        raw_id=raw_id,
-        user_id=valid_uuid(row["user_id"]),
-        course_id=row["course_id"],
-        mcq_attempted=int(number(row["mcq_attempted_count"])),
-        mcq_score=number(row["mcq_total_score_obtained"]),
-        total_activities=int(number(row["total_activities_in_course"])),
-        observed_activities=len(observed),
-        certificate=row["certificate_issued"].lower() == "true",
-        legacy_completion=row["is_legacy_completion"].lower() == "true",
-        total_views=int(number(row["total_views"])),
-    )
+    return {
+        "raw_id": raw_id,
+        "user_id": valid_uuid(row["user_id"]),
+        "course_id": row["course_id"],
+        "mcq_attempted": int(number(row["mcq_attempted_count"])),
+        "mcq_score": number(row["mcq_total_score_obtained"]),
+        "total_activities": int(number(row["total_activities_in_course"])),
+        "observed_activities": len(observed),
+        "certificate": row["certificate_issued"].lower() == "true",
+        "legacy_completion": row["is_legacy_completion"].lower() == "true",
+        "total_views": int(number(row["total_views"])),
+    }
 
 
 def normalize_questions(row, raw_id, data):
@@ -155,24 +157,24 @@ def normalize_questions(row, raw_id, data):
         maximum = number(q.get("question_score"), None)
         assumed = maximum is None
         for topic in dict.fromkeys(str(t) for t in topics):
-            yield dict(
-                raw_id=raw_id,
-                question_index=index,
-                user_id=valid_uuid(row["user_id"]),
-                hackathon_id=row["hackathon_id"],
-                round_id=str(q.get("round_id", "")),
-                attempt_id=str(q["attempt_id"])
+            yield {
+                "raw_id": raw_id,
+                "question_index": index,
+                "user_id": valid_uuid(row["user_id"]),
+                "hackathon_id": row["hackathon_id"],
+                "round_id": str(q.get("round_id", "")),
+                "attempt_id": str(q["attempt_id"])
                 if q.get("attempt_id") is not None
                 else None,
-                question_id=str(q.get("question_id", "")),
-                skill=str(q.get("skill") or "Unspecified"),
-                topic=topic,
-                status=str(q.get("status", "unknown")),
-                obtained=number(q.get("obtained_score"), None),
-                maximum=MCQ_FULL_MARKS if assumed else maximum,
-                assumed_maximum=assumed,
-                submitted_at=str(q.get("submission_time") or ""),
-            )
+                "question_id": str(q.get("question_id", "")),
+                "skill": str(q.get("skill") or "Unspecified"),
+                "topic": topic,
+                "status": str(q.get("status", "unknown")),
+                "obtained": number(q.get("obtained_score"), None),
+                "maximum": MCQ_FULL_MARKS if assumed else maximum,
+                "assumed_maximum": assumed,
+                "submitted_at": str(q.get("submission_time") or ""),
+            }
 
 
 def import_all(directory, engine, report):
@@ -229,13 +231,13 @@ def import_all(directory, engine, report):
                     data, issue = payload(row, engagement)
                     parsed.append(data)
                     raw_values.append(
-                        dict(
-                            source_file=name,
-                            source_row=line,
-                            source_sha256=digest,
-                            user_id=row.get("user_id"),
-                            raw_record=row,
-                            issue=";".join(
+                        {
+                            "source_file": name,
+                            "source_row": line,
+                            "source_sha256": digest,
+                            "user_id": row.get("user_id"),
+                            "raw_record": row,
+                            "issue": ";".join(
                                 filter(
                                     None,
                                     [
@@ -245,7 +247,7 @@ def import_all(directory, engine, report):
                                 )
                             )
                             or None,
-                        )
+                        }
                     )
                 inserted = conn.execute(
                     table.insert().returning(table.c.id, table.c.source_row), raw_values
@@ -259,11 +261,11 @@ def import_all(directory, engine, report):
                     if engagement:
                         if row["course_id"] not in course_ids:
                             new_courses.append(
-                                dict(
-                                    course_id=row["course_id"],
-                                    title=row["course_title"],
-                                    subject=row["course_sub_domain"],
-                                )
+                                {
+                                    "course_id": row["course_id"],
+                                    "title": row["course_title"],
+                                    "subject": row["course_sub_domain"],
+                                }
                             )
                             course_ids.add(row["course_id"])
                         normalized.append(normalize_progress(row, raw_id, data))

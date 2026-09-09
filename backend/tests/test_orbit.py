@@ -3,19 +3,20 @@ import csv
 import gzip
 import json
 from copy import deepcopy
+
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select, func
-from sqlalchemy.pool import StaticPool
 from orbit import database as db
 from orbit.app import app, services, sessions
 from orbit.business_rules import course_metrics, eligibility
 from orbit.cache import TTLCache, cache
-from orbit.ingest import FILES, ORIGINALS, verify, import_all, normalize_questions
+from orbit.ingest import FILES, ORIGINALS, import_all, normalize_questions, verify
+from orbit.orchestrator import chat
+from orbit.practice import PracticeInput, generate, validate_questions
 from orbit.services import Services
 from orbit.tools import ToolRegistry, schemas
-from orbit.orchestrator import chat
-from orbit.practice import validate_questions, PracticeInput, generate
+from sqlalchemy import create_engine, func, select
+from sqlalchemy.pool import StaticPool
 
 A = "11111111-1111-4111-8111-111111111111"
 B = "22222222-2222-4222-8222-222222222222"
@@ -37,17 +38,17 @@ def course(**changes):
 
 
 def assessment(**changes):
-    data = dict(
-        assessment_id="demo-python-advanced",
-        course_id="python",
-        title="Advanced Python",
-        active=True,
-        max_attempts=3,
-        completion_threshold=60,
-        prerequisite_course_id="python",
-        pass_percent=60,
-        demo_rule=True,
-    )
+    data = {
+        "assessment_id": "demo-python-advanced",
+        "course_id": "python",
+        "title": "Advanced Python",
+        "active": True,
+        "max_attempts": 3,
+        "completion_threshold": 60,
+        "prerequisite_course_id": "python",
+        "pass_percent": 60,
+        "demo_rule": True,
+    }
     return {**data, **changes}
 
 
@@ -73,7 +74,7 @@ def engine():
             db.progress.insert(),
             [
                 {"raw_id": 1, **course()},
-                {"raw_id": 2, **{**course(), "user_id": B, "mcq_score": 2}},
+                {"raw_id": 2, **course(), "user_id": B, "mcq_score": 2},
             ],
         )
         conn.execute(db.assessments.insert(), [assessment()])
@@ -250,25 +251,25 @@ def test_cache_ttl_and_invalidation():
 
 def test_history_groups_questions_and_excludes_pending(engine):
     data = [
-        dict(
-            attempt_id=9,
-            round_id=1,
-            question_id=1,
-            skill="Python",
-            question_sub_domain=["Loops", "Iteration"],
-            status="pass",
-            obtained_score=2,
-            question_score=2,
-        ),
-        dict(
-            attempt_id=9,
-            round_id=1,
-            question_id=2,
-            skill="Python",
-            status="underReview",
-            obtained_score=0,
-            question_score=10,
-        ),
+        {
+            "attempt_id": 9,
+            "round_id": 1,
+            "question_id": 1,
+            "skill": "Python",
+            "question_sub_domain": ["Loops", "Iteration"],
+            "status": "pass",
+            "obtained_score": 2,
+            "question_score": 2,
+        },
+        {
+            "attempt_id": 9,
+            "round_id": 1,
+            "question_id": 2,
+            "skill": "Python",
+            "status": "underReview",
+            "obtained_score": 0,
+            "question_score": 10,
+        },
     ]
     with engine.begin() as conn:
         conn.execute(
@@ -284,16 +285,18 @@ def test_history_groups_questions_and_excludes_pending(engine):
 
 
 def test_supplied_full_marks_preserved():
-    row = list(
-        normalize_questions(
-            {"user_id": A, "hackathon_id": "h"}, 1, [{"question_score": 10}]
+    row = next(
+        iter(
+            normalize_questions(
+                {"user_id": A, "hackathon_id": "h"}, 1, [{"question_score": 10}]
+            )
         )
-    )[0]
+    )
     assert row["maximum"] == 10 and row["assumed_maximum"] is False
 
 
 def test_missing_full_marks_assumed():
-    row = list(normalize_questions({"user_id": A, "hackathon_id": "h"}, 1, [{}]))[0]
+    row = next(iter(normalize_questions({"user_id": A, "hackathon_id": "h"}, 1, [{}])))
     assert row["maximum"] == 2 and row["assumed_maximum"] is True
 
 

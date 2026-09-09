@@ -1,5 +1,8 @@
+import asyncio
 import json
+
 import httpx
+
 from .config import settings
 
 
@@ -80,9 +83,29 @@ class Model:
             )
         try:
             async with httpx.AsyncClient(timeout=45) as client:
-                response = await client.post(endpoint, headers=headers, json=body)
+                for attempt in range(3):
+                    response = await client.post(endpoint, headers=headers, json=body)
+                    if response.status_code != 429 or attempt == 2:
+                        break
+                    try:
+                        delay = float(response.headers.get("retry-after", "5"))
+                    except ValueError:
+                        delay = 5
+                    # Long quota resets require user action; never hold a request indefinitely.
+                    if not 0 <= delay <= 15:
+                        break
+                    await asyncio.sleep(max(1, delay))
                 response.raise_for_status()
                 result = response.json()
+        except httpx.HTTPStatusError as exc:
+            status = exc.response.status_code
+            if status == 429:
+                message = "The model provider's rate limit was reached. Wait a minute and retry, or ask about one course at a time."
+            elif status in (401, 403):
+                message = "The model provider rejected access. Check LLM_API_KEY and model permissions in backend/.env."
+            else:
+                message = "The model provider rejected the request. Check the configured model and retry."
+            raise ModelUnavailable(message) from exc
         except (httpx.HTTPError, ValueError) as exc:
             # Never relay provider response bodies, headers, or secrets to the browser.
             raise ModelUnavailable(

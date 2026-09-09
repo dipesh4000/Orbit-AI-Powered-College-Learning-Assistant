@@ -1,4 +1,5 @@
-from sqlalchemy import select, func, and_, case
+from sqlalchemy import and_, case, func, select
+
 from . import database as db
 from .business_rules import course_metrics, eligibility
 from .cache import cache

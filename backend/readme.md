@@ -1,5 +1,11 @@
 # Orbit backend
 
-See the repository [README](../README.md) for environment configuration, lossless ingestion, demo assumptions, indexing, and validation commands.
+FastAPI services, PostgreSQL ingestion, local retrieval, and model orchestration.
 
-Start from this directory with `.venv/Scripts/python.exe -m uvicorn orbit.app:app --host 127.0.0.1 --port 8000` after configuring `.env` and importing the data.
+From this directory, after completing the [setup](../README.md):
+
+```powershell
+.venv/Scripts/python.exe run.py
+```
+
+Run tests with `.venv/Scripts/python.exe -m pytest -q`. The launcher always uses the project virtual environment. See the main README for import, index, and live evaluation commands.

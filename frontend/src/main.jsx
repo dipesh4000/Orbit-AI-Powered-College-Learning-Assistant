@@ -21,12 +21,26 @@ import {
 import "./style.css";
 
 async function api(path, options = {}) {
-  const response = await fetch("/api" + path, {
-    credentials: "include",
-    ...options,
-    headers: { "Content-Type": "application/json", ...options.headers },
-  });
-  const data = await response.json();
+  let response;
+  try {
+    response = await fetch("/api" + path, {
+      credentials: "include",
+      ...options,
+      headers: { "Content-Type": "application/json", ...options.headers },
+    });
+  } catch {
+    throw new Error(
+      "Cannot reach Orbit. Check your connection and that the backend is running, then retry.",
+    );
+  }
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(
+      "Orbit's backend is unavailable. Start the backend and retry.",
+    );
+  }
   if (!response.ok)
     throw new Error(
       typeof data.detail === "string"
