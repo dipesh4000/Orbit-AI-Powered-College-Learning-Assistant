@@ -1,21 +1,17 @@
-"""Regressions for the renamed entry point and working-directory-independent launch."""
-
-import shutil
-import subprocess
-import sys
+"""Application entry-point, configuration, and development-origin regressions."""
 
 import pytest
 from fastapi.testclient import TestClient
 from orbit.config import ROOT, Settings
 
 
-def test_legacy_entrypoint_uses_same_application():
-    from orbit import main
-    from orbit.app import app, services, sessions
+def test_application_entrypoint_health():
+    from orbit.main import app
 
-    assert app is main.app
-    assert services is main.services
-    assert sessions is main.sessions
+    with TestClient(app) as client:
+        response = client.get("/api/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
 
 
 def test_dataset_path_is_relative_to_backend(monkeypatch, tmp_path):
@@ -24,58 +20,19 @@ def test_dataset_path_is_relative_to_backend(monkeypatch, tmp_path):
     assert settings.dataset_dir == ROOT.parent.parent
 
 
-def test_launcher_uses_virtualenv_outside_backend(tmp_path):
-    result = subprocess.run(
-        [sys.executable, str(ROOT / "run.py"), "--version"],
-        cwd=tmp_path,
-        capture_output=True,
-        text=True,
-        timeout=30,
-        check=False,
-    )
-    assert result.returncode == 0, result.stderr
-    assert "uvicorn" in result.stdout.lower()
+def test_cors_preflight_rejects_untrusted_origin():
+    from orbit.main import app
 
-
-def test_launcher_propagates_failure(tmp_path):
-    result = subprocess.run(
-        [sys.executable, str(ROOT / "run.py"), "--not-a-real-option"],
-        cwd=tmp_path,
-        capture_output=True,
-        text=True,
-        timeout=30,
-        check=False,
-    )
-    assert result.returncode != 0
-
-
-def test_direct_main_launch(tmp_path):
-    result = subprocess.run(
-        [sys.executable, str(ROOT / "orbit/main.py"), "--version"],
-        cwd=tmp_path,
-        capture_output=True,
-        text=True,
-        timeout=30,
-        check=False,
-    )
-    assert result.returncode == 0, result.stderr
-    assert "uvicorn" in result.stdout.lower()
-
-
-def test_missing_virtualenv_has_actionable_error(tmp_path):
-    launcher = tmp_path / "run.py"
-    shutil.copyfile(ROOT / "run.py", launcher)
-    result = subprocess.run(
-        [sys.executable, str(launcher)],
-        cwd=tmp_path,
-        capture_output=True,
-        text=True,
-        timeout=30,
-        check=False,
-    )
-    assert result.returncode == 1
-    assert "virtual environment is missing" in result.stderr
-    assert "uv venv .venv" in result.stderr
+    with TestClient(app) as client:
+        response = client.options(
+            "/api/session",
+            headers={
+                "Origin": "https://evil.example",
+                "Access-Control-Request-Method": "POST",
+            },
+        )
+    assert response.status_code == 400
+    assert "access-control-allow-origin" not in response.headers
 
 
 @pytest.mark.parametrize("hostname", ["localhost", "127.0.0.1"])

@@ -1,10 +1,3 @@
-if __name__ == "__main__":
-    import runpy
-    from pathlib import Path
-
-    runpy.run_path(
-        str(Path(__file__).resolve().parents[1] / "run.py"), run_name="__main__"
-    )
 import asyncio
 import secrets
 from collections import OrderedDict
@@ -30,7 +23,7 @@ from .tools import ToolRegistry
 app = FastAPI(title="Orbit", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["Content-Type"],

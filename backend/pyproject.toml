@@ -1,0 +1,28 @@
+[project]
+name = "orbit-backend"
+version = "0.1.0"
+description = "FastAPI backend for the Orbit learning assistant"
+readme = "readme.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.34,<1",
+    "sqlalchemy>=2.0,<3",
+    "psycopg[binary]>=3.2,<4",
+    "pydantic-settings>=2.7,<3",
+    "httpx>=0.28,<1",
+    "sentence-transformers>=3.4,<6",
+    "faiss-cpu>=1.10,<2",
+    "numpy>=1.26,<3",
+]
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff==0.16.6"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+cache_dir = "data/pytest-cache"

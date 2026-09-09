@@ -7,10 +7,10 @@ from copy import deepcopy
 import pytest
 from fastapi.testclient import TestClient
 from orbit import database as db
-from orbit.app import app, services, sessions
 from orbit.business_rules import course_metrics, eligibility
 from orbit.cache import TTLCache, cache
 from orbit.ingest import FILES, ORIGINALS, import_all, normalize_questions, verify
+from orbit.main import app, services, sessions
 from orbit.orchestrator import chat
 from orbit.practice import PracticeInput, generate, validate_questions
 from orbit.services import Services
