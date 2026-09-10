@@ -5,12 +5,13 @@ import json
 from copy import deepcopy
 
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from orbit import database as db
 from orbit.business_rules import course_metrics, eligibility
 from orbit.cache import TTLCache, cache
 from orbit.ingest import FILES, ORIGINALS, import_all, normalize_questions, verify
-from orbit.main import app, services, sessions
+from orbit.main import app, services, session_engine, sessions
 from orbit.orchestrator import chat
 from orbit.practice import PracticeInput, generate, validate_questions
 from orbit.services import Services
@@ -84,13 +85,12 @@ def engine():
 
 @pytest.fixture
 def client(engine):
-    sessions.clear()
     cache.entries.clear()
     app.dependency_overrides[services] = lambda: Services(engine)
+    app.dependency_overrides[session_engine] = lambda: engine
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
-    sessions.clear()
 
 
 def test_demo_full_marks():
@@ -175,11 +175,13 @@ def test_session_cookie_and_isolation(client):
     )
 
 
-def test_student_switch_invalidates_old_session(client):
+def test_student_switch_invalidates_old_session(client, engine):
     client.post("/api/session", json={"user_id": A})
     old = client.cookies.get("orbit_session")
     client.post("/api/session", json={"user_id": B})
-    assert old not in sessions
+    with pytest.raises(HTTPException) as exc:
+        sessions.load(engine, old)
+    assert exc.value.status_code == 401
     assert client.get("/api/session").json()["history"] == []
     assert (
         client.get("/api/dashboard").json()["courses"][0]["performance_percent"] == 20

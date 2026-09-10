@@ -1,7 +1,5 @@
-import asyncio
 import secrets
-from collections import OrderedDict
-from time import monotonic, perf_counter
+from time import perf_counter
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.concurrency import run_in_threadpool
 
-from . import conversations, telemetry
+from . import conversations, sessions, telemetry
 from . import database as db
 from .config import ROOT, settings
 from .embeddings import EmbeddingUnavailable
@@ -31,7 +29,6 @@ app.add_middleware(
     allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["Content-Type"],
 )
-sessions = OrderedDict()
 retriever, model = Retriever(), Model()
 
 
@@ -109,14 +106,13 @@ def services():
     return Services(db.get_engine())
 
 
-def current_session(request: Request):
-    token = request.cookies.get("orbit_session")
-    session = sessions.get(token)
-    if not session or session["expires"] < monotonic():
-        sessions.pop(token, None)
-        raise HTTPException(401, "Choose a student to begin.")
-    sessions.move_to_end(token)
-    return session
+def session_engine(request: Request):
+    # No database is needed to reject a missing cookie or log out anonymously.
+    return db.get_engine() if request.cookies.get("orbit_session") else None
+
+
+def current_session(request: Request, engine=Depends(session_engine)):
+    return sessions.load(engine, request.cookies.get("orbit_session"))
 
 
 class Login(BaseModel):
@@ -163,23 +159,16 @@ def login(body: Login, request: Request, response: Response, service=Depends(ser
         )
     if not student:
         raise HTTPException(400, "Select an available demo student.")
-    sessions.pop(request.cookies.get("orbit_session"), None)
-    token = secrets.token_urlsafe(32)
-    sessions[token] = {
-        **dict(student),
-        "expires": monotonic() + 8 * 3600,
-        "history": [],
-        "lock": asyncio.Lock(),
-    }
-    while len(sessions) > 100:
-        sessions.popitem(last=False)
+    token = sessions.create(
+        service.engine, student, request.cookies.get("orbit_session")
+    )
     response.set_cookie(
         "orbit_session",
         token,
         httponly=True,
         secure=settings.cookie_secure,
         samesite=settings.cookie_samesite,
-        max_age=8 * 3600,
+        max_age=sessions.MAX_AGE,
     )
     return dict(student)
 
@@ -194,8 +183,8 @@ def session_info(session=Depends(current_session)):
 
 
 @app.delete("/api/session")
-def logout(request: Request, response: Response):
-    sessions.pop(request.cookies.get("orbit_session"), None)
+def logout(request: Request, response: Response, engine=Depends(session_engine)):
+    sessions.revoke(engine, request.cookies.get("orbit_session"))
     response.delete_cookie(
         "orbit_session",
         secure=settings.cookie_secure,

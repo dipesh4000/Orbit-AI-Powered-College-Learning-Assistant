@@ -105,6 +105,13 @@ students = Table(
     Column("label", String),
     Column("rationale", Text),
 )
+sessions = Table(
+    "web_sessions",
+    metadata,
+    Column("token_hash", String(64), primary_key=True),
+    Column("expires_at", Float, nullable=False, index=True),
+    Column("data", JSON, nullable=False),
+)
 conversations = Table(
     "chat_conversations",
     metadata,

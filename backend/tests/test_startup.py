@@ -1,8 +1,16 @@
 """Application entry-point, configuration, and development-origin regressions."""
 
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 from orbit.config import ROOT, Settings
+
+
+def test_backend_assets_and_project_env_have_distinct_roots():
+    assert ROOT == Path(__file__).resolve().parents[1]
+    assert (ROOT / "materials/demo_courses.json").is_file()
+    assert Settings.model_config["env_file"] == ROOT.parent / ".env"
 
 
 def test_application_entrypoint_health():

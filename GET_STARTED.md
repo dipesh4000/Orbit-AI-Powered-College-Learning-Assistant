@@ -206,9 +206,14 @@ to include built-page route checks. Live evaluation is a separate, quota-consumi
 1. Check backend `/api/health`. Flags indicate configuration and index presence; they
    do not prove database connectivity or provider access.
 2. Choose a student and confirm the dashboard loads.
-3. Ask a course-content question to exercise local embeddings and FAISS.
+3. Ask a course-content question to exercise hosted embeddings and FAISS.
 4. Generate a small practice set and inspect the source citations.
 
-The deployed runtime needs both `backend/data/rag/` and `backend/data/models/`.
-The retriever uses `local_files_only=True`, so missing weights are not downloaded
-on a request. Deploy one backend worker and instance because sessions are process-local.
+The deployed runtime includes `backend/data/rag/chunks.json` and `index.faiss`.
+These small demo assets are tracked in Git; model weights are not needed because
+embeddings use Hugging Face. Keep the deployed embedding settings consistent with
+the index manifest, or rebuild with `uv run python -m orbit.rag --from-existing`
+from `backend/` and deploy the updated assets.
+Sessions persist in PostgreSQL across backend workers and serverless restarts.
+The `web_sessions` table is created automatically on first use; the database role needs
+table-creation privileges. Keep `.env` at the project root and runtime assets under `backend/data/`.

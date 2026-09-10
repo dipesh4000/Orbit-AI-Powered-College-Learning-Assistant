@@ -1,0 +1,1238 @@
+{
+  "model": "BAAI/bge-small-en-v1.5",
+  "embedding": {
+    "provider": "huggingface",
+    "model": "BAAI/bge-small-en-v1.5",
+    "endpoint": "https://router.huggingface.co/hf-inference/models/BAAI/bge-small-en-v1.5",
+    "dimensions": 384,
+    "query_prefix": "Represent this sentence for searching relevant passages: ",
+    "normalize": true,
+    "truncate": true
+  },
+  "chunks": [
+    {
+      "id": "python-functions-0",
+      "source": "Python \u2014 functions and collections",
+      "topic": "Functions and collections",
+      "text": "A Python function groups reusable steps and is defined with def. Parameters receive inputs; return sends a value to the caller. A function with no explicit return produces None. Lists are mutable ordered collections. Tuples are immutable sequences. Dictionaries map unique hashable keys to values. Sets hold distinct elements. Assignment such as b = a binds another name to the same object; it does not copy a list. Default argument values are evaluated when a function is defined. A mutable list default may therefore retain changes between calls. Use None as the default and create a new list inside the function when separate state is intended.",
+      "demo_material": true,
+      "course_ids": [
+        "8",
+        "103",
+        "161",
+        "179",
+        "112",
+        "144",
+        "58",
+        "180",
+        "178",
+        "67",
+        "64",
+        "66",
+        "68"
+      ]
+    },
+    {
+      "id": "python-loops-0",
+      "source": "Python \u2014 iteration",
+      "topic": "Loops and complexity",
+      "text": "A for loop visits items from an iterable. range(n) yields integers from zero through n minus one. A while loop repeats while its condition is true, so its body should eventually change the condition or exit explicitly. break exits the nearest enclosing loop; continue moves to its next iteration. A list comprehension constructs a list from an iterable, optionally with a filter. For example, [x*x for x in range(4)] gives [0, 1, 4, 9]. One loop that processes n values with constant work per value takes O(n) time. Two nested loops that each traverse n values take O(n squared) time when every pair is visited.",
+      "demo_material": true,
+      "course_ids": [
+        "8",
+        "103",
+        "161",
+        "179",
+        "112",
+        "144",
+        "58",
+        "180",
+        "178",
+        "67",
+        "64",
+        "66",
+        "68"
+      ]
+    },
+    {
+      "id": "sql-joins-0",
+      "source": "Databases \u2014 joining tables",
+      "topic": "SQL joins",
+      "text": "An INNER JOIN returns row combinations satisfying the join predicate. A LEFT JOIN preserves every left row and supplies NULL for columns of an unmatched right row. The ON clause specifies the match condition. A CROSS JOIN forms a Cartesian product: three rows crossed with four rows produce twelve rows. Multiple matches on the right can produce more result rows than exist on the left. To find left rows without a match, use LEFT JOIN and test a non-nullable right key with IS NULL. A WHERE condition requiring a right-side value can remove unmatched rows from a left join. SQL tests missing values with IS NULL rather than = NULL.",
+      "demo_material": true,
+      "course_ids": [
+        "243",
+        "8",
+        "51",
+        "145",
+        "116",
+        "117",
+        "110"
+      ]
+    },
+    {
+      "id": "sql-normalization-0",
+      "source": "Databases \u2014 normalization",
+      "topic": "Database normalization",
+      "text": "Normalization organizes relations to reduce redundant facts and insertion, update, and deletion anomalies. A functional dependency X determines Y means that rows with equal X values must have equal Y values. First normal form requires atomic values within the chosen domain and no repeating groups. Second normal form additionally removes partial dependencies of non-key attributes on a proper subset of a candidate key. Third normal form restricts problematic transitive dependencies. If StudentID determines DepartmentID and DepartmentID determines DepartmentName, keeping department facts in a separate relation avoids repeating the department name for each student. In BCNF every determinant of a nontrivial functional dependency is a superkey. A lossless decomposition reconstructs the original relation when joined, without spurious rows.",
+      "demo_material": true,
+      "course_ids": [
+        "243",
+        "51",
+        "145",
+        "116",
+        "117",
+        "110"
+      ]
+    },
+    {
+      "id": "aptitude-ratios-0",
+      "source": "Aptitude \u2014 ratios and percentages",
+      "topic": "Ratios and percentages",
+      "text": "A ratio compares quantities in the same units. To divide a total T in the ratio a:b, allocate T*a/(a+b) and T*b/(a+b). For example, dividing 100 in the ratio 2:3 gives 40 and 60. A percentage represents parts per hundred. Percentage change is (new minus old)/old times 100 when the old value is nonzero. Increasing 200 by 10 percent gives 220. Decreasing 220 by 10 percent gives 198, so equal percentage increases and decreases do not cancel. A weighted average divides the sum of each value times its weight by the total weight. Always identify the base quantity before calculating a percentage.",
+      "demo_material": true,
+      "course_ids": [
+        "91",
+        "86",
+        "101",
+        "98",
+        "262",
+        "268",
+        "78",
+        "257",
+        "94",
+        "261",
+        "100",
+        "102",
+        "87",
+        "99",
+        "267",
+        "70",
+        "269",
+        "76",
+        "266",
+        "73",
+        "72",
+        "74",
+        "75",
+        "271",
+        "88",
+        "182",
+        "97",
+        "77",
+        "85",
+        "96",
+        "270",
+        "114",
+        "92",
+        "95",
+        "90",
+        "184",
+        "89",
+        "69",
+        "211",
+        "93",
+        "212",
+        "214",
+        "213",
+        "209"
+      ]
+    },
+    {
+      "id": "aptitude-speed-0",
+      "source": "Aptitude \u2014 speed and time",
+      "topic": "Speed, distance and time",
+      "text": "For constant speed, distance equals speed times time. Use consistent units: one kilometer per hour equals five eighteenths meters per second. Average speed equals total distance divided by total elapsed time. For equal distances traveled at positive speeds a and b, average speed is 2ab/(a+b), not their arithmetic mean. For two objects moving toward each other, their relative speed is the sum of the speeds. When moving in the same direction, relative speed is their speed difference. A train passing a stationary point travels its own length; passing a platform requires traveling the train length plus the platform length.",
+      "demo_material": true,
+      "course_ids": [
+        "91",
+        "86",
+        "101",
+        "98",
+        "262",
+        "268",
+        "78",
+        "257",
+        "94",
+        "261",
+        "100",
+        "102",
+        "87",
+        "99",
+        "267",
+        "70",
+        "269",
+        "76",
+        "266",
+        "73",
+        "72",
+        "74",
+        "75",
+        "271",
+        "88",
+        "182",
+        "97",
+        "77",
+        "85",
+        "96",
+        "270",
+        "114",
+        "92",
+        "95",
+        "90",
+        "184",
+        "89",
+        "69",
+        "211",
+        "93",
+        "212",
+        "214",
+        "213",
+        "209"
+      ]
+    },
+    {
+      "id": "english-comprehension-0",
+      "source": "English \u2014 reading comprehension",
+      "topic": "Reading comprehension",
+      "text": "Reading comprehension distinguishes the main claim, supporting details, and inferences. The main idea expresses the passage's central point; an example usually supports that point rather than replacing it. An inference must follow from the available passage, not an unrelated assumption. Words such as however signal contrast, while therefore signals a conclusion. Resolve pronouns by checking the nearest contextually appropriate antecedent. To answer a vocabulary-in-context question, substitute the proposed meaning into the sentence and check the surrounding argument. When two options seem plausible, prefer the one whose full wording is supported; absolute claims such as always or never need correspondingly strong evidence.",
+      "demo_material": true,
+      "course_ids": [
+        "84",
+        "258",
+        "263",
+        "273",
+        "259",
+        "260",
+        "247",
+        "108",
+        "107",
+        "109",
+        "104",
+        "279",
+        "280",
+        "105",
+        "80",
+        "71",
+        "106",
+        "45"
+      ]
+    },
+    {
+      "id": "java-objects-0",
+      "source": "Java \u2014 objects and inheritance",
+      "topic": "Objects and inheritance",
+      "text": "A Java class defines fields and methods; an object is an instance of a class. A constructor initializes a new instance and has no return type. Encapsulation controls access to state through access modifiers and methods. Inheritance lets a subclass extend a superclass. Overriding provides a subclass implementation of an inherited instance method with a compatible signature. Overloading uses the same method name with different parameter lists. Dynamic dispatch selects an overridden instance method according to the runtime object type. An interface defines a contract that implementing classes satisfy. Prefer composition when one object uses another without a valid is-a relationship.",
+      "demo_material": true,
+      "course_ids": [
+        "165",
+        "136",
+        "141"
+      ]
+    },
+    {
+      "id": "ai-evaluation-0",
+      "source": "Machine learning \u2014 evaluation",
+      "topic": "Model evaluation",
+      "text": "Separate training data from evaluation data to estimate generalization. A validation set supports model selection; a held-out test set measures the final choice. Data leakage occurs when information unavailable at prediction time enters training or evaluation. Fit preprocessing such as scaling on training data only. For binary classification, precision is true positives divided by predicted positives, while recall is true positives divided by actual positives. Accuracy is the fraction of all predictions that are correct and can be misleading with strongly imbalanced classes. Overfitting occurs when a model captures training-specific noise and performs poorly on unseen data. Cross-validation repeats training and validation across multiple splits.",
+      "demo_material": true,
+      "course_ids": [
+        "7",
+        "34",
+        "35",
+        "244",
+        "155",
+        "10",
+        "197",
+        "169",
+        "168",
+        "256",
+        "160",
+        "166",
+        "206",
+        "23",
+        "188",
+        "181",
+        "198",
+        "220",
+        "54",
+        "274",
+        "239",
+        "275",
+        "40"
+      ]
+    }
+  ],
+  "catalog": {
+    "229": {
+      "title": "Microprocessor & Microcontroller ( 3rd Year - 2nd Sem)",
+      "subject": "Microprocessor & Microcontroller"
+    },
+    "243": {
+      "title": "Database Management System 3 -2",
+      "subject": "Database Management"
+    },
+    "7": {
+      "title": "Jumpstart Your Journey in AI, ML & Data Science",
+      "subject": "AI & ML"
+    },
+    "165": {
+      "title": "Java Full Stack Development",
+      "subject": "Full Stack Java Developer"
+    },
+    "233": {
+      "title": "ANALOG COMMUNICATIONS  2-2",
+      "subject": "Electronics"
+    },
+    "142": {
+      "title": "C++ Programming",
+      "subject": "C++"
+    },
+    "8": {
+      "title": "Python Full Stack Developer",
+      "subject": "Full Stack Python Developer"
+    },
+    "91": {
+      "title": "Speed, Distance and Time | Aptitude",
+      "subject": "Aptitude"
+    },
+    "136": {
+      "title": "JAVA",
+      "subject": "Java"
+    },
+    "126": {
+      "title": "Strategic Supply Chain Planning: Enhancing Efficiency and Resilience",
+      "subject": "Operations"
+    },
+    "103": {
+      "title": "Python",
+      "subject": "Python"
+    },
+    "48": {
+      "title": "AI for Management Graduates: Leveraging Artificial Intelligence in Business",
+      "subject": "General Management"
+    },
+    "86": {
+      "title": "Percentages | Aptitude",
+      "subject": "Aptitude"
+    },
+    "101": {
+      "title": "Heights and Distances | Aptitude",
+      "subject": "Aptitude"
+    },
+    "129": {
+      "title": "JavaScript",
+      "subject": "JavaScript"
+    },
+    "98": {
+      "title": "Number Systems | Aptitude",
+      "subject": "Aptitude"
+    },
+    "118": {
+      "title": "SQL: A Beginner's Guide",
+      "subject": "General Management"
+    },
+    "262": {
+      "title": "Square and Cube roots | Aptitude",
+      "subject": "Aptitude"
+    },
+    "268": {
+      "title": "Sentence Formation | Verbal",
+      "subject": "Aptitude"
+    },
+    "149": {
+      "title": "Javascript Skill Course",
+      "subject": "JavaScript"
+    },
+    "11": {
+      "title": "Foundations of Embedded Systems & IoT: Building Intelligent Devices",
+      "subject": "Internet of Things (IoT)"
+    },
+    "19": {
+      "title": "Introduction to Financial Modeling ",
+      "subject": "Finance"
+    },
+    "34": {
+      "title": "Practical Data Science: From Fundamentals to Real-World Applications",
+      "subject": "Data Science"
+    },
+    "9": {
+      "title": "Cutting-Edge VLSI: Designing Tomorrow\u2019s Electronics",
+      "subject": "VLSI"
+    },
+    "12": {
+      "title": "Cybersecurity Fundamentals: Building a Secure Digital Environment",
+      "subject": "Cyber Security"
+    },
+    "177": {
+      "title": "MERN Stack Developer",
+      "subject": "MERN Stack Developer"
+    },
+    "146": {
+      "title": " C Programming for Beginners",
+      "subject": "C"
+    },
+    "227": {
+      "title": "Digital Signal Processing 3 - 2",
+      "subject": "3rd Year"
+    },
+    "78": {
+      "title": "Percentages | Aptitude",
+      "subject": "Aptitude"
+    },
+    "131": {
+      "title": "CSS",
+      "subject": "CSS"
+    },
+    "35": {
+      "title": "Data-Driven Decision Making: Storytelling with Data",
+      "subject": "Data Science"
+    },
+    "257": {
+      "title": "Letter and Symbol Series  | Aptitude",
+      "subject": "Aptitude"
+    },
+    "193": {
+      "title": "Blackbucks FDP on \u201cFull Stack Development for Scalable Web Applications\u201d",
+      "subject": "FDP"
+    },
+    "4": {
+      "title": "Product Management Essentials - Market Research and Analysis",
+      "subject": "Marketing"
+    },
+    "17": {
+      "title": "Become a Six Sigma Expert",
+      "subject": "Operations"
+    },
+    "20": {
+      "title": "Digital Marketing Fundamentals - SEO for Beginners",
+      "subject": "Marketing"
+    },
+    "244": {
+      "title": "Machine Learning 3 -2",
+      "subject": "AI & ML"
+    },
+    "30": {
+      "title": "Social Media Marketing for Beginners",
+      "subject": "Marketing"
+    },
+    "155": {
+      "title": "Artificial Intelligence and Machine Learning",
+      "subject": "AI & ML"
+    },
+    "230": {
+      "title": "Embedded System |  ECE | 3rd Year ",
+      "subject": "Embedded system"
+    },
+    "139": {
+      "title": "Blackbucks Skill Academy SQL Course ",
+      "subject": "Systems"
+    },
+    "173": {
+      "title": "Cloud Computing | VIT - AP",
+      "subject": "Web Technologies"
+    },
+    "50": {
+      "title": "Mastering Business Communication: Storytelling and Case Studies for Real-World Success",
+      "subject": "General Management"
+    },
+    "84": {
+      "title": "Synonyms ",
+      "subject": "English"
+    },
+    "258": {
+      "title": "Spotting Errors",
+      "subject": "English Ability"
+    },
+    "28": {
+      "title": "Mastering and Understanding Annual Reports: A Guide to Evaluating Financial Health",
+      "subject": "Finance"
+    },
+    "94": {
+      "title": "Boats and Streams | Aptitude",
+      "subject": "Aptitude"
+    },
+    "5": {
+      "title": "Introduction to Financial Statements for Beginners",
+      "subject": "Finance"
+    },
+    "3": {
+      "title": "Product Management Essentials: Skills, Strategies, and Career Success",
+      "subject": "Marketing"
+    },
+    "161": {
+      "title": "Advanced Python",
+      "subject": "Python"
+    },
+    "263": {
+      "title": "Verbal Classification",
+      "subject": "English Ability"
+    },
+    "261": {
+      "title": "Simplification  | Aptitude",
+      "subject": "Aptitude"
+    },
+    "53": {
+      "title": "Introduction to Financial Ratio Analysis with Real-Time Examples",
+      "subject": "Finance"
+    },
+    "273": {
+      "title": "Foundation Level ",
+      "subject": "English"
+    },
+    "63": {
+      "title": "AWS Certification ",
+      "subject": "Devops Engineer"
+    },
+    "61": {
+      "title": "Predictive Analytics in HR",
+      "subject": "HR"
+    },
+    "100": {
+      "title": "Calendars | Aptitude",
+      "subject": "Aptitude"
+    },
+    "113": {
+      "title": "HTML For Beginners The Easy Way: Start Learning HTML",
+      "subject": "HTML"
+    },
+    "42": {
+      "title": "Comprehensive Guide to Searching Algorithms",
+      "subject": "C++"
+    },
+    "25": {
+      "title": "Digital Marketing Fundamentals -  SEO Tools and Analytics",
+      "subject": "Marketing"
+    },
+    "259": {
+      "title": "Antonyms",
+      "subject": "English Ability"
+    },
+    "260": {
+      "title": "Selecting words",
+      "subject": "English Ability"
+    },
+    "102": {
+      "title": "Profit and Loss | Aptitude",
+      "subject": "Aptitude"
+    },
+    "15": {
+      "title": "Algorithms Unveiled: Essential Concepts and Fundamentals",
+      "subject": "C"
+    },
+    "226": {
+      "title": "VLSI 3 - 2",
+      "subject": "VLSI"
+    },
+    "22": {
+      "title": "Digital Marketing Fundamentals - On-Page SEO Fundamentals",
+      "subject": "Marketing"
+    },
+    "179": {
+      "title": "Python with DSA (Coimbatore)",
+      "subject": "Python"
+    },
+    "87": {
+      "title": "Number Series | Aptitude",
+      "subject": "Aptitude"
+    },
+    "99": {
+      "title": "Partnership | Aptitude",
+      "subject": "Aptitude"
+    },
+    "29": {
+      "title": "Mastering Regular Expressions: From Basics to Advanced Applications",
+      "subject": "General Management"
+    },
+    "164": {
+      "title": "CRM & Digital Marketing",
+      "subject": "Marketing"
+    },
+    "51": {
+      "title": "SQL for the Business Analyst",
+      "subject": "SQL"
+    },
+    "187": {
+      "title": "Blackbucks FDP on GenAI: Transforming Education with Generative AI",
+      "subject": "generative AI"
+    },
+    "49": {
+      "title": "Mastering Effective Business Communication for Freshers",
+      "subject": "General Management"
+    },
+    "267": {
+      "title": "Spellings | Verbal",
+      "subject": "Aptitude"
+    },
+    "43": {
+      "title": "Professional Certification in Investment Banking Operations and Management",
+      "subject": "Finance"
+    },
+    "10": {
+      "title": "Creating AI Conversations: A Deep Dive into ChatGPT",
+      "subject": "AI & ML"
+    },
+    "32": {
+      "title": "\"Economics in One Lesson\" for Beginners",
+      "subject": "General Management"
+    },
+    "70": {
+      "title": "Data Sufficiency | Aptitude",
+      "subject": "Aptitude"
+    },
+    "112": {
+      "title": "Get Started with Python: Core Concepts and Real-World Applications",
+      "subject": "Python"
+    },
+    "6": {
+      "title": "Introduction to Product Management with Case Studies",
+      "subject": "Marketing"
+    },
+    "143": {
+      "title": "DSA",
+      "subject": "C"
+    },
+    "269": {
+      "title": "Averages and Ages | Aptitude",
+      "subject": "Aptitude"
+    },
+    "231": {
+      "title": "LINEAR CONTROL SYSTEMS  2 - 2",
+      "subject": "Electronics"
+    },
+    "76": {
+      "title": "HCF and LCM | Aptitude ",
+      "subject": "Aptitude"
+    },
+    "197": {
+      "title": "FDP on Quantum Computing Educator brought by IIDT-Blackbucks",
+      "subject": "AI & ML"
+    },
+    "266": {
+      "title": "Logical Sequence of Words | Verbal",
+      "subject": "Aptitude"
+    },
+    "150": {
+      "title": "HTML & CSS Skill Test Course",
+      "subject": "HTML"
+    },
+    "169": {
+      "title": "Data Science & Business Analytics | VIT - AP",
+      "subject": "Data Science"
+    },
+    "14": {
+      "title": "Crafting a Professional LinkedIn Profile",
+      "subject": "General Management"
+    },
+    "125": {
+      "title": "Six Sigma Fundamentals: Achieving Quality Through Data-Driven Decisions",
+      "subject": "Marketing"
+    },
+    "154": {
+      "title": "MongoDB",
+      "subject": "Mongo"
+    },
+    "232": {
+      "title": "ELECTROMAGNETIC WAVES AND TRANSMISSION LINES   2-2",
+      "subject": "Electronics"
+    },
+    "73": {
+      "title": "Profit and Loss | Aptitude",
+      "subject": "Aptitude"
+    },
+    "47": {
+      "title": "Investment Banking Case Studies",
+      "subject": "Finance"
+    },
+    "24": {
+      "title": "Digital Marketing Fundamentals - Off-Page SEO Essentials",
+      "subject": "Marketing"
+    },
+    "60": {
+      "title": "React Js Course",
+      "subject": "React"
+    },
+    "168": {
+      "title": "Data Analytics & Big Data Fundamentals | VIT - AP",
+      "subject": "Data Science"
+    },
+    "192": {
+      "title": "Blackbucks\u2013SRKR FDP on AI & ML for Real-World Applications",
+      "subject": "FDP"
+    },
+    "172": {
+      "title": "Devops | VIT - AP",
+      "subject": "Devops Engineer"
+    },
+    "191": {
+      "title": "Blackbucks \u2013 Faculty Development Program on Ethical Hacking",
+      "subject": "FDP"
+    },
+    "162": {
+      "title": "AI and ML in Econometrics and Statistical Analysis ",
+      "subject": "Systems"
+    },
+    "72": {
+      "title": "Fundamentals of Compound Interest | Aptitude",
+      "subject": "Aptitude"
+    },
+    "59": {
+      "title": "C++",
+      "subject": "C++"
+    },
+    "39": {
+      "title": "Design Thinking for Innovation",
+      "subject": "HR"
+    },
+    "57": {
+      "title": "Mastering C Programming",
+      "subject": "C"
+    },
+    "36": {
+      "title": "Mastering the Art of Resume Writing",
+      "subject": "General Management"
+    },
+    "74": {
+      "title": "Permutations and Combinations | Aptitude",
+      "subject": "Aptitude"
+    },
+    "144": {
+      "title": "Python",
+      "subject": "Python"
+    },
+    "242": {
+      "title": "Managerial Economics and  Financial Analysis 2 - 2",
+      "subject": "Finance"
+    },
+    "130": {
+      "title": "AngularJS in a Nutshell: A Rapid Learning Course",
+      "subject": "Angular"
+    },
+    "196": {
+      "title": "Cyber Security with Gen AI",
+      "subject": "Cyber Security"
+    },
+    "111": {
+      "title": "Git and GitHub",
+      "subject": "Web Technologies"
+    },
+    "52": {
+      "title": "Becoming a Successful Business Analyst",
+      "subject": "General Management"
+    },
+    "175": {
+      "title": "PG Program AI | IIDT - Blackbucks",
+      "subject": "Devops Engineer"
+    },
+    "158": {
+      "title": "Mastering C Programming ",
+      "subject": "C"
+    },
+    "234": {
+      "title": "ELECTRONIC CIRCUIT ANALYSIS  2-2",
+      "subject": "Electronics"
+    },
+    "222": {
+      "title": "UI/UX Designer (Figma/Canva)",
+      "subject": "UI/UX & Canva Design"
+    },
+    "186": {
+      "title": "Blackbucks AI-Teach: FDP on Generative AI Integration",
+      "subject": "generative AI"
+    },
+    "46": {
+      "title": "Blockchain Technology and Its Business Implications",
+      "subject": "General Management"
+    },
+    "224": {
+      "title": "VLSI Design & Semiconductor Engineer",
+      "subject": "VLSI"
+    },
+    "156": {
+      "title": "Programming Subjects",
+      "subject": "C"
+    },
+    "159": {
+      "title": "C++ 6 months course",
+      "subject": "C++"
+    },
+    "256": {
+      "title": "Machine Learning LAB 3 - 2 ",
+      "subject": "AI & ML"
+    },
+    "75": {
+      "title": "Ratio and Proportions | Aptitude",
+      "subject": "Aptitude"
+    },
+    "238": {
+      "title": "MATLAB Basics",
+      "subject": "MATLAB Environment & Fundamentals"
+    },
+    "115": {
+      "title": "Node JS",
+      "subject": "NodeJS"
+    },
+    "225": {
+      "title": "IoT Application & Embedded Engineer",
+      "subject": "ES & IoT"
+    },
+    "247": {
+      "title": "Soft skills",
+      "subject": "English"
+    },
+    "13": {
+      "title": "Getting Started with HTML: The Building Blocks of the Web",
+      "subject": "HTML"
+    },
+    "271": {
+      "title": "Master English Communication Skills LSRW",
+      "subject": "Aptitude"
+    },
+    "160": {
+      "title": "Data Analysis and Visualization for BSc Students",
+      "subject": "Data Science"
+    },
+    "246": {
+      "title": "GDC Kuppam - Blackbucks| PM-USHA Web Designing & Front-End Development ",
+      "subject": "CSS"
+    },
+    "166": {
+      "title": "Gen AI and ChatGPT | VIT - AP",
+      "subject": "AI & ML"
+    },
+    "217": {
+      "title": "CRM & Digital Marketing | Blackbucks",
+      "subject": "Marketing"
+    },
+    "151": {
+      "title": "Node Js and Express Js Skill Test Course",
+      "subject": "NodeJS"
+    },
+    "206": {
+      "title": "National Level FDP 2025 VNRVJIET - Blackbucks",
+      "subject": "AI & ML"
+    },
+    "56": {
+      "title": "Advanced Digital Supply Chain Management: Strategies, Technologies and Innovations",
+      "subject": "General Management"
+    },
+    "145": {
+      "title": "SQL: A Beginner's Guide",
+      "subject": "SQL"
+    },
+    "88": {
+      "title": "Simple Interest and Compound Interest | Aptitude",
+      "subject": "Aptitude"
+    },
+    "182": {
+      "title": "ThinkSharp: Aptitude Skills | Placement",
+      "subject": "Aptitude"
+    },
+    "23": {
+      "title": "Business Analytics",
+      "subject": "Data Science"
+    },
+    "188": {
+      "title": "IIDT PGP Program 2025 | Term 02",
+      "subject": "AI & ML"
+    },
+    "97": {
+      "title": "Pipes and Cisterns | Aptitude",
+      "subject": "Aptitude"
+    },
+    "170": {
+      "title": "UI/UX Design | VIT - AP",
+      "subject": "Web Technologies"
+    },
+    "171": {
+      "title": "Mern Full Stack Development | VIT - AP",
+      "subject": "Web Technologies"
+    },
+    "77": {
+      "title": "Data Interpretation | Aptitude",
+      "subject": "Aptitude"
+    },
+    "138": {
+      "title": " C Programming for Beginners",
+      "subject": "C"
+    },
+    "216": {
+      "title": "Business Analytics",
+      "subject": "Systems"
+    },
+    "85": {
+      "title": "Probability | Aptitude",
+      "subject": "Aptitude"
+    },
+    "96": {
+      "title": "Problems on Trains | Aptitude",
+      "subject": "Aptitude"
+    },
+    "141": {
+      "title": "Java Programming Skill Test",
+      "subject": "Java"
+    },
+    "270": {
+      "title": "Verbal Ability",
+      "subject": "Aptitude"
+    },
+    "241": {
+      "title": "Business Analytics",
+      "subject": "Systems"
+    },
+    "108": {
+      "title": "Jumbled Sentence || English",
+      "subject": "English"
+    },
+    "107": {
+      "title": "Phrasal Verbs || English",
+      "subject": "English"
+    },
+    "248": {
+      "title": "Research methodology and IPR 3-2",
+      "subject": "Research"
+    },
+    "16": {
+      "title": "Arrays Demystified: Fundamentals and Real-World Applications",
+      "subject": "C"
+    },
+    "109": {
+      "title": "Correcting Sentence | English",
+      "subject": "English"
+    },
+    "114": {
+      "title": "Analogy Reasoning | Aptitude",
+      "subject": "Aptitude"
+    },
+    "104": {
+      "title": "Tenses || English",
+      "subject": "English"
+    },
+    "189": {
+      "title": "APSCHE - Academic Leadership Program | Sponsored by Symbiosis - Blackbucks Internships",
+      "subject": "General Management"
+    },
+    "41": {
+      "title": "Leveraging IoT for Business Transformation: Strategic Insights for Management Students",
+      "subject": "General Management"
+    },
+    "92": {
+      "title": "Ratios and Proportions | Aptitude",
+      "subject": "Aptitude"
+    },
+    "95": {
+      "title": "Mixtures & Alligations | Aptitude",
+      "subject": "Aptitude"
+    },
+    "90": {
+      "title": "Syllogism | Aptitude",
+      "subject": "Aptitude"
+    },
+    "38": {
+      "title": "Maximizing Your First 100 Days: Strategies for New Professionals in the Workplace",
+      "subject": "General Management"
+    },
+    "279": {
+      "title": "Advanced Foundation Level ",
+      "subject": "English"
+    },
+    "21": {
+      "title": "Contemporary CRM & Marketing Tactics",
+      "subject": "Marketing"
+    },
+    "201": {
+      "title": "Aptitude Mastery for Managers: From Basics to Excellence",
+      "subject": "General Management"
+    },
+    "280": {
+      "title": "Intermediate Communication Development",
+      "subject": "English"
+    },
+    "105": {
+      "title": "Reading Comprehension || English",
+      "subject": "English"
+    },
+    "184": {
+      "title": "InterviewPro: Placement Simulation Series",
+      "subject": "Aptitude"
+    },
+    "167": {
+      "title": "Cyber Security & Ethical Hacking | VIT - AP",
+      "subject": "Cyber Security"
+    },
+    "202": {
+      "title": "Corporate Communication Foundations: LSRW for Leaders",
+      "subject": "General Management"
+    },
+    "223": {
+      "title": "Mobile Application Developer",
+      "subject": "Mobile Development"
+    },
+    "252": {
+      "title": "Sports activity 3-2",
+      "subject": "Games"
+    },
+    "251": {
+      "title": "Sports activity 2-2",
+      "subject": "Games"
+    },
+    "176": {
+      "title": "Investment Banking for Managers: Foundations & Strategies",
+      "subject": "Finance"
+    },
+    "200": {
+      "title": "Leadership Program for Management",
+      "subject": "General Management"
+    },
+    "133": {
+      "title": "Learn C++: Functions",
+      "subject": "C++"
+    },
+    "195": {
+      "title": "Blackbucks FDP 6",
+      "subject": "FDP"
+    },
+    "181": {
+      "title": "IIDT PGP Program 2025 | Term 01",
+      "subject": "AI & ML"
+    },
+    "199": {
+      "title": "Introduction to Financial Statements for Beginners\t",
+      "subject": "Finance"
+    },
+    "132": {
+      "title": "Learn C++: Basic Concepts ",
+      "subject": "C++"
+    },
+    "89": {
+      "title": "Puzzles | Aptitude",
+      "subject": "Aptitude"
+    },
+    "190": {
+      "title": "APITA - Blackbucks LLM FDP ",
+      "subject": "FDP"
+    },
+    "157": {
+      "title": "TESTING course ",
+      "subject": "Test Engineer"
+    },
+    "116": {
+      "title": "SQL Server del",
+      "subject": "SQL"
+    },
+    "134": {
+      "title": "Learn C++: Object-Oriented Programming (OOP)",
+      "subject": "C++"
+    },
+    "117": {
+      "title": "SQL Server 30 Hours",
+      "subject": "SQL"
+    },
+    "55": {
+      "title": "Consumer Behavior Models and Applications for Freshers",
+      "subject": "Marketing"
+    },
+    "174": {
+      "title": "Project Management - VIT-AP",
+      "subject": "Operations"
+    },
+    "198": {
+      "title": "Quantum Computing Basics",
+      "subject": "AI & ML"
+    },
+    "58": {
+      "title": "Mastering Linked Lists: Comprehensive Guide",
+      "subject": "Python"
+    },
+    "194": {
+      "title": "FDP on TABLEAU Tool",
+      "subject": "FDP"
+    },
+    "276": {
+      "title": "Microeconomics for Business Decisions",
+      "subject": "General Management"
+    },
+    "135": {
+      "title": "Learn C++: Advanced\u00a0Concepts",
+      "subject": "C++"
+    },
+    "180": {
+      "title": "Python with DSA (Chennai)",
+      "subject": "Python"
+    },
+    "220": {
+      "title": "Blackbucks |AIML basics",
+      "subject": "AI & ML"
+    },
+    "54": {
+      "title": "Comprehensive File Handling Course",
+      "subject": "Data Science"
+    },
+    "178": {
+      "title": "Python with DSA (Tirunavelli)",
+      "subject": "Python"
+    },
+    "228": {
+      "title": "Program Summary:",
+      "subject": "Microprocessor"
+    },
+    "67": {
+      "title": "Graphs | Data Structure ",
+      "subject": "Python"
+    },
+    "218": {
+      "title": "Annamacharya Advanced DSA Program",
+      "subject": "dsa"
+    },
+    "64": {
+      "title": "Queue | Data Structure",
+      "subject": "Python"
+    },
+    "69": {
+      "title": "Permutations and Combinations | Aptitude",
+      "subject": "Aptitude"
+    },
+    "62": {
+      "title": "Exploring C++: Intermediate Strategies for Efficient Coding",
+      "subject": "C++"
+    },
+    "66": {
+      "title": "Trees  | Data Structure",
+      "subject": "Python"
+    },
+    "68": {
+      "title": "Hashing | Data Structure",
+      "subject": "Python"
+    },
+    "1": {
+      "title": "Data Analysis and Visualization",
+      "subject": "Test Engineer"
+    },
+    "37": {
+      "title": "Go-to-Market Essentials: A Course for Entry-Level Product Managers",
+      "subject": "Marketing"
+    },
+    "44": {
+      "title": "Cracking Consulting Case Interviews: Strategies for Success",
+      "subject": "HR"
+    },
+    "80": {
+      "title": "Analogies",
+      "subject": "English"
+    },
+    "71": {
+      "title": "Essay Writing | English",
+      "subject": "English"
+    },
+    "211": {
+      "title": "Statements and Arguments",
+      "subject": "Aptitude"
+    },
+    "274": {
+      "title": "Quantum Computing Foundation (10hrs)",
+      "subject": "AI & ML"
+    },
+    "26": {
+      "title": "The Art of Storytelling for MBA Beginners",
+      "subject": "General Management"
+    },
+    "239": {
+      "title": "Testing CMW",
+      "subject": "Data Science"
+    },
+    "27": {
+      "title": "Foundations of Ethics and Professionalism in Business: A Course for Freshers",
+      "subject": "General Management"
+    },
+    "93": {
+      "title": "Time & Work | Aptitude",
+      "subject": "Aptitude"
+    },
+    "110": {
+      "title": "SQL Server",
+      "subject": "SQL"
+    },
+    "275": {
+      "title": "Quantum Computing Intermediate (30hrs)",
+      "subject": "AI & ML"
+    },
+    "106": {
+      "title": "Idioms and Phrases || English",
+      "subject": "English"
+    },
+    "212": {
+      "title": "Statement and Assumptions",
+      "subject": "Aptitude"
+    },
+    "18": {
+      "title": "MBA 2.0: Mastering Leadership with CEO Insights",
+      "subject": "General Management"
+    },
+    "31": {
+      "title": "Mastering Blue Ocean Strategy",
+      "subject": "Marketing"
+    },
+    "33": {
+      "title": "Crisis Management and Leadership: Adapting and Thriving Under Pressure",
+      "subject": "HR"
+    },
+    "45": {
+      "title": "Mastering Guesstimates: Navigating the Unknown with Confidence",
+      "subject": "English"
+    },
+    "214": {
+      "title": "Listening",
+      "subject": "Aptitude"
+    },
+    "213": {
+      "title": "Seating Arrangement",
+      "subject": "Aptitude"
+    },
+    "127": {
+      "title": "Lean Six Sigma for Technology-Driven Organizations",
+      "subject": "Operations"
+    },
+    "221": {
+      "title": "GIS & Geospatial Mapping Applications",
+      "subject": "Web Technologies"
+    },
+    "208": {
+      "title": "TESTING CMW",
+      "subject": "Test Engineer"
+    },
+    "209": {
+      "title": "Prepositions",
+      "subject": "Aptitude"
+    },
+    "2": {
+      "title": "TESTING 3",
+      "subject": "Test Engineer"
+    },
+    "207": {
+      "title": "TESTING CMW",
+      "subject": "Test Engineer"
+    },
+    "40": {
+      "title": "Comprehensive Guide to Sorting Algorithms",
+      "subject": "Data Science"
+    },
+    "147": {
+      "title": " C Programming for Beginners for Management",
+      "subject": "Systems"
+    },
+    "249": {
+      "title": "Library 2 - 2",
+      "subject": "General Knowledge"
+    },
+    "277": {
+      "title": "Calculus & Linear Algebra for Business",
+      "subject": "General Management"
+    },
+    "240": {
+      "title": "TESTING CMW",
+      "subject": "Database Administrator"
+    }
+  },
+  "version": "0b22d8e2df920e2531c4b190a0a427f29bb983031993eade58121d7a0f4d24e9",
+  "index_sha256": "44d96f9c7b0b2bfd0654ecd9c8a59e26f9d6411c30e8bb90199e6ed5a7cd7807"
+}

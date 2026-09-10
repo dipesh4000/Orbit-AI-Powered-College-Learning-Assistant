@@ -7,7 +7,11 @@ node_modules/
 frontend/dist/
 frontend/test-results/
 frontend/playwright-report/
-backend/data/
+backend/data/*
+!backend/data/rag/
+backend/data/rag/*
+!backend/data/rag/chunks.json
+!backend/data/rag/index.faiss
 backend/logs/
 *.db
 *.csv

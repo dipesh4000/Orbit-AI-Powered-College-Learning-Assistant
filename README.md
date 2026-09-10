@@ -160,7 +160,7 @@ flowchart TD
 | AI orchestration | Async Python, HTTPX | Tool loop, provider adapters, timeout and failover |
 | LLM providers | Anthropic or an OpenAI-compatible primary; NVIDIA NIM fallback | Tool-capable chat and question generation |
 | Retrieval | Sentence Transformers, MiniLM, PyTorch, NumPy, FAISS CPU | Local embeddings and course search |
-| State | Process-local sessions and bounded TTL caches | Session context and reusable tool/retrieval results |
+| State | PostgreSQL sessions and bounded process-local TTL caches | Shared session context and reusable tool/retrieval results |
 | Observability | JSON traces, rotating metrics logs | Tool execution, provider usage, latency, and failures |
 | Tooling | uv, pytest, Ruff, Playwright, Prettier | Dependencies, backend checks, browser validation, formatting |
 
@@ -168,4 +168,4 @@ flowchart TD
 
 Orbit preserves all **27,456 supplied source rows**, including raw records, source archives, duplicate rows, and separate invalid-UUID splits. Missing scores remain unavailable instead of becoming zero. Eligibility and its inputs are read fresh. Reusable tool data can be cached; final AI answers are not cached.
 
-The student picker is a demo selector. Learning materials and assessment rules are labeled demo assumptions. Sessions and caches are process-local; conversations and practice history persist in PostgreSQL. The current design uses one backend worker and instance.
+The student picker is a demo selector. Learning materials and assessment rules are labeled demo assumptions. Sessions, active chat context, conversations, and practice history persist in PostgreSQL across workers and serverless restarts. Session cookies hold opaque tokens, with only their SHA-256 hashes stored in the database; sessions expire after eight hours and are revoked on logout or profile changes. PostgreSQL row locks serialize chat changes across workers. Tool and retrieval caches remain process-local.
