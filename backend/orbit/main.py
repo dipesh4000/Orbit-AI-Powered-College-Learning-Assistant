@@ -144,7 +144,8 @@ def list_students(service=Depends(services)):
         return [dict(r) for r in conn.execute(select(db.students)).mappings()]
 
 
-@app.post("/api/session")
+@app.post("/api/login")
+@app.post("/api/session", include_in_schema=False)
 def login(body: Login, request: Request, response: Response, service=Depends(services)):
     with service.engine.connect() as conn:
         student = (
@@ -171,7 +172,7 @@ def login(body: Login, request: Request, response: Response, service=Depends(ser
         token,
         httponly=True,
         secure=settings.cookie_secure,
-        samesite="lax",
+        samesite=settings.cookie_samesite,
         max_age=8 * 3600,
     )
     return dict(student)
@@ -189,7 +190,12 @@ def session_info(session=Depends(current_session)):
 @app.delete("/api/session")
 def logout(request: Request, response: Response):
     sessions.pop(request.cookies.get("orbit_session"), None)
-    response.delete_cookie("orbit_session")
+    response.delete_cookie(
+        "orbit_session",
+        secure=settings.cookie_secure,
+        httponly=True,
+        samesite=settings.cookie_samesite,
+    )
     return {"ok": True}
 
 
@@ -304,5 +310,9 @@ if DIST.exists():
     app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
 
     @app.get("/")
+    @app.get("/login", include_in_schema=False)
+    @app.get("/chat", include_in_schema=False)
+    @app.get("/dashboard", include_in_schema=False)
+    @app.get("/practice", include_in_schema=False)
     def frontend():
-        return FileResponse(DIST / "index.html")
+        return FileResponse(DIST / "index.html", headers={"Cache-Control": "no-cache"})

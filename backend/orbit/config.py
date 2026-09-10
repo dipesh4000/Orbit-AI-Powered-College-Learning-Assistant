@@ -1,7 +1,8 @@
 from pathlib import Path
+from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,7 +19,14 @@ class Settings(BaseSettings):
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     rag_threshold: float = 0.35
     cookie_secure: bool = False
+    cookie_samesite: Literal["lax", "strict", "none"] = "lax"
     allowed_origin: str = "http://localhost:5173"
+
+    @model_validator(mode="after")
+    def validate_cookie_policy(self):
+        if self.cookie_samesite == "none" and not self.cookie_secure:
+            raise ValueError("COOKIE_SAMESITE=none requires COOKIE_SECURE=true")
+        return self
 
     @property
     def allowed_origins(self) -> list[str]:

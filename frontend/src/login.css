@@ -1,0 +1,349 @@
+.login {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100dvh;
+  padding: 0;
+  background: #fff;
+}
+.login-story {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(32px, 4vw, 72px);
+  background:
+    radial-gradient(ellipse at 65% 60%, #e5ede2 0, transparent 55%), #f4f5ef;
+  overflow: hidden;
+  color: #233f36;
+}
+.login-story .brand {
+  color: inherit;
+  text-decoration: none;
+  padding: 0;
+  font-size: 30px;
+}
+.login-story .brand-icon {
+  color: #355e4f;
+  font-size: 38px;
+}
+.brand-tag {
+  font-size: 9px;
+  letter-spacing: 1.6px;
+  margin-left: 12px;
+  color: #627568;
+}
+.story-copy {
+  margin-top: clamp(40px, 7vh, 84px);
+  position: relative;
+  z-index: 1;
+}
+.story-copy .eyebrow {
+  color: #66796a;
+  font-weight: 600;
+}
+.story-copy h1 {
+  font-size: clamp(34px, 3.3vw, 58px);
+  letter-spacing: -2px;
+  line-height: 1.13;
+  margin: 20px 0;
+}
+.story-copy h1 span {
+  color: #75866a;
+}
+.story-copy p {
+  max-width: 430px;
+  font-size: 16px;
+  color: #63716a;
+}
+.orbit-art {
+  position: relative;
+  width: min(100%, 400px);
+  aspect-ratio: 1.3;
+  margin: 12px auto;
+  flex: 1;
+  min-height: 240px;
+  max-height: 350px;
+}
+.orbit-ring {
+  position: absolute;
+  border: 1px solid #78927e40;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  aspect-ratio: 1;
+  animation: orbit-turn 32s linear infinite;
+}
+.ring-one {
+  width: 42%;
+}
+.ring-two {
+  width: 68%;
+  animation-duration: 45s;
+  animation-direction: reverse;
+}
+.ring-three {
+  width: 92%;
+  animation-duration: 60s;
+  border-style: dashed;
+}
+.orbit-ring i {
+  position: absolute;
+  top: 15%;
+  left: 12%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #8caa8e;
+  box-shadow: 0 0 0 5px #8caa8e15;
+}
+.ring-two i {
+  background: #b79c66;
+  width: 12px;
+  height: 12px;
+}
+.orbit-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 82px;
+  height: 82px;
+  border-radius: 24px;
+  background: #284c3e;
+  color: #edf2df;
+  font-size: 60px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 12px 40px #284c3e25;
+}
+.orbit-label {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  padding: 10px 14px;
+  border: 1px solid #fff;
+  border-radius: 12px;
+  background: #fffffff0;
+  box-shadow: 0 5px 20px #284c3e08;
+}
+.label-learn {
+  top: 15%;
+  left: 3%;
+  transform: rotate(-6deg);
+}
+.label-grow {
+  top: 43%;
+  right: 0;
+  transform: rotate(6deg);
+}
+.label-practice {
+  bottom: 7%;
+  left: 13%;
+  transform: rotate(-3deg);
+}
+.story-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: auto 0 0;
+  padding-top: 20px;
+  color: #687b6a;
+  font-size: 12px;
+}
+.login-form-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px clamp(28px, 5vw, 90px) 28px;
+  height: auto;
+  overflow: visible;
+}
+.login-card {
+  width: 100%;
+  max-width: 430px;
+  margin: auto 0;
+  padding: 32px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.login-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #728174;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+}
+.login-card h2 {
+  margin: 20px 0 12px;
+  font-size: clamp(28px, 2.4vw, 38px);
+  letter-spacing: -1.3px;
+}
+.login-card > .muted {
+  font-size: 15px;
+  margin-bottom: 26px;
+}
+.server-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 16px;
+  background: #f6f7f4;
+  border: 1px solid #e7ebe3;
+  border-radius: 12px;
+  margin-bottom: 28px;
+  color: #536449;
+}
+.server-status > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.server-status strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+}
+.server-status small {
+  font-size: 11px;
+  line-height: 1.6;
+  margin-top: 4px;
+  color: #687260;
+}
+.server-status.unavailable {
+  background: #fff9f0;
+  border-color: #f0e0c5;
+}
+.login-card label {
+  font-size: 13px;
+  color: #354338;
+  font-weight: 600;
+}
+.login-card select {
+  font-size: 16px;
+  height: 54px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.profile-description {
+  font-size: 12px;
+  color: #777e76;
+  min-height: 40px;
+  margin: 10px 0 16px;
+}
+.login-submit {
+  width: 100%;
+  min-height: 52px;
+  background: #294d3e;
+  border-color: #294d3e;
+  border-radius: 10px;
+  font-size: 14px;
+  justify-content: space-between;
+  padding: 14px 18px;
+}
+.login-submit:hover {
+  background: #1e3b2f;
+}
+.login-submit:disabled {
+  opacity: 0.5;
+}
+.connection-retry {
+  width: 100%;
+  margin-top: 12px;
+}
+.login-disclosure {
+  font-size: 11px;
+  text-align: center;
+  color: #68726a;
+  margin: 22px 0 8px;
+}
+.login-card .fine {
+  text-align: center;
+  margin: 0;
+  color: #7a807b;
+}
+.login-bottom {
+  font-size: 11px;
+  color: #8b918b;
+  text-align: center;
+  margin: 32px 0 0;
+}
+@keyframes orbit-turn {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+@media (max-width: 950px) {
+  .brand-tag {
+    display: none;
+  }
+  .login-story {
+    padding: 36px;
+  }
+  .login-form-panel {
+    padding: 32px;
+  }
+  .story-copy h1 {
+    font-size: 38px;
+  }
+}
+@media (max-width: 720px) {
+  .login {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .login-story {
+    padding: 24px;
+  }
+  .login-story .brand {
+    font-size: 24px;
+  }
+  .login-story .brand-icon {
+    font-size: 30px;
+  }
+  .brand-tag {
+    display: inline;
+    font-size: 8px;
+  }
+  .story-copy {
+    margin-top: 24px;
+  }
+  .story-copy h1 {
+    font-size: 34px;
+    letter-spacing: -1.4px;
+    margin: 12px 0;
+  }
+  .story-copy p {
+    font-size: 13px;
+    margin-bottom: 0;
+    max-width: 440px;
+  }
+  .orbit-art,
+  .story-footer {
+    display: none;
+  }
+  .login-form-panel {
+    padding: 30px 24px 24px;
+  }
+  .login-card {
+    padding: 0;
+  }
+  .login-card h2 {
+    margin-top: 14px;
+    font-size: 28px;
+  }
+  .login-card > .muted {
+    font-size: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orbit-ring {
+    animation: none;
+    transform: translate(-50%, -50%);
+  }
+}

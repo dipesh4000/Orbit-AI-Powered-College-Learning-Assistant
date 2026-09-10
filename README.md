@@ -73,6 +73,8 @@ Use `orbit.main:app` as the entry point. No custom launcher or activation script
 
 ## Build and serve together
 
+For static frontend hosting, Render cold starts, environment variables, and the page/API route contract, see [Deployment](docs/DEPLOYMENT.md).
+
 From the repository folder:
 
 ```powershell

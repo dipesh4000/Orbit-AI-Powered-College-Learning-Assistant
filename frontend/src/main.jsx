@@ -23,38 +23,16 @@ import {
 import "./style.css";
 import ReactMarkdown from "react-markdown";
 import SubjectChart from "./SubjectChart";
+import remarkGfm from "remark-gfm";
+import {
+  BrowserRouter,
+  useLocation,
+  useNavigate,
+  NavLink,
+} from "react-router-dom";
+import Login from "./Login";
+import { api, post, wakeServer } from "./api";
 
-async function api(path, options = {}) {
-  let response;
-  try {
-    response = await fetch("/api" + path, {
-      credentials: "include",
-      ...options,
-      headers: { "Content-Type": "application/json", ...options.headers },
-    });
-  } catch {
-    throw new Error(
-      "Cannot reach Orbit. Check your connection and that the backend is running, then retry.",
-    );
-  }
-  let data;
-  try {
-    data = await response.json();
-  } catch {
-    throw new Error(
-      "Orbit's backend is unavailable. Start the backend and retry.",
-    );
-  }
-  if (!response.ok)
-    throw new Error(
-      typeof data.detail === "string"
-        ? data.detail
-        : "Please check the entered values.",
-    );
-  return data;
-}
-const post = (path, data) =>
-  api(path, { method: "POST", body: JSON.stringify(data) });
 const pct = (value) =>
   value == null ? "Not available" : `${value.toFixed(1)}%`;
 function Sources({ sources = [] }) {
@@ -94,9 +72,24 @@ function Busy() {
 }
 
 function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const routes = {
+    "/chat": "Chat",
+    "/dashboard": "Dashboard",
+    "/practice": "Practice",
+  };
+  const view = routes[location.pathname] || "Chat";
+  const setView = (name) => navigate("/" + name.toLowerCase());
+  const [waking, setWaking] = useState(false);
+  const [dataError, setDataError] = useState("");
+  const [dataAttempt, setDataAttempt] = useState(0);
+  const [attempt, setAttempt] = useState(0);
+  const returnPath = useRef(
+    routes[location.pathname] ? location.pathname : "/chat",
+  );
   const [student, setStudent] = useState(null),
     [students, setStudents] = useState([]),
-    [view, setView] = useState("Chat"),
     [open, setOpen] = useState(false),
     [collapsed, setCollapsed] = useState(
       () => localStorage.getItem("orbit-sidebar") === "collapsed",
@@ -130,32 +123,78 @@ function App() {
     window.addEventListener("keydown", close);
     return () => window.removeEventListener("keydown", close);
   }, []);
-  async function initialize() {
-    setError("");
-    setLoading(true);
-    try {
-      setHealth(await api("/health"));
-      setStudents(await api("/students"));
-      try {
-        const s = await api("/session");
-        setStudent(s);
-        setMessages(s.history || []);
-        setConversationId(s.conversation_id || null);
-      } catch {
-        setStudent(null);
-      }
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const initialize = () => setAttempt((value) => value + 1);
   useEffect(() => {
-    initialize();
-  }, []);
+    const controller = new AbortController();
+    const signal = controller.signal;
+    setLoading(true);
+    setWaking(false);
+    setError("");
+    setHealth(null);
+    const timer = setTimeout(() => setWaking(true), 3000);
+    (async () => {
+      try {
+        const status = await wakeServer(signal);
+        const profiles = await api("/students", { signal, timeout: 20000 });
+        let session = null;
+        try {
+          session = await api("/session", { signal, timeout: 15000 });
+        } catch (error) {
+          if (error.status !== 401) throw error;
+        }
+        if (signal.aborted) return;
+        setHealth(status);
+        setStudents(profiles);
+        setStudent(session);
+        setMessages(session?.history || []);
+        setConversationId(session?.conversation_id || null);
+        if (!profiles.length)
+          setError(
+            "No demo profiles are available yet. Please contact the workspace owner.",
+          );
+      } catch (error) {
+        if (!signal.aborted) setError(error.message);
+      } finally {
+        clearTimeout(timer);
+        if (!signal.aborted) setLoading(false);
+      }
+    })();
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [attempt]);
+  useEffect(() => {
+    if (loading) return;
+    if (!student && location.pathname !== "/login") {
+      if (routes[location.pathname]) returnPath.current = location.pathname;
+      navigate("/login", { replace: true });
+    } else if (student && !routes[location.pathname]) {
+      navigate(returnPath.current, { replace: true });
+    }
+  }, [student, loading, location.pathname, navigate]);
+  useEffect(() => {
+    document.title = `${student ? view : "Welcome"} · Orbit`;
+  }, [student, view]);
+  useEffect(() => {
+    const expire = () => {
+      returnPath.current = window.location.pathname;
+      setStudent(null);
+      setMessages([]);
+      setConversations([]);
+      setConversationId(null);
+      setDashboard(null);
+      setCourses([]);
+      setError("Your session has ended. Choose your profile to continue.");
+      navigate("/login", { replace: true });
+    };
+    window.addEventListener("orbit:session-expired", expire);
+    return () => window.removeEventListener("orbit:session-expired", expire);
+  }, [navigate]);
   useEffect(() => {
     let active = true;
     if (student) {
+      setDataError("");
       Promise.all([api("/dashboard"), api("/courses"), api("/conversations")])
         .then(([d, c, saved]) => {
           if (active) {
@@ -165,21 +204,60 @@ function App() {
           }
         })
         .catch((e) => {
-          if (active) setError(e.message);
+          if (active) setDataError(e.message);
         });
     }
     return () => {
       active = false;
     };
-  }, [student?.user_id]);
+  }, [student?.user_id, dataAttempt]);
   useEffect(() => {
-    end.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    end.current?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+      block: "end",
+    });
   }, [messages, busy]);
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.activeElement;
+    const sidebar = document.getElementById("workspace-navigation");
+    const focusable = () =>
+      [...sidebar.querySelectorAll("a[href], button:not(:disabled)")].filter(
+        (item) => item.getClientRects().length,
+      );
+    focusable()[0]?.focus();
+    const trap = (event) => {
+      if (event.key !== "Tab") return;
+      const items = focusable();
+      const first = items[0],
+        last = items.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      }
+      if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+    const resize = () => {
+      if (window.innerWidth > 720) setOpen(false);
+    };
+    window.addEventListener("keydown", trap);
+    window.addEventListener("resize", resize);
+    return () => {
+      window.removeEventListener("keydown", trap);
+      window.removeEventListener("resize", resize);
+      previous?.focus();
+    };
+  }, [open]);
   async function selectStudent(user_id) {
     setBusy(true);
     setError("");
     try {
-      const s = await post("/session", { user_id });
+      const s = await post("/login", { user_id });
       setStudent(s);
       setConversations([]);
       setMessages([]);
@@ -202,7 +280,8 @@ function App() {
       setConversationId(null);
       setDashboard(null);
       setCourses([]);
-      setView("Chat");
+      returnPath.current = "/chat";
+      navigate("/login", { replace: true });
     } catch (e) {
       setError(e.message);
     }
@@ -285,78 +364,16 @@ function App() {
   };
   if (!student)
     return (
-      <div className="login">
-        <div className="login-card">
-          <div className="brand">
-            <span className="brand-icon">✳</span> orbit
-            <span className="tiny">LEARNING SPACE</span>
-          </div>
-          <div className="eyebrow">A LITTLE FOCUS. A LOT OF POSSIBILITY.</div>
-          <h1>
-            Your next step
-            <br />
-            starts here.
-          </h1>
-          <p className="muted">
-            Choose a student to explore their courses, find areas to focus on,
-            and turn learning into practice.
-          </p>
-          <div className="demo-info">
-            <span className="demo-label">
-              Demo student selection · no authentication
-            </span>
-            <span className="info-tooltip">
-              <button
-                type="button"
-                aria-label="About the demo students"
-                aria-describedby="student-info"
-              >
-                <CircleHelp size={16} />
-              </button>
-              <span role="tooltip" id="student-info">
-                These test users are fetched from the supplied dataset to mimic
-                a few prominent cases: recorded course scores, combined course
-                and hackathon history, and missing course enrollment.
-              </span>
-            </span>
-          </div>
-          <ErrorBox message={error} />
-          {loading ? (
-            <Busy />
-          ) : students.length ? (
-            <div className="student-list">
-              {students.map((s) => (
-                <button
-                  key={s.user_id}
-                  disabled={busy}
-                  onClick={() => selectStudent(s.user_id)}
-                >
-                  <span className="avatar">{s.label.split(" ")[1]}</span>
-                  <span>
-                    <strong>{s.label}</strong>
-                    <small>{s.rationale}</small>
-                    <code>{s.user_id}</code>
-                  </span>
-                  <ArrowRight size={18} />
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="setup-note">
-              <strong>Connect your workspace</strong>
-              <p>
-                Configure <code>backend/.env</code>, then import the supplied
-                CSVs. The student picker will populate from real records.
-              </p>
-              <button onClick={initialize}>Check connection</button>
-            </div>
-          )}
-          <p className="fine">
-            Demo marks, rules, and learning materials are labeled throughout.
-            Student records come from the supplied dataset.
-          </p>
-        </div>
-      </div>
+      <Login
+        students={students}
+        loading={loading}
+        waking={waking}
+        health={health}
+        busy={busy}
+        error={error}
+        onRetry={initialize}
+        onSelect={selectStudent}
+      />
     );
   return (
     <div className={"app " + (collapsed ? "sidebar-collapsed" : "")}>
@@ -399,19 +416,16 @@ function App() {
               [ChartNoAxesCombined, "Dashboard"],
               [BookOpen, "Practice"],
             ].map(([Icon, name]) => (
-              <button
+              <NavLink
                 key={name}
-                aria-current={view === name ? "page" : undefined}
-                className={view === name ? "active" : ""}
-                onClick={() => {
-                  setView(name);
-                  setOpen(false);
-                }}
+                to={"/" + name.toLowerCase()}
+                className={({ isActive }) => (isActive ? "active" : "")}
+                onClick={() => setOpen(false)}
               >
                 <Icon size={18} />
                 {name}
                 {view === name && <span className="nav-dot" />}
-              </button>
+              </NavLink>
             ))}
           </nav>
         </div>
@@ -474,7 +488,11 @@ function App() {
           </div>
         </div>
       </aside>
-      <main ref={mainRef}>
+      <main
+        ref={mainRef}
+        className={view === "Chat" && messages.length ? "chat-main" : undefined}
+        inert={open ? true : undefined}
+      >
         <header>
           <div className="breadcrumb">
             {collapsed && (
@@ -527,7 +545,23 @@ function App() {
                   <small>{m.role === "user" ? "YOU" : "✳ ORBIT"}</small>
                   <div className="message-body">
                     {m.role === "assistant" ? (
-                      <ReactMarkdown>{m.content}</ReactMarkdown>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          table: ({ children }) => (
+                            <div
+                              className="table-wrap"
+                              role="region"
+                              aria-label="Response table"
+                              tabIndex={0}
+                            >
+                              <table>{children}</table>
+                            </div>
+                          ),
+                        }}
+                      >
+                        {m.content}
+                      </ReactMarkdown>
                     ) : (
                       m.content
                     )}
@@ -544,7 +578,8 @@ function App() {
                   {m.tools?.length > 0 && (
                     <details className="trace">
                       <summary>
-                        Used {m.tools.length} tools
+                        Checked {m.tools.length} data source
+                        {m.tools.length === 1 ? "" : "s"}
                         {m.cache ? ` · ${m.cache} cached lookups` : ""}
                       </summary>
                       {m.tools.join(" → ")}
@@ -630,7 +665,15 @@ function App() {
             </p>
           </section>
         )}
-        {view === "Dashboard" && (
+        {dataError && (
+          <div className="workspace-load-error">
+            <ErrorBox message={dataError} />
+            <button onClick={() => setDataAttempt((value) => value + 1)}>
+              Reload workspace data
+            </button>
+          </div>
+        )}
+        {view === "Dashboard" && (!dataError || dashboard) && (
           <Dashboard data={dashboard} onPractice={() => setView("Practice")} />
         )}{" "}
         <div hidden={view !== "Practice"}>
@@ -1141,4 +1184,8 @@ function Practice({ courses, health }) {
   );
 }
 
-createRoot(document.getElementById("root")).render(<App />);
+createRoot(document.getElementById("root")).render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>,
+);

@@ -161,14 +161,20 @@ nav {
   display: grid;
   gap: 3px;
 }
-nav button {
+nav a {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border-radius: 9px;
+  color: inherit;
+  text-decoration: none;
   justify-content: flex-start;
   border: 0;
   background: transparent;
   padding: 10px 12px;
   font-size: 13px;
 }
-nav button.active {
+nav a.active {
   background: #e9e9ec;
   color: #181818;
 }
@@ -308,7 +314,8 @@ header {
   width: 100%;
   min-height: 58px;
   max-height: 180px;
-  resize: vertical;
+  resize: none;
+  max-height: 160px;
   font-size: 14px;
   line-height: 1.6;
   background: none;
@@ -822,74 +829,6 @@ main > .error {
 .error svg {
   flex-shrink: 0;
 }
-.login {
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  background: #fafafa;
-  padding: 28px;
-}
-.login-card {
-  width: min(100%, 510px);
-  padding: 30px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: #fff;
-}
-.login-card .brand {
-  margin-bottom: 30px;
-  padding: 0;
-}
-.login-card h1 {
-  font-size: 34px;
-}
-.login-card > .muted {
-  font-size: 13px;
-}
-.demo-label {
-  margin: 4px 0 16px;
-}
-.student-list {
-  display: grid;
-  gap: 8px;
-}
-.student-list button {
-  justify-content: flex-start;
-  text-align: left;
-  padding: 12px;
-  gap: 12px;
-}
-.student-list button > span:nth-child(2) {
-  min-width: 0;
-  flex: 1;
-}
-.student-list strong {
-  font-size: 12px;
-}
-.student-list small {
-  font-size: 11px;
-  color: #777;
-  line-height: 1.5;
-  margin: 4px 0;
-}
-.student-list code {
-  font-size: 9px;
-  color: #999;
-  overflow-wrap: anywhere;
-}
-.student-list svg {
-  flex-shrink: 0;
-  color: #888;
-}
-.login-card > .fine {
-  margin-top: 20px;
-}
-.setup-note {
-  background: #f6f6f6;
-  border-radius: 12px;
-  padding: 18px;
-  font-size: 12px;
-}
 .mobile-menu,
 .scrim {
   display: none;
@@ -1009,15 +948,6 @@ main > .error {
   }
   .practice-banner {
     padding: 16px;
-  }
-  .login {
-    padding: 16px;
-  }
-  .login-card {
-    padding: 24px;
-  }
-  .login-card h1 {
-    font-size: 30px;
   }
   .course-metrics {
     gap: 6px;
@@ -1307,4 +1237,101 @@ main > .error {
   .message.user {
     max-width: 90%;
   }
+}
+
+html {
+  overflow-wrap: break-word;
+}
+a:focus-visible,
+.table-wrap:focus-visible {
+  outline: 2px solid #355e4f;
+  outline-offset: 3px;
+}
+nav a:hover {
+  background: #ececee;
+}
+.panel,
+.stat,
+.practice-fields > *,
+.dashboard-grid > *,
+.chart-scroll,
+.message-body {
+  min-width: 0;
+}
+.panel-head,
+.page-heading {
+  flex-wrap: wrap;
+}
+@media (min-width: 1051px) {
+  .practice-fields {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.3fr) minmax(
+        0,
+        1fr
+      ) minmax(0, 0.65fr);
+  }
+}
+.chat-main {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+.chat-main > header {
+  flex-shrink: 0;
+}
+.chat-main .chat.has-messages {
+  flex: 1;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+}
+.message-body .table-wrap {
+  width: 100%;
+  max-width: 100%;
+  margin: 16px 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.message-body table {
+  font-size: 13px;
+}
+.message-body th {
+  background: #f4f6f3;
+  color: #354b3e;
+  font-size: 12px;
+}
+.message-body tr:nth-child(even) {
+  background: #fafbf9;
+}
+.message-body pre {
+  max-width: 100%;
+}
+.composer:focus-within {
+  border-color: #647d6c;
+  box-shadow: 0 0 0 3px #647d6c12;
+}
+@media (max-width: 720px) {
+  .composer textarea,
+  select {
+    font-size: 16px;
+  }
+  .send,
+  .mobile-menu,
+  .mobile-close {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .quiz-progress {
+    flex-wrap: wrap;
+  }
+  .chat.has-messages {
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+}
+
+.workspace-load-error {
+  margin: 16px 28px;
 }

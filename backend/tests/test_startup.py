@@ -64,3 +64,35 @@ def test_untrusted_origins_remain_rejected(origin):
 def test_remote_origin_does_not_enable_loopback():
     settings = Settings(_env_file=None, allowed_origin="https://orbit.example")
     assert settings.allowed_origins == ["https://orbit.example"]
+
+
+def test_cross_site_cookie_requires_https():
+    with pytest.raises(ValueError, match="COOKIE_SECURE"):
+        Settings(_env_file=None, cookie_samesite="none", cookie_secure=False)
+
+
+def test_login_route_and_session_alias():
+    from orbit.main import app
+
+    routes = {route.path for route in app.routes}
+    assert {
+        "/api/login",
+        "/api/session",
+        "/api/chat",
+        "/api/dashboard",
+        "/api/practice",
+    } <= routes
+
+
+@pytest.mark.parametrize("path", ["/", "/login", "/chat", "/dashboard", "/practice"])
+def test_built_frontend_deep_links(path):
+    from orbit.main import DIST, app
+
+    if not DIST.exists():
+        pytest.skip("Build the frontend to test production page routes")
+    with TestClient(app) as client:
+        response = client.get(path)
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+        assert 'id="root"' in response.text
+        assert client.get("/api/does-not-exist").status_code == 404
