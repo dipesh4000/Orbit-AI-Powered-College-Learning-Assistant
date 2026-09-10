@@ -8,7 +8,7 @@
 .login-story {
   display: flex;
   flex-direction: column;
-  padding: clamp(32px, 4vw, 72px);
+  padding: clamp(24px, 4dvh, 56px);
   background:
     radial-gradient(ellipse at 65% 60%, #e5ede2 0, transparent 55%), #f4f5ef;
   overflow: hidden;
@@ -31,7 +31,7 @@
   color: #627568;
 }
 .story-copy {
-  margin-top: clamp(40px, 7vh, 84px);
+  margin-top: clamp(20px, 4dvh, 60px);
   position: relative;
   z-index: 1;
 }
@@ -59,7 +59,7 @@
   aspect-ratio: 1.3;
   margin: 12px auto;
   flex: 1;
-  min-height: 240px;
+  min-height: 120px;
   max-height: 350px;
 }
 .orbit-ring {
@@ -155,7 +155,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px clamp(28px, 5vw, 90px) 28px;
+  padding: 24px clamp(28px, 5vw, 90px);
   height: auto;
   overflow: visible;
 }
@@ -163,7 +163,7 @@
   width: 100%;
   max-width: 430px;
   margin: auto 0;
-  padding: 32px 0;
+  padding: 12px 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -269,7 +269,7 @@
   font-size: 11px;
   color: #8b918b;
   text-align: center;
-  margin: 32px 0 0;
+  margin: 16px 0 0;
 }
 @keyframes orbit-turn {
   from {
@@ -345,5 +345,50 @@
   .orbit-ring {
     animation: none;
     transform: translate(-50%, -50%);
+  }
+}
+
+/* Let decoration shrink to the viewport; keep the form reachable at large zoom. */
+@media (min-width: 721px) {
+  .login {
+    grid-template-rows: minmax(min-content, 100dvh);
+  }
+  .login-story {
+    min-height: 0;
+  }
+  .orbit-art {
+    aspect-ratio: auto;
+  }
+}
+@media (max-height: 800px) {
+  .login-card h2 {
+    margin: 12px 0 8px;
+  }
+  .login-card > .muted {
+    margin-bottom: 16px;
+  }
+  .server-status {
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+  .login-disclosure {
+    margin-top: 16px;
+  }
+  .login-bottom {
+    margin-top: 12px;
+  }
+}
+@media (max-width: 720px) {
+  .login {
+    grid-template-rows: auto 1fr;
+  }
+  .login-story {
+    padding: 14px 24px;
+  }
+  .story-copy {
+    display: none;
+  }
+  .login-form-panel {
+    padding: 12px 24px;
   }
 }

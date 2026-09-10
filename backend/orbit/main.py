@@ -132,7 +132,10 @@ def health():
     return {
         "status": "ok",
         "database_configured": bool(settings.database_url),
-        "model_configured": bool(settings.llm_api_key and settings.llm_model),
+        "model_configured": bool(
+            (settings.llm_api_key and settings.llm_model)
+            or (settings.nvidia_api_key and settings.nvidia_model)
+        ),
         "index_ready": (ROOT / "data/rag/index.faiss").exists(),
         "demo": True,
     }

@@ -1,6 +1,6 @@
 import asyncio
 import json
-from time import perf_counter
+from time import monotonic, perf_counter
 
 import httpx
 
@@ -13,17 +13,84 @@ class ModelUnavailable(RuntimeError):
 
 
 class Model:
+    def __init__(self):
+        self._primary_retry_at = 0.0
+
     async def complete(self, messages, tools=None):
+        fallback = bool(settings.nvidia_api_key and settings.nvidia_model)
+        primary = bool(settings.llm_api_key and settings.llm_model)
+        if primary and (not fallback or monotonic() >= self._primary_retry_at):
+            try:
+                result = await self._measured_complete(
+                    messages,
+                    tools,
+                    provider=settings.llm_provider,
+                    api_key=settings.llm_api_key,
+                    model=settings.llm_model,
+                    base_url=settings.llm_base_url,
+                    retry_rate_limit=not fallback,
+                )
+                self._primary_retry_at = 0.0
+                return result
+            except ModelUnavailable:
+                if not fallback:
+                    raise
+                self._primary_retry_at = (
+                    monotonic() + settings.llm_fallback_cooldown_seconds
+                )
+                telemetry.record("model_fallback", "nvidia", 0)
+        if fallback:
+            return await self._measured_complete(
+                messages,
+                tools,
+                provider="nvidia",
+                api_key=settings.nvidia_api_key,
+                model=settings.nvidia_model,
+                base_url=settings.nvidia_base_url,
+                retry_rate_limit=False,
+            )
+        raise ModelUnavailable(
+            "Configure LLM_API_KEY and LLM_MODEL or NVIDIA_API_KEY in backend/.env to enable AI responses."
+        )
+
+    async def _measured_complete(self, messages, tools, **config):
         started, failed, usage = perf_counter(), True, {}
         try:
-            result = await self._complete(messages, tools)
-            usage = result.pop("usage", {})
+            async with asyncio.timeout(settings.llm_timeout_seconds):
+                result = await self._complete(messages, tools, **config)
+            raw_usage = result.pop("usage", {})
+            if isinstance(raw_usage, dict):
+                usage = {
+                    key: value
+                    for key, value in raw_usage.items()
+                    if isinstance(value, (int, float)) and value >= 0
+                }
+            content, calls = result.get("content"), result.get("tool_calls")
+            if not isinstance(content, str) or not isinstance(calls, list):
+                raise ModelUnavailable(
+                    "The model provider returned an invalid response. Please retry."
+                )
+            if not content.strip() and not calls:
+                raise ModelUnavailable(
+                    "The model provider returned an empty response. Please retry."
+                )
             failed = False
             return result
+        except (
+            TimeoutError,
+            KeyError,
+            IndexError,
+            TypeError,
+            ValueError,
+            AttributeError,
+        ) as exc:
+            raise ModelUnavailable(
+                "The model provider returned an invalid response or timed out. Please retry."
+            ) from exc
         finally:
             telemetry.record(
                 "model",
-                settings.llm_provider,
+                config["provider"],
                 (perf_counter() - started) * 1000,
                 error=failed,
                 input_tokens=usage.get("input_tokens", usage.get("prompt_tokens", 0)),
@@ -32,12 +99,18 @@ class Model:
                 ),
             )
 
-    async def _complete(self, messages, tools=None):
-        if not settings.llm_api_key or not settings.llm_model:
-            raise ModelUnavailable(
-                "Configure LLM_API_KEY and LLM_MODEL in backend/.env to enable AI responses."
-            )
-        if settings.llm_provider == "anthropic":
+    async def _complete(
+        self,
+        messages,
+        tools=None,
+        *,
+        provider,
+        api_key,
+        model,
+        base_url,
+        retry_rate_limit,
+    ):
+        if provider == "anthropic":
             history, system = [], ""
             for message in messages:
                 role = message["role"]
@@ -68,7 +141,7 @@ class Model:
                         )
                 history.append({"role": role, "content": blocks})
             body = {
-                "model": settings.llm_model,
+                "model": model,
                 "max_tokens": 6000,
                 "system": system,
                 "messages": history,
@@ -83,39 +156,48 @@ class Model:
                     for t in tools
                 ]
             headers = {
-                "x-api-key": settings.llm_api_key,
+                "x-api-key": api_key,
                 "anthropic-version": "2023-06-01",
             }
-            endpoint = settings.llm_base_url.rstrip("/") + "/messages"
-        elif settings.llm_provider == "openai-compatible":
+            endpoint = base_url.rstrip("/") + "/messages"
+        elif provider in ("openai-compatible", "nvidia"):
             body = {
-                "model": settings.llm_model,
+                "model": model,
                 "messages": messages,
                 "temperature": 0.2,
+                "stream": False,
                 "max_tokens": 6000,
             }
+            if provider == "nvidia":
+                body["chat_template_kwargs"] = {"enable_thinking": False}
             if tools:
                 body["tools"] = tools
-            headers = {"Authorization": "Bearer " + settings.llm_api_key}
-            endpoint = settings.llm_base_url.rstrip("/") + "/chat/completions"
+            headers = {"Authorization": "Bearer " + api_key}
+            endpoint = base_url.rstrip("/") + "/chat/completions"
         else:
             raise ModelUnavailable(
                 "Unsupported LLM_PROVIDER; choose anthropic or openai-compatible."
             )
         try:
-            async with httpx.AsyncClient(timeout=45) as client:
+            async with httpx.AsyncClient(
+                timeout=settings.llm_timeout_seconds
+            ) as client:
                 for attempt in range(3):
                     attempt_started = perf_counter()
                     response = await client.post(endpoint, headers=headers, json=body)
                     telemetry.record(
                         "provider_http",
-                        settings.llm_provider,
+                        provider,
                         (perf_counter() - attempt_started) * 1000,
                         error=response.status_code >= 400,
                         status=response.status_code,
                         attempt=attempt + 1,
                     )
-                    if response.status_code != 429 or attempt == 2:
+                    if (
+                        response.status_code != 429
+                        or attempt == 2
+                        or not retry_rate_limit
+                    ):
                         break
                     try:
                         delay = float(response.headers.get("retry-after", "5"))
@@ -132,7 +214,8 @@ class Model:
             if status == 429:
                 message = "The model provider's rate limit was reached. Wait a minute and retry, or ask about one course at a time."
             elif status in (401, 403):
-                message = "The model provider rejected access. Check LLM_API_KEY and model permissions in backend/.env."
+                key_name = "NVIDIA_API_KEY" if provider == "nvidia" else "LLM_API_KEY"
+                message = f"The model provider rejected access. Check {key_name} and model permissions in backend/.env."
             else:
                 message = "The model provider rejected the request. Check the configured model and retry."
             raise ModelUnavailable(message) from exc
@@ -141,7 +224,7 @@ class Model:
             raise ModelUnavailable(
                 "The model provider is unavailable or rejected the configuration. Please check the local settings and retry."
             ) from exc
-        if settings.llm_provider == "anthropic":
+        if provider == "anthropic":
             return {
                 "usage": result.get("usage", {}),
                 "role": "assistant",
@@ -162,9 +245,13 @@ class Model:
                 ],
             }
         message = result["choices"][0]["message"]
+        if not message.get("content") and not message.get("tool_calls"):
+            raise ModelUnavailable(
+                "The model provider returned an empty response. Please retry."
+            )
         return {
             "usage": result.get("usage", {}),
             "role": "assistant",
             "content": message.get("content") or "",
-            "tool_calls": message.get("tool_calls", []),
+            "tool_calls": message.get("tool_calls") or [],
         }

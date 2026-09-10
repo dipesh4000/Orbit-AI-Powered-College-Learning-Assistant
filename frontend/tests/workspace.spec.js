@@ -262,3 +262,34 @@ for (const width of [360, 768, 1440]) {
     }
   });
 }
+
+for (const [width, height] of [
+  [1440, 900],
+  [1366, 768],
+  [1280, 720],
+  [1024, 768],
+  [768, 1024],
+  [390, 844],
+  [375, 667],
+  [360, 640],
+]) {
+  test(`login fits ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await mockApi(page);
+    await page.goto("/login");
+    await expect(page.getByText("Your workspace is ready")).toBeVisible();
+    await page.getByLabel("Student profile").selectOption(student.user_id);
+    const size = await page.evaluate(() => ({
+      width: document.documentElement.scrollWidth,
+      height: document.documentElement.scrollHeight,
+    }));
+    if (width === 1366 || width === 360) {
+      await page.screenshot({ path: `test-results/login-${width}.png` });
+    }
+    expect(size.width).toBeLessThanOrEqual(width);
+    expect(size.height).toBeLessThanOrEqual(height);
+    await expect(
+      page.getByRole("button", { name: "Enter workspace" }),
+    ).toBeInViewport();
+  });
+}

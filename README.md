@@ -127,3 +127,23 @@ The student picker is a demo selector, not authentication. Assessment rules and 
 - [Architecture, dataset assumptions, and seeded-user rationale](docs/ARCHITECTURE.md)
 - [Validation results and remaining AI acceptance work](VALIDATION.md)
 - [Project requirements](ORBIT_PROJECT_INSTRUCTIONS.md)
+
+
+### NVIDIA failover
+
+Add `NVIDIA_API_KEY` to `backend/.env` (or your hosting environment) and restart
+the backend. Existing `LLM_*` settings remain the primary provider. The default
+fallback is `nvidia/nemotron-3-nano-30b-a3b`, with thinking disabled for lower
+latency. Set `NVIDIA_MODEL=nvidia/nemotron-3-super-120b-a12b` to use Super instead.
+The endpoint defaults to `https://integrate.api.nvidia.com/v1`.
+
+With NVIDIA configured, a failed primary request switches immediately, including
+quota/rate limits, rejected credentials, HTTP errors, timeouts, and malformed or
+empty responses. The primary is skipped for `LLM_FALLBACK_COOLDOWN_SECONDS=300`,
+then retried automatically. Each provider call has a total
+`LLM_TIMEOUT_SECONDS=30` budget. Without NVIDIA, existing bounded rate-limit
+retries remain. NVIDIA can also run alone when the primary is unconfigured.
+Tool schemas and conversation/tool-result history are preserved during failover;
+metrics identify NVIDIA separately. Cooldown state is per backend process.
+If both providers fail, the existing safe unavailable response is returned;
+failover cannot guarantee availability when both services have exhausted quotas.
