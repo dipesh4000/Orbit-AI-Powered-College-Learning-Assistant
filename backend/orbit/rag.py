@@ -44,6 +44,21 @@ class Retriever:
         self.catalog = manifest["catalog"]
         self.version = manifest["version"]
 
+    def practice_sources(self, topic, course_id, top_k=5):
+        # The picker supplies a catalog topic: retrieve its passages directly.
+        # This avoids rejecting known topics on semantic similarity or requiring
+        # the embedding model to load just to create a quiz.
+        manifest = json.loads(
+            (ROOT / "data/rag/chunks.json").read_text(encoding="utf-8")
+        )
+        matches = [
+            c
+            for c in manifest["chunks"]
+            if course_id in c["course_ids"]
+            and c["topic"].strip().casefold() == topic.strip().casefold()
+        ]
+        return matches[:top_k] if matches else self.search(topic, course_id, top_k)
+
     def search(self, query, course_id=None, top_k=5):
         self.load()
 

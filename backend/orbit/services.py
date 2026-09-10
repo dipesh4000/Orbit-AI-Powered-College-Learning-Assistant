@@ -43,6 +43,104 @@ class Services:
     def get_course_performance(self, user_id):
         return self.get_course_progress(user_id)
 
+    def subject_summary(self, user_id):
+        """Normalize actual scored evidence to 100; never fill missing marks with progress."""
+        subjects = {}
+        for course in self.get_course_progress(user_id):
+            row = subjects.setdefault(
+                course["subject"] or "Unspecified",
+                {
+                    "subject": course["subject"] or "Unspecified",
+                    "course_scores": [],
+                    "progress": [],
+                    "course_ids": set(),
+                    "course_obtained": 0,
+                    "course_maximum": 0,
+                },
+            )
+            # Ambiguous duplicate snapshots cannot be silently averaged or double-counted.
+            if (
+                course["multiple_source_rows"]
+                or course["course_id"] in row["course_ids"]
+            ):
+                continue
+            row["course_ids"].add(course["course_id"])
+            if course["progress_percent"] is not None:
+                row["progress"].append(course["progress_percent"])
+            if course["performance_percent"] is not None:
+                row["course_scores"].append(course["performance_percent"])
+                row["course_obtained"] += course["mcq_score"]
+                row["course_maximum"] += (
+                    course["mcq_attempted"] * course["full_marks_per_mcq"]
+                )
+        q = db.questions
+        unique = (
+            select(q.c.raw_id, q.c.question_index, q.c.skill, q.c.obtained, q.c.maximum)
+            .where(
+                q.c.user_id == user_id,
+                q.c.status.in_(["pass", "fail", "partiallyCorrect", "unAttempted"]),
+                q.c.maximum > 0,
+                q.c.obtained >= 0,
+                q.c.obtained <= q.c.maximum,
+            )
+            .distinct()
+            .subquery()
+        )
+        with self.engine.connect() as conn:
+            scores = (
+                conn.execute(
+                    select(
+                        unique.c.skill,
+                        func.sum(unique.c.obtained).label("obtained"),
+                        func.sum(unique.c.maximum).label("maximum"),
+                    ).group_by(unique.c.skill)
+                )
+                .mappings()
+                .all()
+            )
+        # Keep dataset subject labels intact; never guess that 'Coding' means a specific course.
+        for score in scores:
+            name = score["skill"] or "Unspecified"
+            row = subjects.setdefault(
+                name,
+                {
+                    "subject": name,
+                    "course_scores": [],
+                    "progress": [],
+                    "course_ids": set(),
+                    "course_obtained": 0,
+                    "course_maximum": 0,
+                },
+            )
+            row["hackathon_obtained"] = score["obtained"]
+            row["hackathon_maximum"] = score["maximum"]
+        result = []
+        for name, row in sorted(subjects.items()):
+            maximum = row.get("hackathon_maximum", row["course_maximum"])
+            obtained = row.get("hackathon_obtained", row["course_obtained"])
+            result.append(
+                {
+                    "subject": name,
+                    "marks_out_of_100": round(obtained / maximum * 100, 2)
+                    if maximum
+                    else None,
+                    "obtained": obtained if maximum else None,
+                    "maximum": maximum or None,
+                    "score_source": "Hackathon questions"
+                    if "hackathon_maximum" in row
+                    else "Course MCQs (demo 2 marks per attempt)"
+                    if maximum
+                    else "No scored evidence",
+                    "progress_percent": round(
+                        sum(row["progress"]) / len(row["progress"]), 2
+                    )
+                    if row["progress"]
+                    else None,
+                    "course_count": len(row["course_ids"]),
+                }
+            )
+        return result
+
     def unique_questions(self, user_id):
         q = db.questions
         # One question can have several topic tags. History scores count it once.
@@ -212,6 +310,7 @@ class Services:
                 "weak_topics": self.get_weak_topics(user_id),
                 "history": self.get_hackathon_history(user_id),
                 "assessments": self.list_assessments(user_id),
+                "subjects": self.subject_summary(user_id),
             },
         )
         return {

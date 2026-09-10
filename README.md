@@ -57,8 +57,8 @@ uv run uvicorn orbit.main:app --reload --host 127.0.0.1 --port 8000
 
 ```powershell
 cd frontend
-npm.cmd ci
-npm.cmd run dev
+npm i
+npm run dev
 ```
 
 Open [localhost:5173](http://localhost:5173). Stop servers with `Ctrl+C`. The backend accepts both loopback hostnames on the configured development port.

@@ -322,7 +322,10 @@ def seed(conn):
             .limit(20)
         ).scalars()
     )
-    chosen = list(dict.fromkeys(scored + shared + history + engaged))[:5]
+    # One representative per demo experience, then fill any missing slots.
+    history_only = [user_id for user_id in history if user_id not in engaged]
+    chosen = list(dict.fromkeys(scored[:1] + shared[:1] + history_only[:1]))
+    chosen = list(dict.fromkeys(chosen + scored + shared + history + engaged))[:3]
     for i, user_id in enumerate(chosen, 1):
         has_mcq = conn.scalar(
             select(func.count())

@@ -549,3 +549,102 @@ def test_lossless_import_and_idempotency(tmp_path):
         assert gzip.decompress(archive) == (tmp_path / original).read_bytes()
         assert conn.scalar(select(db.invalid_submissions.c.user_id)) == "legacy-entry"
     engine.dispose()
+
+
+def test_greeting_persists_and_history_is_student_scoped(client, monkeypatch, tmp_path):
+    from orbit import orchestrator
+
+    monkeypatch.setattr(orchestrator, "ROOT", tmp_path)
+    client.post("/api/session", json={"user_id": A})
+    response = client.post("/api/chat", json={"message": "Hi"})
+    assert response.status_code == 200
+    assert "Hi!" in response.json()["answer"]
+    assert response.json()["tools_called"] == []
+    saved_id = response.json()["conversation_id"]
+    client.delete("/api/conversation")
+    assert client.get("/api/session").json()["history"] == []
+    assert client.get("/api/conversations").json()[0]["id"] == saved_id
+    # A new session still sees persisted history.
+    client.delete("/api/session")
+    client.post("/api/session", json={"user_id": A})
+    restored = client.post(f"/api/conversations/{saved_id}/open").json()
+    assert restored["history"][0]["content"] == "Hi"
+    client.post("/api/chat", json={"message": "Hello"})
+    assert len(client.get("/api/conversations").json()) == 1
+    assert len(client.get("/api/session").json()["history"]) == 4
+    client.post("/api/session", json={"user_id": B})
+    assert client.get("/api/conversations").json() == []
+    assert client.post(f"/api/conversations/{saved_id}/open").status_code == 404
+
+
+def test_subject_marks_deduplicate_tags_and_exclude_pending(engine):
+    with engine.begin() as conn:
+        conn.execute(
+            db.questions.insert(),
+            [
+                {
+                    "raw_id": 1,
+                    "question_index": 0,
+                    "user_id": A,
+                    "skill": "Coding",
+                    "topic": topic,
+                    "status": "pass",
+                    "obtained": 3,
+                    "maximum": 5,
+                }
+                for topic in ["Loops", "Functions"]
+            ]
+            + [
+                {
+                    "raw_id": 1,
+                    "question_index": 1,
+                    "user_id": A,
+                    "skill": "Coding",
+                    "topic": "Loops",
+                    "status": "underReview",
+                    "obtained": 0,
+                    "maximum": 100,
+                },
+                {
+                    "raw_id": 1,
+                    "question_index": 2,
+                    "user_id": A,
+                    "skill": "Coding",
+                    "topic": "Loops",
+                    "status": "fail",
+                    "obtained": 0,
+                    "maximum": 5,
+                },
+            ],
+        )
+    rows = {r["subject"]: r for r in Services(engine).subject_summary(A)}
+    assert rows["Coding"]["marks_out_of_100"] == 30
+    assert rows["Coding"]["maximum"] == 10
+    assert rows["Coding"]["progress_percent"] is None
+    assert rows["Python"]["marks_out_of_100"] == 80
+    assert rows["Python"]["progress_percent"] == 80
+    assert "Coding" not in {r["subject"] for r in Services(engine).subject_summary(B)}
+
+
+def test_subject_progress_does_not_invent_marks(engine):
+    with engine.begin() as conn:
+        conn.execute(
+            db.progress.update()
+            .where(db.progress.c.user_id == A)
+            .values(mcq_attempted=0, mcq_score=0)
+        )
+    row = Services(engine).subject_summary(A)[0]
+    assert row["marks_out_of_100"] is None
+    assert row["progress_percent"] == 80
+
+
+def test_request_metrics_are_correlated_and_contain_no_identity(client):
+    assert client.get("/api/metrics").status_code == 401
+    client.post("/api/session", json={"user_id": A})
+    response = client.get("/api/dashboard")
+    assert len(response.headers["X-Request-ID"]) == 24
+    metrics = client.get("/api/metrics").json()
+    assert A not in json.dumps(metrics)
+    assert any(
+        r["name"] == "/api/dashboard" and r["count"] >= 1 for r in metrics["metrics"]
+    )

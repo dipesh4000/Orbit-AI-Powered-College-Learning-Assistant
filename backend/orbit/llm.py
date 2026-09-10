@@ -1,8 +1,10 @@
 import asyncio
 import json
+from time import perf_counter
 
 import httpx
 
+from . import telemetry
 from .config import settings
 
 
@@ -12,6 +14,25 @@ class ModelUnavailable(RuntimeError):
 
 class Model:
     async def complete(self, messages, tools=None):
+        started, failed, usage = perf_counter(), True, {}
+        try:
+            result = await self._complete(messages, tools)
+            usage = result.pop("usage", {})
+            failed = False
+            return result
+        finally:
+            telemetry.record(
+                "model",
+                settings.llm_provider,
+                (perf_counter() - started) * 1000,
+                error=failed,
+                input_tokens=usage.get("input_tokens", usage.get("prompt_tokens", 0)),
+                output_tokens=usage.get(
+                    "output_tokens", usage.get("completion_tokens", 0)
+                ),
+            )
+
+    async def _complete(self, messages, tools=None):
         if not settings.llm_api_key or not settings.llm_model:
             raise ModelUnavailable(
                 "Configure LLM_API_KEY and LLM_MODEL in backend/.env to enable AI responses."
@@ -84,7 +105,16 @@ class Model:
         try:
             async with httpx.AsyncClient(timeout=45) as client:
                 for attempt in range(3):
+                    attempt_started = perf_counter()
                     response = await client.post(endpoint, headers=headers, json=body)
+                    telemetry.record(
+                        "provider_http",
+                        settings.llm_provider,
+                        (perf_counter() - attempt_started) * 1000,
+                        error=response.status_code >= 400,
+                        status=response.status_code,
+                        attempt=attempt + 1,
+                    )
                     if response.status_code != 429 or attempt == 2:
                         break
                     try:
@@ -113,6 +143,7 @@ class Model:
             ) from exc
         if settings.llm_provider == "anthropic":
             return {
+                "usage": result.get("usage", {}),
                 "role": "assistant",
                 "content": "\n".join(
                     b["text"] for b in result["content"] if b["type"] == "text"
@@ -132,6 +163,7 @@ class Model:
             }
         message = result["choices"][0]["message"]
         return {
+            "usage": result.get("usage", {}),
             "role": "assistant",
             "content": message.get("content") or "",
             "tool_calls": message.get("tool_calls", []),

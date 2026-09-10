@@ -12,6 +12,8 @@ import {
   LoaderCircle,
   LogOut,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   MessageSquare,
   Plus,
   Sparkles,
@@ -19,6 +21,8 @@ import {
   X,
 } from "lucide-react";
 import "./style.css";
+import ReactMarkdown from "react-markdown";
+import SubjectChart from "./SubjectChart";
 
 async function api(path, options = {}) {
   let response;
@@ -93,17 +97,39 @@ function App() {
   const [student, setStudent] = useState(null),
     [students, setStudents] = useState([]),
     [view, setView] = useState("Chat"),
-    [open, setOpen] = useState(false);
+    [open, setOpen] = useState(false),
+    [collapsed, setCollapsed] = useState(
+      () => localStorage.getItem("orbit-sidebar") === "collapsed",
+    );
   const [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
     [health, setHealth] = useState(null),
-    [messages, setMessages] = useState([]);
+    [messages, setMessages] = useState([]),
+    [conversations, setConversations] = useState([]),
+    [conversationId, setConversationId] = useState(null);
   const [dashboard, setDashboard] = useState(null),
     [courses, setCourses] = useState([]),
     [input, setInput] = useState(""),
     [busy, setBusy] = useState(false);
   const end = useRef(null),
-    inputRef = useRef(null);
+    inputRef = useRef(null),
+    mainRef = useRef(null);
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 });
+  }, [view]);
+  function toggleSidebar() {
+    setCollapsed((value) => {
+      localStorage.setItem("orbit-sidebar", value ? "expanded" : "collapsed");
+      return !value;
+    });
+  }
+  useEffect(() => {
+    const close = (event) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, []);
   async function initialize() {
     setError("");
     setLoading(true);
@@ -114,6 +140,7 @@ function App() {
         const s = await api("/session");
         setStudent(s);
         setMessages(s.history || []);
+        setConversationId(s.conversation_id || null);
       } catch {
         setStudent(null);
       }
@@ -129,11 +156,12 @@ function App() {
   useEffect(() => {
     let active = true;
     if (student) {
-      Promise.all([api("/dashboard"), api("/courses")])
-        .then(([d, c]) => {
+      Promise.all([api("/dashboard"), api("/courses"), api("/conversations")])
+        .then(([d, c, saved]) => {
           if (active) {
             setDashboard(d);
             setCourses(c);
+            setConversations(saved);
           }
         })
         .catch((e) => {
@@ -153,7 +181,9 @@ function App() {
     try {
       const s = await post("/session", { user_id });
       setStudent(s);
+      setConversations([]);
       setMessages([]);
+      setConversationId(null);
       setDashboard(null);
       setCourses([]);
     } catch (e) {
@@ -167,7 +197,9 @@ function App() {
     try {
       await api("/session", { method: "DELETE" });
       setStudent(null);
+      setConversations([]);
       setMessages([]);
+      setConversationId(null);
       setDashboard(null);
       setCourses([]);
       setView("Chat");
@@ -180,11 +212,32 @@ function App() {
     try {
       await api("/conversation", { method: "DELETE" });
       setMessages([]);
+      setConversationId(null);
       setInput("");
       setView("Chat");
       setOpen(false);
     } catch (e) {
       setError(e.message);
+    }
+  }
+  async function openConversation(id) {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const saved = await post(
+        `/conversations/${encodeURIComponent(id)}/open`,
+        {},
+      );
+      setMessages(saved.history);
+      setConversationId(saved.conversation_id);
+      setInput("");
+      setView("Chat");
+      setOpen(false);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
     }
   }
   async function send(e) {
@@ -197,6 +250,7 @@ function App() {
     setBusy(true);
     try {
       const r = await post("/chat", { message: question });
+      setConversationId(r.conversation_id);
       setMessages((m) => [
         ...m,
         {
@@ -207,6 +261,13 @@ function App() {
           cache: r.cache_hits,
         },
       ]);
+      api("/conversations")
+        .then(setConversations)
+        .catch(() =>
+          setError(
+            "Your reply is saved, but the history list could not refresh. Reload to retry.",
+          ),
+        );
     } catch (e) {
       setMessages((m) => [
         ...m,
@@ -240,8 +301,24 @@ function App() {
             Choose a student to explore their courses, find areas to focus on,
             and turn learning into practice.
           </p>
-          <div className="demo-label">
-            Demo student selection · no authentication
+          <div className="demo-info">
+            <span className="demo-label">
+              Demo student selection · no authentication
+            </span>
+            <span className="info-tooltip">
+              <button
+                type="button"
+                aria-label="About the demo students"
+                aria-describedby="student-info"
+              >
+                <CircleHelp size={16} />
+              </button>
+              <span role="tooltip" id="student-info">
+                These test users are fetched from the supplied dataset to mimic
+                a few prominent cases: recorded course scores, combined course
+                and hackathon history, and missing course enrollment.
+              </span>
+            </span>
           </div>
           <ErrorBox message={error} />
           {loading ? (
@@ -282,13 +359,31 @@ function App() {
       </div>
     );
   return (
-    <div className="app">
+    <div className={"app " + (collapsed ? "sidebar-collapsed" : "")}>
       <button
         className={"scrim " + (open ? "visible" : "")}
         aria-label="Close navigation"
         onClick={() => setOpen(false)}
       />
-      <aside className={"sidebar " + (open ? "open" : "")}>
+      <aside
+        id="workspace-navigation"
+        className={"sidebar " + (open ? "open" : "")}
+      >
+        <button
+          className="collapse-toggle"
+          onClick={toggleSidebar}
+          aria-label="Collapse sidebar"
+          title="Collapse sidebar"
+        >
+          <PanelLeftClose size={18} />
+        </button>
+        <button
+          className="mobile-close"
+          onClick={() => setOpen(false)}
+          aria-label="Close navigation"
+        >
+          <X size={18} />
+        </button>
         <div className="brand">
           <span className="brand-icon">✳</span> orbit
           <span className="tiny">STUDENT</span>
@@ -306,6 +401,7 @@ function App() {
             ].map(([Icon, name]) => (
               <button
                 key={name}
+                aria-current={view === name ? "page" : undefined}
                 className={view === name ? "active" : ""}
                 onClick={() => {
                   setView(name);
@@ -318,6 +414,27 @@ function App() {
               </button>
             ))}
           </nav>
+        </div>
+        <div className="conversation-history">
+          <div className="nav-label">RECENT CHATS</div>
+          {conversations.length ? (
+            conversations.map((c) => (
+              <button
+                key={c.id}
+                disabled={busy}
+                title={c.title}
+                className={conversationId === c.id ? "active" : ""}
+                onClick={() => openConversation(c.id)}
+              >
+                <MessageSquare size={14} />
+                <span>{c.title}</span>
+              </button>
+            ))
+          ) : (
+            <p className="history-empty">
+              Your conversations will appear here.
+            </p>
+          )}
         </div>
         <div className="examples">
           <div className="nav-label">TRY A CONVERSATION</div>
@@ -357,13 +474,25 @@ function App() {
           </div>
         </div>
       </aside>
-      <main>
+      <main ref={mainRef}>
         <header>
           <div className="breadcrumb">
+            {collapsed && (
+              <button
+                className="expand-toggle"
+                onClick={toggleSidebar}
+                aria-label="Expand sidebar"
+                title="Expand sidebar"
+              >
+                <PanelLeftOpen size={19} />
+              </button>
+            )}
             <button
               className="mobile-menu"
               onClick={() => setOpen(true)}
               aria-label="Open navigation"
+              aria-expanded={open}
+              aria-controls="workspace-navigation"
             >
               <Menu size={20} />
             </button>
@@ -396,7 +525,21 @@ function App() {
                   className={"message " + m.role + (m.isError ? " failed" : "")}
                 >
                   <small>{m.role === "user" ? "YOU" : "✳ ORBIT"}</small>
-                  <div>{m.content}</div>
+                  <div className="message-body">
+                    {m.role === "assistant" ? (
+                      <ReactMarkdown>{m.content}</ReactMarkdown>
+                    ) : (
+                      m.content
+                    )}
+                  </div>
+                  {m.isError && (
+                    <button
+                      className="retry-message"
+                      onClick={() => prompt(messages[i - 1]?.content || "")}
+                    >
+                      Edit and retry
+                    </button>
+                  )}
                   <Sources sources={m.sources} />
                   {m.tools?.length > 0 && (
                     <details className="trace">
@@ -466,7 +609,14 @@ function App() {
                     "Help me choose a course for practice.",
                   ],
                 ].map(([Icon, title, sub, p]) => (
-                  <button key={title} onClick={() => prompt(p)}>
+                  <button
+                    key={title}
+                    onClick={() =>
+                      title === "Put it into practice"
+                        ? setView("Practice")
+                        : prompt(p)
+                    }
+                  >
                     <Icon size={20} />
                     <strong>{title}</strong>
                     <small>{sub}</small>
@@ -483,9 +633,9 @@ function App() {
         {view === "Dashboard" && (
           <Dashboard data={dashboard} onPractice={() => setView("Practice")} />
         )}{" "}
-        {view === "Practice" && (
-          <Practice courses={courses} studentId={student.user_id} />
-        )}
+        <div hidden={view !== "Practice"}>
+          <Practice key={student.user_id} courses={courses} health={health} />
+        </div>
       </main>
     </div>
   );
@@ -514,14 +664,16 @@ function Dashboard({ data, onPractice }) {
         <Busy />
       </div>
     );
-  const scored = data.courses.filter((c) => c.performance_percent != null);
+  const scored = (data.subjects || []).filter(
+    (s) => s.marks_out_of_100 != null,
+  );
   return (
     <section className="content">
       <div className="page-heading">
         <div>
           <div className="eyebrow">YOUR LEARNING, IN VIEW</div>
-          <h1>A little perspective.</h1>
-          <p className="muted">See where you are. Decide where to go next.</p>
+          <h1>Your learning overview</h1>
+          <p className="muted">Track your courses and find your next focus.</p>
         </div>
         <span className="pill">
           {data.cache_hit ? "Cached · up to 60s" : "Fresh data"}
@@ -535,7 +687,11 @@ function Dashboard({ data, onPractice }) {
             new Set(data.courses.map((c) => c.course_id)).size,
             "From your course records",
           ],
-          ["Courses with scores", scored.length, "Missing scores are not zero"],
+          [
+            "Subjects with marks",
+            scored.length,
+            "Recorded scores on a 100-point scale",
+          ],
           ["Focus topics", data.weak_topics.length, "Below 60% of full marks"],
           ["Recent attempts", data.history.length, "Up to 30 recorded rounds"],
         ].map(([label, value, note]) => (
@@ -546,11 +702,12 @@ function Dashboard({ data, onPractice }) {
           </div>
         ))}
       </div>
+      <SubjectChart subjects={data.subjects || []} />
       <div className="dashboard-grid">
         <article className="panel">
           <div className="panel-head">
-            <h2>Course performance</h2>
-            <span className="muted">MCQ scores</span>
+            <h2>Course progress</h2>
+            <span className="muted">Recorded activity</span>
           </div>
           {data.courses.length ? (
             data.courses.slice(0, allCourses ? undefined : 8).map((c) => (
@@ -562,7 +719,11 @@ function Dashboard({ data, onPractice }) {
                   <strong>{c.title}</strong>
                   <small>{c.subject}</small>
                   <div className="course-metrics">
-                    <span>Score: {pct(c.performance_percent)}</span>
+                    <span>
+                      {c.performance_percent == null
+                        ? "Course marks not recorded"
+                        : `Marks: ${c.performance_percent.toFixed(1)} / 100`}
+                    </span>
                     <span>Progress: {pct(c.progress_percent)}</span>
                   </div>
                   {c.progress_percent != null && (
@@ -706,7 +867,7 @@ function Dashboard({ data, onPractice }) {
   );
 }
 
-function Practice({ courses, studentId }) {
+function Practice({ courses, health }) {
   const [course, setCourse] = useState(""),
     [topics, setTopics] = useState([]),
     [topic, setTopic] = useState(""),
@@ -719,7 +880,11 @@ function Practice({ courses, studentId }) {
     [answers, setAnswers] = useState({}),
     [loadingTopics, setLoadingTopics] = useState(false);
   useEffect(() => {
-    if (courses.length && !course) setCourse(courses[0].course_id);
+    if (courses.length && !course)
+      setCourse(
+        (courses.find((c) => c.practice_topics?.length) || courses[0])
+          .course_id,
+      );
   }, [courses]);
   useEffect(() => {
     let active = true;
@@ -749,6 +914,7 @@ function Practice({ courses, studentId }) {
   }, [course]);
   async function generate(e) {
     e.preventDefault();
+    if (busy || loadingTopics || !course || !topic) return;
     setBusy(true);
     setError("");
     setResult(null);
@@ -773,23 +939,29 @@ function Practice({ courses, studentId }) {
       <div className="page-heading">
         <div>
           <div className="eyebrow">KNOWLEDGE INTO CONFIDENCE</div>
-          <h1>Make it stick.</h1>
+          <h1>Create a quiz</h1>
           <p className="muted">
-            A focused practice session, built around what you're learning.
+            Choose a topic. Let AI build your next practice session.
           </p>
         </div>
       </div>
       <div className="practice-banner">
         <Sparkles size={32} />
         <div>
-          <h2>A little practice goes a long way.</h2>
+          <h2>Made for what you’re learning.</h2>
           <p>
-            Questions use authored demo materials linked to your course subject.
-            Every answer includes an explanation and source.
+            AI creates original questions from the demo materials linked to your
+            course. Every answer includes an explanation and source.
           </p>
         </div>
       </div>
-      <form className="panel" onSubmit={generate}>
+      <form className="panel quiz-setup" onSubmit={generate}>
+        <div className="panel-head">
+          <h2>
+            <Sparkles size={17} /> Create with AI
+          </h2>
+          <span className="pill">Personalized practice</span>
+        </div>
         <div className="practice-fields">
           <label>
             Course
@@ -802,6 +974,7 @@ function Practice({ courses, studentId }) {
               {courses.map((c) => (
                 <option key={c.course_id} value={c.course_id}>
                   {c.title}
+                  {c.practice_topics?.length === 0 ? " (no materials)" : ""}
                 </option>
               ))}
             </select>
@@ -811,7 +984,7 @@ function Practice({ courses, studentId }) {
             <select
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              disabled={busy || loadingTopics}
+              disabled={busy || loadingTopics || !topics.length}
             >
               <option value="">
                 {loadingTopics
@@ -848,22 +1021,77 @@ function Practice({ courses, studentId }) {
             </select>
           </label>
         </div>
+        {!loadingTopics && course && !topics.length && !error && (
+          <div className="notice">
+            No learning materials are available for this course yet. Choose
+            another course to create a grounded quiz.
+          </div>
+        )}
+        {health && !health.model_configured && (
+          <div className="notice">
+            AI is not connected yet. Configure the model and API key in
+            backend/.env, then refresh this page.
+          </div>
+        )}
+        <details className="generation-rules">
+          <summary>How your quiz is created</summary>
+          <p>
+            Questions stay within the selected course materials and match your
+            difficulty. Each question has four distinct choices, one correct
+            answer, a source, and an explanation. We validate the format and
+            source references before showing your quiz.
+          </p>
+        </details>
         <div className="setup-footer">
-          <span className="fine">
-            Demo material · Four options · Source-checked output
-          </span>
-          <button className="primary" disabled={busy || !topic || !course}>
+          <span className="fine">Demo course material · Answers included</span>
+          <button
+            className="primary"
+            disabled={
+              busy ||
+              loadingTopics ||
+              !topic ||
+              !course ||
+              health?.model_configured === false
+            }
+          >
             {busy ? (
               <LoaderCircle className="spin" size={17} />
             ) : (
               <Sparkles size={17} />
             )}{" "}
-            Generate practice
+            {busy ? "Creating your quiz…" : "Generate quiz"}
           </button>
         </div>
       </form>
       <ErrorBox message={error} />
-      {busy && <Busy />}
+      {busy && (
+        <div className="notice" role="status">
+          <Busy />
+          Creating questions and checking their format and sources. This may
+          take a minute.
+        </div>
+      )}
+      {result?.questions?.length > 0 && (
+        <div className="quiz-progress" role="status">
+          <div>
+            <strong>Your quiz is ready</strong>
+            <small>
+              {Object.keys(answers).length} of {result.questions.length}{" "}
+              answered · {Object.keys(revealed).length} reviewed
+            </small>
+          </div>
+          {Object.keys(revealed).length === result.questions.length && (
+            <span className="pill">
+              {
+                result.questions.filter(
+                  (q, i) => answers[i] === q.correct_answer,
+                ).length
+              }{" "}
+              / {result.questions.length} correct
+            </span>
+          )}
+        </div>
+      )}
       {result?.message && <div className="notice">{result.message}</div>}
       {result?.questions.map((q, i) => (
         <article className="panel question" key={i}>
@@ -899,8 +1127,11 @@ function Practice({ courses, studentId }) {
               <small>Source: [{q.source_reference}] · Demo material</small>
             </div>
           ) : (
-            <button onClick={() => setRevealed((r) => ({ ...r, [i]: true }))}>
-              Reveal answer & explanation
+            <button
+              disabled={!answers[i]}
+              onClick={() => setRevealed((r) => ({ ...r, [i]: true }))}
+            >
+              Check answer
             </button>
           )}
         </article>

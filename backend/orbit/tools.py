@@ -93,6 +93,25 @@ class ToolRegistry:
         self.services, self.retriever, self.model = services, retriever, model
 
     async def execute(self, name, arguments, user_id):
+        from time import perf_counter
+
+        from . import telemetry
+
+        started, failed, hit = perf_counter(), True, False
+        try:
+            result, hit = await self._execute(name, arguments, user_id)
+            failed = isinstance(result, dict) and "error" in result
+            return result, hit
+        finally:
+            telemetry.record(
+                "tool",
+                name if name in SPECS else "unknown",
+                (perf_counter() - started) * 1000,
+                error=failed,
+                cache_hit=hit,
+            )
+
+    async def _execute(self, name, arguments, user_id):
         if name not in SPECS:
             raise ValueError("Unknown tool.")
         # This is the only dispatch boundary. LLM-supplied identities cannot reach services.

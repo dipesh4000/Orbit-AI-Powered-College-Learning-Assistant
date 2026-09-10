@@ -105,6 +105,15 @@ students = Table(
     Column("label", String),
     Column("rationale", Text),
 )
+conversations = Table(
+    "chat_conversations",
+    metadata,
+    Column("id", String, primary_key=True),
+    Column("user_id", String, index=True, nullable=False),
+    Column("title", String(80), nullable=False),
+    Column("messages", JSON, nullable=False),
+    Column("updated_at", String, index=True, nullable=False),
+)
 assessments = Table(
     "assessments",
     metadata,

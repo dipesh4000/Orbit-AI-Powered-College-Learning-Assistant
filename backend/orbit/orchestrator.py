@@ -2,6 +2,7 @@ import json
 import re
 from time import perf_counter
 
+from . import telemetry
 from .config import ROOT
 from .rag import INSUFFICIENT
 from .tools import schemas
@@ -79,6 +80,15 @@ async def chat(question, session, registry, model):
         if any(i.lower() != session["user_id"].lower() for i in ids):
             trace["final_answer"] = (
                 "I can only access the currently selected student’s records. Use the student picker to change the demo session."
+            )
+        elif re.fullmatch(
+            r"(?:hi|hello|hey|good morning|good afternoon|good evening|thanks|thank you)[!?.\s]*",
+            question.strip(),
+            re.IGNORECASE,
+        ):
+            trace["final_answer"] = (
+                "Hi! I'm Orbit, your learning assistant. I can help you review your progress, "
+                "understand a course topic, or create a practice quiz. What would you like to work on?"
             )
         else:
             for _ in range(6):
@@ -162,7 +172,7 @@ async def chat(question, session, registry, model):
                 },
             ]
         )
-        del transcript[:-20]
+        del transcript[:-200]
         return {
             "answer": trace["final_answer"],
             "sources": list(sources.values()),
@@ -174,4 +184,17 @@ async def chat(question, session, registry, model):
         raise
     finally:
         trace["latency_ms"] = round((perf_counter() - started) * 1000)
+        telemetry.record(
+            "chat",
+            "turn",
+            trace["latency_ms"],
+            error="error" in trace,
+            tool_count=len(trace["tools_called"]),
+            cache_hit=any(t["cache_hit"] for t in trace["tool_outputs"]),
+            outcome="error"
+            if "error" in trace
+            else "insufficient"
+            if INSUFFICIENT in trace["final_answer"]
+            else "answered",
+        )
         write_trace(trace)
