@@ -1,0 +1,8 @@
+{"timestamp": "2026-09-10T18:25:14.769466+00:00", "request_id": "81da9fe6e6552dc8ec7efefb", "event": "http", "name": "/api/health", "duration_ms": 5.88, "error": false, "status": 200, "method": "GET"}
+{"timestamp": "2026-09-10T18:25:18.107875+00:00", "request_id": "a0d72ff22b3bb47eac6d5008", "event": "http", "name": "/api/students", "duration_ms": 3322.74, "error": false, "status": 200, "method": "GET"}
+{"timestamp": "2026-09-10T18:25:18.115861+00:00", "request_id": "195ec892ac96258360eaf961", "event": "http", "name": "/api/session", "duration_ms": 1.32, "error": true, "status": 401, "method": "GET"}
+{"timestamp": "2026-09-10T18:25:21.876641+00:00", "request_id": "4ac61bff88f152e630d96c59", "event": "http", "name": "/api/login", "duration_ms": 315.51, "error": false, "status": 200, "method": "POST"}
+{"timestamp": "2026-09-10T18:25:22.661518+00:00", "request_id": "e1b9628190b6753dae2a58a2", "event": "http", "name": "/api/courses", "duration_ms": 702.43, "error": false, "status": 200, "method": "GET"}
+{"timestamp": "2026-09-10T18:25:22.986949+00:00", "request_id": "d01fa9d862bfd4918a4cfa26", "event": "http", "name": "/api/conversations", "duration_ms": 1027.64, "error": false, "status": 200, "method": "GET"}
+{"timestamp": "2026-09-10T18:25:23.994087+00:00", "request_id": "772d6d55a1c0f05ab6e2eda0", "event": "http", "name": "/api/dashboard", "duration_ms": 2037.66, "error": false, "status": 200, "method": "GET"}
+{"timestamp": "2026-09-10T18:25:24.417832+00:00", "request_id": "4201583f7b056558355fce1a", "event": "http", "name": "/api/topics/{course_id}", "duration_ms": 385.98, "error": true, "status": 503, "method": "GET"}

@@ -1,0 +1,2 @@
+{"timestamp": "2026-09-10T18:22:46.713794+00:00", "request_id": "b7e92984155d880516b98a71", "event": "http", "name": "/api/health", "duration_ms": 6.03, "error": false, "status": 200, "method": "GET"}
+{"timestamp": "2026-09-10T18:22:46.733584+00:00", "request_id": "de5d9fe64017b27f36e35eaa", "event": "http", "name": "/api/students", "duration_ms": 5.53, "error": true, "status": 503, "method": "GET"}
