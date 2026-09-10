@@ -11,7 +11,6 @@ dependencies = [
     "psycopg[binary]>=3.2,<4",
     "pydantic-settings>=2.7,<3",
     "httpx>=0.28,<1",
-    "sentence-transformers>=3.4,<6",
     "faiss-cpu>=1.10,<2",
     "numpy>=1.26,<3",
 ]

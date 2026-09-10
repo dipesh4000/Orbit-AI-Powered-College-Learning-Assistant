@@ -17,4 +17,4 @@ npm.cmd run build
 
 Restart FastAPI after building to serve the app at [127.0.0.1:8000](http://127.0.0.1:8000).
 
-See the [project README](../README.md) for virtual environment setup, configuration, validation, and troubleshooting.
+See the [getting-started guide](../GET_STARTED.md) for virtual environment setup, configuration, validation, and troubleshooting.

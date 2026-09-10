@@ -22,7 +22,7 @@ def test_practice_catalog_topic_skips_embedding_load(tmp_path, monkeypatch):
         lambda *args: (_ for _ in ()).throw(AssertionError("Must use catalog")),
     )
     assert retriever.practice_sources("Collections", "python") == [chunk]
-    assert retriever.model is None
+    assert retriever.index is None
 
 
 def test_practice_catalog_does_not_cross_courses(tmp_path, monkeypatch):

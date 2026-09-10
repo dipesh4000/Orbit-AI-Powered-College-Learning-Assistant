@@ -14,7 +14,7 @@ uv run uvicorn orbit.main:app --reload --host 127.0.0.1 --port 8000
 
 No activation is required. `uv sync` also creates `.venv` if it is missing. Dependencies live in `pyproject.toml` and resolved versions in `uv.lock`.
 
-Keep your credentials in `.env`. See the [project README](../README.md) for first-time configuration, data import, indexing, and frontend commands.
+Keep your credentials in `.env`. See the [getting-started guide](../GET_STARTED.md) for first-time configuration, data import, indexing, and frontend commands.
 
 ## Checks
 

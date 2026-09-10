@@ -15,10 +15,11 @@ from starlette.concurrency import run_in_threadpool
 from . import conversations, telemetry
 from . import database as db
 from .config import ROOT, settings
+from .embeddings import EmbeddingUnavailable
 from .llm import Model, ModelUnavailable
 from .orchestrator import chat
 from .practice import PracticeInput, generate
-from .rag import Retriever
+from .rag import Retriever, index_ready
 from .services import Services
 from .tools import ToolRegistry
 
@@ -73,6 +74,7 @@ async def observe_request(request, call_next):
 
 
 @app.exception_handler(ModelUnavailable)
+@app.exception_handler(EmbeddingUnavailable)
 async def model_error(request, exc):
     return JSONResponse({"detail": str(exc)}, status_code=503)
 
@@ -136,7 +138,8 @@ def health():
             (settings.llm_api_key and settings.llm_model)
             or (settings.nvidia_api_key and settings.nvidia_model)
         ),
-        "index_ready": (ROOT / "data/rag/index.faiss").exists(),
+        "embedding_configured": bool(settings.hf_token),
+        "index_ready": index_ready(),
         "demo": True,
     }
 

@@ -1,5 +1,144 @@
 # Orbit deployment
 
+Local installation and data preparation live in [GET_STARTED.md](../GET_STARTED.md).
+
+## Why the full Vercel deployment exceeds 500 MB
+
+The reported 5,646.89 MB is the function bundle, not the frontend build. Vercel's
+Python function limit is **500 MB uncompressed**, including dependencies. Increasing
+request memory or splitting routes does not remove libraries shared by each function.
+See [Vercel function limits](https://vercel.com/docs/functions/limitations).
+
+This repository's root `vercel.json` declares both frontend and backend services.
+The backend depends on `sentence-transformers`, which brings in PyTorch. The current
+Linux lockfile also resolves CUDA libraries and Triton. Those are a likely major
+contributor to the multi-gigabyte build; the exact Vercel artifact has not been inspected.
+Local virtual environments and model caches can add more if uploaded with a project.
+
+The NVIDIA chat API is remote HTTPS inference and does not require local CUDA.
+Local PyTorch is used for MiniLM embeddings, independently of the chat provider.
+
+## Where to deploy
+
+| Setup | Recommendation for Orbit |
+| --- | --- |
+| Paid Render web service, serving React and FastAPI together; Neon database | Simplest full-project setup: one origin, one service, no cross-site session cookies |
+| Vercel static frontend; paid Render backend; Neon database | Keep Vercel for the UI and route API requests to the backend |
+| Railway service with a volume; Neon database | Alternative for a persistent Python service with usage-based billing |
+| Entire current backend in Vercel Functions | Poor fit for the local ML dependency footprint and process-local sessions |
+
+Start evaluation with approximately **2 GB RAM for the backend**, then measure loaded
+model memory and concurrent requests before choosing a smaller plan. This is a sizing
+estimate, not a measured minimum. A GPU is not needed for the small embedding model.
+Paid persistent storage is useful for the index and downloaded embedding weights.
+Render free services sleep after inactivity and cannot attach a persistent disk.
+
+References: [Render FastAPI](https://render.com/docs/deploy-fastapi),
+[Render free-service restrictions](https://render.com/docs/free),
+[Render disks](https://render.com/docs/disks),
+[Railway pricing](https://docs.railway.com/pricing),
+[Railway volumes](https://docs.railway.com/volumes/reference).
+
+## Option A: full project on Render
+
+Use the repository directory containing both `frontend/` and `backend/` as the service
+root. The build environment must provide Node.js/npm and Python/uv. For a native
+Python service, verify Node is available in its build environment; a Docker service
+with both runtimes is an alternative if your environment does not provide them.
+
+Build command, from that root:
+
+```sh
+npm --prefix frontend ci && npm --prefix frontend run build && pip install uv && uv sync --directory backend --frozen --no-dev
+```
+
+Start command:
+
+```sh
+uv run --directory backend --no-sync uvicorn orbit.main:app --host 0.0.0.0 --port "$PORT" --workers 1
+```
+
+Use one instance. Set `VITE_API_BASE_URL=/api` before the frontend build, and configure
+the backend variables from `backend/.env.example` in Render's environment settings.
+Set `ALLOWED_ORIGIN` to the exact public app origin, `COOKIE_SECURE=true`, and
+`COOKIE_SAMESITE=lax`. Configure `/api/health` as the health-check path.
+
+Before testing course chat or practice:
+
+1. Prepare the Neon database using the local ingestion commands in GET_STARTED.md.
+   Do not import student CSVs during every deployment.
+2. Build the course index locally with `uv run python -m orbit.rag` from `backend/`.
+3. Provision both `backend/data/rag/` and `backend/data/models/` on the service,
+   using a private transfer or a controlled setup step. The model cache must include
+   the actual weight files, not broken symlinks. Do not copy `.venv` between systems.
+4. On Render, attach a disk at the absolute `backend/data` directory inside the
+   deployed checkout. With the standard repository-root checkout this is
+   `/opt/render/project/src/backend/data`; verify the path in the service shell.
+5. Populate the disk at runtime: Render disks are not available during build steps.
+   Mounting an empty disk over files created at build time hides those files.
+
+Alternatively, rebuild the index and model cache during each build, with the required
+dataset securely available to that build. Never commit student CSVs or API keys just
+to make a deployment succeed. Requests require pre-provisioned weights because the
+retriever loads with `local_files_only=True`.
+
+## Option B: keep the frontend on Vercel
+
+Create or reconfigure the Vercel project with **Root Directory = `frontend`**, framework
+**Vite**, build command `npm run build`, and output directory **`dist`**. Disable inclusion
+of files outside the root when not needed. Do not reuse the repository-root multi-service
+configuration: it explicitly deploys the oversized backend.
+
+Deploy FastAPI separately using the Render backend instructions below. For reliable
+same-origin sessions, add a `frontend/vercel.json` like this after replacing the
+example hostname with the actual backend URL:
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://YOUR-BACKEND.onrender.com/api/:path*" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ]
+}
+```
+
+Set frontend `VITE_API_BASE_URL=/api`. On the backend set `ALLOWED_ORIGIN` to the
+Vercel frontend's exact HTTPS origin, `COOKIE_SECURE=true`, and `COOKIE_SAMESITE=lax`.
+Keep API responses uncached. Verify login, logout, a page reload, and a long chat request
+through the deployed proxy; host proxy timeouts still apply and cannot be changed by
+the browser's timeout setting. An always-on backend avoids routing a long cold start
+through the proxy. See [Vercel external rewrites](https://vercel.com/docs/routing/rewrites).
+
+## Reducing the backend footprint
+
+For CPU hosting, use the CPU-only PyTorch index rather than shipping unused GPU
+libraries. The following is an optional dependency change to make in `backend/pyproject.toml`
+and validate before deployment; it has not been applied automatically:
+
+```toml
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+```
+
+Declare `torch` as a direct dependency as well (for example, add `"torch>=2.2,<3"`
+to the existing `project.dependencies` list) so its source is explicit. Then run
+`uv lock`, `uv sync`, and the backend tests, and exercise an actual course search.
+Commit the updated lockfile together with the dependency configuration. Follow
+[uv's PyTorch guide](https://docs.astral.sh/uv/guides/integration/pytorch/) for platform-specific
+wheel availability. Build deployments with `uv sync --frozen --no-dev`.
+
+Exclude `.venv`, local caches, logs, datasets, and `node_modules` from source uploads.
+Required model weights and the index must still be provisioned separately. CPU-only
+PyTorch reduces size but does **not** guarantee this backend fits Vercel's 500 MB limit.
+Fitting serverless would require a larger redesign, such as remote embeddings and
+external session storage; merely moving routes into separate functions is insufficient.
+
 ## Route contract
 
 | Browser page | API operations |

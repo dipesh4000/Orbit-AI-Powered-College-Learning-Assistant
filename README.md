@@ -1,149 +1,171 @@
 # Orbit
 
-A college learning assistant built with React and FastAPI: student progress, course-grounded chat, demo assessment eligibility, and practice questions.
+### Find your focus. Build your momentum.
 
-## Backend setup
+Orbit is a college learning workspace combining student progress, course-grounded AI chat, assessment eligibility, and practice. It turns supplied learning records into useful next steps while keeping identity, data access, and assessment decisions under backend control.
 
-Install **uv** first. From the `Orbit` repository folder:
+[Get started](GET_STARTED.md) · [Deployment](docs/DEPLOYMENT.md) · [Data and demo assumptions](docs/ARCHITECTURE.md)
 
-```powershell
-cd backend
-uv venv
-uv sync
+## The learning workspace
+
+| Experience | What Orbit provides |
+| --- | --- |
+| Student selection | Demo profiles drawn from supplied student records |
+| Dashboard | Course progress, performance, weak topics, and assessment history |
+| AI chat | Multi-step tool use, course references, and persistent conversations |
+| Eligibility | Deterministic decisions with reasons and unmet requirements |
+| Practice | Course-grounded questions with validated options, answers, and citations |
+| Provider resilience | Primary LLM with automatic NVIDIA fallback and recovery cooldown |
+
+## System architecture
+
+```mermaid
+flowchart TB
+    student([Student]) --> ui["React workspace"]
+    ui --> api["FastAPI routes and session checks"]
+    api --> services["Student data services"]
+    api --> agent["AI orchestration loop"]
+    api --> practice["Practice generation"]
+    agent --> tools["Typed tool registry"]
+    tools --> services
+    tools --> rules["Deterministic eligibility rules"]
+    tools --> rag["Course retrieval"]
+    tools --> practice
+    rules --> services
+    services --> database[("PostgreSQL / Neon")]
+    practice --> rag
+    agent --> model["Shared model interface"]
+    practice --> model
+    model --> primary["Primary LLM API"]
+    model -.-> fallback["NVIDIA Nemotron fallback"]
+    rag --> embeddings["Local MiniLM embeddings"]
+    rag --> index[("FAISS index and source chunks")]
+    api --> conversations["Conversation persistence"]
+    conversations --> database
+    agent -.-> traces["Turn traces and latency metrics"]
+    classDef app fill:#e9f2ec,stroke:#476b56,color:#203b2b;
+    classDef data fill:#eef0fa,stroke:#65739d,color:#27334f;
+    class ui,api,agent,tools,practice,model app;
+    class database,index data;
 ```
 
-That's the environment setup. `pyproject.toml` declares dependencies, `uv.lock` pins them, and `uv sync` installs them into `.venv`, including development tools. Python 3.13 is selected by `.python-version`; uv can download it if needed.
+The LLM selects tools and narrates their outputs. Typed services query the database, Python computes eligibility, and retrieval supplies course passages. The model has no direct database connection.
 
-**Activation is not required.** Use `uv run` for backend commands. `uv sync` also creates `.venv` if you skip `uv venv`.
+## AI flow: a LangGraph-style view
 
-## Configure once
+Nodes, conditional routing, and a tool loop describe the existing implementation. Orbit implements this flow in async Python; **LangGraph and LangChain are not runtime dependencies**.
 
-From `backend/`:
+A turn carries messages, tool results, source references, and a trace. The backend binds student identity before executing tools. Chat retains the latest 20 history messages and permits six model rounds, with at most eight tool calls per response.
 
-```powershell
-if (!(Test-Path .env)) { Copy-Item .env.example .env }
+```mermaid
+flowchart TD
+    startNode(["START: student message"]) --> guards{"Identity restriction or greeting?"}
+    guards -->|Yes| fixed["Return the appropriate fixed response"]
+    guards -->|No| context["System rules plus recent history"]
+    context --> model["Call model with tool schemas"]
+    model --> route{"Tool calls returned?"}
+    route -->|Yes| execute["Validate arguments and execute tools with bound identity"]
+    execute --> state["Append tool results and collect sources"]
+    state --> evidence{"Course search returned no passages?"}
+    evidence -->|Yes| insufficient["Insufficient information plus any eligibility reasons"]
+    evidence -->|No| budget{"Model rounds remaining?"}
+    budget -->|Yes| model
+    budget -->|No| limit["Ask the student to narrow the request"]
+    route -->|No| used{"Any tools used this turn?"}
+    used -->|Yes| answer["Return model answer with collected sources"]
+    used -->|No| insufficient
+    fixed --> finish["Update history and record trace"]
+    insufficient --> finish
+    limit --> finish
+    answer --> finish
+    finish --> endNode([END])
+    classDef action fill:#e9f2ec,stroke:#476b56,color:#203b2b;
+    classDef gate fill:#fff3d9,stroke:#a88a45,color:#54451f;
+    class context,model,execute,state,finish action;
+    class guards,route,evidence,budget,used gate;
 ```
 
-Edit `.env` with your settings. Existing credentials are preserved.
+Missing retrieval evidence stops further course-content generation. System instructions treat tool outputs and retrieved text as untrusted data. Citations and tool-use checks support grounded answers; they do not formally verify every generated claim.
 
-| Setting | Value |
-|---|---|
-| `DATABASE_URL` | Your PostgreSQL/Neon URL, with `sslmode=require` |
-| `LLM_PROVIDER` | `anthropic` or `openai-compatible` |
-| `LLM_BASE_URL` | Your provider's API base URL |
-| `LLM_API_KEY` | Your API key |
-| `LLM_MODEL` | An exact tool-capable model ID |
-| `DATASET_DIR` | `../..` for this workspace, relative to `backend/` |
+## Model fallback and recovery
 
-For a new database or missing course index:
+Chat and practice share a model interface. NVIDIA defaults to `nvidia/nemotron-3-nano-30b-a3b`, with thinking disabled for lower latency. `nvidia/nemotron-3-super-120b-a12b` is an optional model setting.
 
-```powershell
-uv run python -m orbit.ingest --verify-only
-uv run python -m orbit.ingest
-uv run python -m orbit.rag
+```mermaid
+flowchart TD
+    requestNode(["Model request"]) --> available{"Primary configured and eligible?"}
+    available -->|Yes| primary["Call primary provider"]
+    available -->|No| fallbackReady{"NVIDIA configured?"}
+    primary --> outcome{"Usable response?"}
+    outcome -->|Yes| success["Return content or tool calls"]
+    outcome -->|No| configured{"NVIDIA configured?"}
+    configured -->|Yes| cooldown["Skip primary for 300 seconds"]
+    cooldown --> nvidia["Call NVIDIA with the same history and tools"]
+    fallbackReady -->|Yes| nvidia
+    fallbackReady -->|No| unavailable["Safe unavailable error"]
+    configured -->|No| unavailable
+    nvidia --> fallbackResult{"Usable response?"}
+    fallbackResult -->|Yes| success
+    fallbackResult -->|No| unavailable
+    cooldown -.-> probe["Later request after cooldown retries primary"]
 ```
 
-Skip this preparation if your database is already imported and the index exists. The first index build downloads local embedding weights. Secrets, datasets, model weights, and logs are ignored by Git.
+With fallback enabled, quota errors, rejected access, HTTP failures, timeouts, and unusable responses trigger failover. Each provider call has a default 30-second total budget. Without NVIDIA, the primary retains bounded rate-limit retries before returning an error. Cooldown state is process-local, and both providers can still become unavailable.
 
-## Run
+## Course retrieval
 
-**Backend** — from `backend/`:
+Demo-authored materials are split into overlapping chunks, embedded locally with `all-MiniLM-L6-v2`, and stored in FAISS with source and course metadata. Search filters by course and similarity threshold before returning evidence.
 
-```powershell
-uv run uvicorn orbit.main:app --reload --host 127.0.0.1 --port 8000
+```mermaid
+flowchart LR
+    materials["Demo course materials"] --> chunks["Overlapping source chunks"]
+    chunks --> embed["MiniLM embeddings"]
+    embed --> index[("FAISS and chunk metadata")]
+    question["Course question"] --> search["Semantic search and course filter"]
+    index --> search
+    search --> threshold{"Relevant evidence?"}
+    threshold -->|Yes| context["Passages and source IDs for chat"]
+    threshold -->|No| stopNode["Insufficient information"]
 ```
 
-**Frontend** — in a second terminal, from the repository folder:
+## Validated practice generation
 
-```powershell
-cd frontend
-npm i
-npm run dev
+Known catalog topics use direct passage lookup, with semantic search as a fallback. Generated questions pass schema and citation checks before being saved or displayed.
+
+```mermaid
+flowchart TD
+    inputNode(["Course, topic, difficulty, count"]) --> enrolled{"Enrolled course?"}
+    enrolled -->|No| reject["Reject request"]
+    enrolled -->|Yes| sources["Retrieve topic passages"]
+    sources --> found{"Passages available?"}
+    found -->|No| insufficient["Return no questions and explain missing evidence"]
+    found -->|Yes| generate["Generate JSON through shared model interface"]
+    generate --> validate{"Count, uniqueness, options, answer and citations valid?"}
+    validate -->|Yes| persist["Save practice history in PostgreSQL"]
+    persist --> display(["Display validated questions"])
+    validate -->|No| retry{"Correction already attempted?"}
+    retry -->|No| correct["Add validation feedback"]
+    correct --> generate
+    retry -->|Yes| errorNode["Return validation error"]
 ```
 
-Open [localhost:5173](http://localhost:5173). Stop servers with `Ctrl+C`. The backend accepts both loopback hostnames on the configured development port.
+## Technology stack
 
-From the repository folder, the same backend command is:
+| Layer | Technologies | Role |
+| --- | --- | --- |
+| Interface | React 19, React Router 7, Vite 6, CSS, Lucide | Responsive workspace and navigation |
+| Chat rendering | React Markdown, remark-gfm | Markdown answers and tables |
+| API | Python 3.13, FastAPI, Uvicorn, Pydantic | Routes, validation, sessions, and error handling |
+| Data | PostgreSQL / Neon, SQLAlchemy, Psycopg | Student records, conversations, practice history |
+| AI orchestration | Async Python, HTTPX | Tool loop, provider adapters, timeout and failover |
+| LLM providers | Anthropic or an OpenAI-compatible primary; NVIDIA NIM fallback | Tool-capable chat and question generation |
+| Retrieval | Sentence Transformers, MiniLM, PyTorch, NumPy, FAISS CPU | Local embeddings and course search |
+| State | Process-local sessions and bounded TTL caches | Session context and reusable tool/retrieval results |
+| Observability | JSON traces, rotating metrics logs | Tool execution, provider usage, latency, and failures |
+| Tooling | uv, pytest, Ruff, Playwright, Prettier | Dependencies, backend checks, browser validation, formatting |
 
-```powershell
-uv run --directory backend uvicorn orbit.main:app --reload --host 127.0.0.1 --port 8000
-```
+## Data and trust boundaries
 
-Use `orbit.main:app` as the entry point. No custom launcher or activation script is needed.
+Orbit preserves all **27,456 supplied source rows**, including raw records, source archives, duplicate rows, and separate invalid-UUID splits. Missing scores remain unavailable instead of becoming zero. Eligibility and its inputs are read fresh. Reusable tool data can be cached; final AI answers are not cached.
 
-## Build and serve together
-
-For static frontend hosting, Render cold starts, environment variables, and the page/API route contract, see [Deployment](docs/DEPLOYMENT.md).
-
-From the repository folder:
-
-```powershell
-cd frontend
-npm.cmd ci
-npm.cmd run build
-cd ../backend
-uv run uvicorn orbit.main:app --host 127.0.0.1 --port 8000
-```
-
-Stop any existing backend first. Open [127.0.0.1:8000](http://127.0.0.1:8000). FastAPI serves the built frontend and API together. API docs are at [/docs](http://127.0.0.1:8000/docs); startup status is at [/api/health](http://127.0.0.1:8000/api/health).
-
-## Checks
-
-From `backend/`:
-
-```powershell
-uv run pytest -q
-uv run ruff check orbit tests scripts
-uv run ruff format --check orbit tests scripts
-```
-
-Additional checks:
-
-```powershell
-uv run python scripts/verify_dataset.py
-uv run python scripts/evaluate.py --interval 60
-```
-
-The dataset rehearsal uses a temporary database. Live evaluation needs the running backend and configured model, consumes provider quota, and saves results in `backend/data/`. Review answer quality alongside automated results.
-
-To add a dependency, use `uv add package-name`; for a development dependency, use `uv add --dev package-name`. Commit both `pyproject.toml` and `uv.lock` after dependency changes.
-
-## Troubleshooting
-
-| Symptom | Action |
-|---|---|
-| Missing dependencies or a deleted `.venv` | Run `uv sync`, then use `uv run`. |
-| Import error | Run the documented command from `backend/`, or use `--directory backend` from the repository folder. |
-| Port 8000 is occupied | Stop the earlier backend with `Ctrl+C` before starting another. |
-| Database unavailable | Check `.env` and run the importer for a new database. |
-| Missing course index | Run `uv run python -m orbit.rag`. |
-| Model rate limit | Wait for quota to recover; request one course at a time. |
-| Root URL returns 404 on port 8000 | Build the frontend and restart the backend, or use port 5173. |
-
-## Project notes
-
-The student picker is a demo selector, not authentication. Assessment rules and course materials are explicitly demo-authored. Sessions and caches require one backend process. All **27,456 source rows** are preserved.
-
-- [Architecture, dataset assumptions, and seeded-user rationale](docs/ARCHITECTURE.md)
-- [Validation results and remaining AI acceptance work](VALIDATION.md)
-- [Project requirements](ORBIT_PROJECT_INSTRUCTIONS.md)
-
-
-### NVIDIA failover
-
-Add `NVIDIA_API_KEY` to `backend/.env` (or your hosting environment) and restart
-the backend. Existing `LLM_*` settings remain the primary provider. The default
-fallback is `nvidia/nemotron-3-nano-30b-a3b`, with thinking disabled for lower
-latency. Set `NVIDIA_MODEL=nvidia/nemotron-3-super-120b-a12b` to use Super instead.
-The endpoint defaults to `https://integrate.api.nvidia.com/v1`.
-
-With NVIDIA configured, a failed primary request switches immediately, including
-quota/rate limits, rejected credentials, HTTP errors, timeouts, and malformed or
-empty responses. The primary is skipped for `LLM_FALLBACK_COOLDOWN_SECONDS=300`,
-then retried automatically. Each provider call has a total
-`LLM_TIMEOUT_SECONDS=30` budget. Without NVIDIA, existing bounded rate-limit
-retries remain. NVIDIA can also run alone when the primary is unconfigured.
-Tool schemas and conversation/tool-result history are preserved during failover;
-metrics identify NVIDIA separately. Cooldown state is per backend process.
-If both providers fail, the existing safe unavailable response is returned;
-failover cannot guarantee availability when both services have exhausted quotas.
+The student picker is a demo selector. Learning materials and assessment rules are labeled demo assumptions. Sessions and caches are process-local; conversations and practice history persist in PostgreSQL. The current design uses one backend worker and instance.

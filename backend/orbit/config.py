@@ -21,8 +21,15 @@ class Settings(BaseSettings):
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
     llm_timeout_seconds: float = Field(default=30, gt=0, le=45)
     llm_fallback_cooldown_seconds: float = Field(default=300, ge=0)
-    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
-    rag_threshold: float = 0.35
+    hf_token: str = ""
+    hf_embedding_url: str = ""
+    embedding_model: str = "BAAI/bge-small-en-v1.5"
+    embedding_dimensions: int = Field(default=384, gt=0)
+    embedding_query_prefix: str = (
+        "Represent this sentence for searching relevant passages: "
+    )
+    embedding_timeout_seconds: float = Field(default=20, gt=0, le=30)
+    rag_threshold: float = Field(default=0.6, ge=0, le=1)
     cookie_secure: bool = False
     cookie_samesite: Literal["lax", "strict", "none"] = "lax"
     allowed_origin: str = "http://localhost:5173"

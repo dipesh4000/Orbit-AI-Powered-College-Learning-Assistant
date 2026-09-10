@@ -1,12 +1,18 @@
+import os
+
 import pytest
-from orbit.config import ROOT
+from orbit.config import ROOT, settings
 from orbit.rag import Retriever
 
 
 @pytest.fixture(scope="module")
 def retriever():
+    if os.getenv("ORBIT_LIVE_EMBEDDINGS") != "1" or not settings.hf_token:
+        pytest.skip(
+            "Set ORBIT_LIVE_EMBEDDINGS=1 and HF_TOKEN for paid live retrieval checks."
+        )
     if not (ROOT / "data/rag/index.faiss").exists():
-        pytest.skip("Build the local course index to run real embedding checks.")
+        pytest.skip("Build the Hugging Face course index to run live embedding checks.")
     return Retriever()
 
 
