@@ -1,8 +1,10 @@
 import asyncio
 import csv
+import errno
 import gzip
 import json
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 from fastapi import HTTPException
@@ -577,6 +579,52 @@ def test_greeting_persists_and_history_is_student_scoped(client, monkeypatch, tm
     client.post("/api/session", json={"user_id": B})
     assert client.get("/api/conversations").json() == []
     assert client.post(f"/api/conversations/{saved_id}/open").status_code == 404
+
+
+@pytest.mark.parametrize("failure", ["mkdir", "open"])
+def test_read_only_trace_directory_cannot_break_chat(
+    client, monkeypatch, tmp_path, failure
+):
+    from orbit import orchestrator
+
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setattr(orchestrator, "ROOT", tmp_path)
+    original = getattr(Path, failure)
+
+    def read_only(path, *args, **kwargs):
+        if path in (tmp_path / "logs", tmp_path / "logs/turns.jsonl"):
+            raise OSError(errno.EROFS, "Read-only file system")
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, failure, read_only)
+    assert client.post("/api/login", json={"user_id": A}).status_code == 200
+    response = client.post("/api/chat", json={"message": "Hi"})
+    assert response.status_code == 200
+    assert "Hi!" in response.json()["answer"]
+    assert len(client.get("/api/session").json()["history"]) == 2
+
+
+def test_trace_failure_preserves_provider_error(client, monkeypatch, tmp_path):
+    from unittest.mock import AsyncMock
+
+    from orbit import main, orchestrator
+    from orbit.llm import ModelUnavailable
+
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setattr(orchestrator, "ROOT", tmp_path)
+    # A file occupying the directory path reliably reproduces an unwritable log.
+    (tmp_path / "logs").write_text("not a directory")
+    monkeypatch.setattr(
+        main.model,
+        "complete",
+        AsyncMock(side_effect=ModelUnavailable("Model service unavailable.")),
+    )
+    client.post("/api/login", json={"user_id": A})
+    response = client.post(
+        "/api/chat", json={"message": "Which assessments can I take?"}
+    )
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Model service unavailable."
 
 
 def test_subject_marks_deduplicate_tags_and_exclude_pending(engine):

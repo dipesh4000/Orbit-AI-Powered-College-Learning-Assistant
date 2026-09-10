@@ -1,4 +1,6 @@
 import json
+import logging
+import os
 import re
 from time import perf_counter
 
@@ -50,10 +52,18 @@ def encode_tool_result(result):
 
 
 def write_trace(trace):
-    folder = ROOT / "logs"
-    folder.mkdir(exist_ok=True)
-    with (folder / "turns.jsonl").open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(trace, ensure_ascii=False) + "\n")
+    # Vercel's application directory is read-only. Metadata is already emitted
+    # by telemetry; keep full student/tool traces confined to local development.
+    if os.environ.get("VERCEL") == "1":
+        return
+    try:
+        folder = ROOT / "logs"
+        folder.mkdir(exist_ok=True)
+        with (folder / "turns.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(trace, ensure_ascii=False) + "\n")
+    except OSError:
+        # Logging must neither discard an answer nor mask a provider exception.
+        logging.getLogger(__name__).warning("Chat trace could not be saved.")
 
 
 async def chat(question, session, registry, model):

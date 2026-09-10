@@ -13,6 +13,16 @@ def test_backend_assets_and_project_env_have_distinct_roots():
     assert Settings.model_config["env_file"] == ROOT.parent / ".env"
 
 
+def test_runtime_environment_works_without_dotenv(monkeypatch, tmp_path):
+    monkeypatch.setenv("DATABASE_URL", "postgresql://runtime-db/example")
+    monkeypatch.setenv("LLM_API_KEY", "test-runtime-key")
+    monkeypatch.setenv("LLM_MODEL", "test-runtime-model")
+    settings = Settings(_env_file=tmp_path / "missing.env")
+    assert settings.database_url == "postgresql://runtime-db/example"
+    assert settings.llm_api_key == "test-runtime-key"
+    assert settings.llm_model == "test-runtime-model"
+
+
 def test_application_entrypoint_health():
     from orbit.main import app
 

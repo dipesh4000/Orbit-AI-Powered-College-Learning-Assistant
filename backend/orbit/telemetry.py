@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 from collections import defaultdict
 from contextvars import ContextVar
 from datetime import UTC, datetime
@@ -47,14 +48,17 @@ def record(event, name, duration_ms, *, error=False, **fields):
         row["buckets"][bucket] += 1
         try:
             if not _logger.handlers:
-                folder = ROOT / "logs"
-                folder.mkdir(exist_ok=True)
-                handler = RotatingFileHandler(
-                    folder / "metrics.jsonl",
-                    maxBytes=5_000_000,
-                    backupCount=3,
-                    encoding="utf-8",
-                )
+                if os.environ.get("VERCEL") == "1":
+                    handler = logging.StreamHandler()
+                else:
+                    folder = ROOT / "logs"
+                    folder.mkdir(exist_ok=True)
+                    handler = RotatingFileHandler(
+                        folder / "metrics.jsonl",
+                        maxBytes=5_000_000,
+                        backupCount=3,
+                        encoding="utf-8",
+                    )
                 handler.setFormatter(logging.Formatter("%(message)s"))
                 _logger.addHandler(handler)
             _logger.info(

@@ -217,3 +217,10 @@ from `backend/` and deploy the updated assets.
 Sessions persist in PostgreSQL across backend workers and serverless restarts.
 The `web_sessions` table is created automatically on first use; the database role needs
 table-creation privileges. Keep `.env` at the project root and runtime assets under `backend/data/`.
+
+On Vercel, configure backend variables in the project's Environment Variables settings
+for the target deployment environment, then redeploy. These runtime values are read
+directly and take precedence over the local root `.env`; no `.env` file needs to be
+uploaded. Vercel's application directory is read-only, so metadata logs go to the
+runtime log stream and full local chat trace files are disabled there. A local trace
+write failure also cannot interrupt chat or replace the original provider error.
