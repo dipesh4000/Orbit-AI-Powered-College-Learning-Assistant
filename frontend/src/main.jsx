@@ -402,7 +402,7 @@ function App() {
           <X size={18} />
         </button>
         <div className="brand">
-          <span className="brand-icon">✳</span> orbit
+          <span className="brand-icon">◌</span> orbit
           <span className="tiny">STUDENT</span>
         </div>
         <button className="new-chat" onClick={newChat} disabled={busy}>
@@ -542,7 +542,7 @@ function App() {
                   key={i}
                   className={"message " + m.role + (m.isError ? " failed" : "")}
                 >
-                  <small>{m.role === "user" ? "YOU" : "✳ ORBIT"}</small>
+                  <small>{m.role === "user" ? "YOU" : "◌ ORBIT"}</small>
                   <div className="message-body">
                     {m.role === "assistant" ? (
                       <ReactMarkdown

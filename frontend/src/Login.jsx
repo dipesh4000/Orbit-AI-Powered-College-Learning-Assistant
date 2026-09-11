@@ -25,7 +25,7 @@ export default function Login({
     <div className="login">
       <section className="login-story" aria-labelledby="story-title">
         <a className="brand" href="/login" aria-label="Orbit home">
-          <span className="brand-icon">✳</span> orbit{" "}
+          <span className="brand-icon">◌</span> orbit{" "}
           <span className="brand-tag">YOUR LEARNING SPACE</span>
         </a>
         <div className="story-copy">
@@ -50,7 +50,7 @@ export default function Login({
           <div className="orbit-ring ring-three">
             <i />
           </div>
-          <div className="orbit-core">✳</div>
+          <div className="orbit-core">◌</div>
           <span className="orbit-label label-learn">
             <BookOpen size={16} /> Understand
           </span>
