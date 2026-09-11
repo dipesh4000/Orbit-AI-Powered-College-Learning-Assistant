@@ -61,6 +61,8 @@
   flex: 1;
   min-height: 120px;
   max-height: 350px;
+  display: grid;
+  place-items: center;
 }
 .orbit-ring {
   position: absolute;
@@ -108,7 +110,7 @@
   height: 82px;
   border-radius: 24px;
   background: #284c3e;
-  color: #edf2df;
+  /* color: #161810; */
   font-size: 60px;
   display: grid;
   place-items: center;

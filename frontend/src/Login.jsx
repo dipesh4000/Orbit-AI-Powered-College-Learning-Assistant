@@ -50,7 +50,7 @@ export default function Login({
           <div className="orbit-ring ring-three">
             <i />
           </div>
-          <div className="orbit-core">◌</div>
+          <div className="orbit-core"></div>
           <span className="orbit-label label-learn">
             <BookOpen size={16} /> Understand
           </span>
