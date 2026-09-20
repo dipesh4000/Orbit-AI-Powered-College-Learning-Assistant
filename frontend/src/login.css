@@ -10,9 +10,9 @@
   flex-direction: column;
   padding: clamp(24px, 4dvh, 56px);
   background:
-    radial-gradient(ellipse at 65% 60%, #e5ede2 0, transparent 55%), #f4f5ef;
+    radial-gradient(ellipse at 65% 60%, #e8e8e8 0, transparent 55%), #f0f0f0;
   overflow: hidden;
-  color: #233f36;
+  color: #000000;
 }
 .login-story .brand {
   color: inherit;
@@ -21,14 +21,14 @@
   font-size: 30px;
 }
 .login-story .brand-icon {
-  color: #355e4f;
+  color: #000000;
   font-size: 38px;
 }
 .brand-tag {
   font-size: 9px;
   letter-spacing: 1.6px;
   margin-left: 12px;
-  color: #627568;
+  color: #666666;
 }
 .story-copy {
   margin-top: clamp(20px, 4dvh, 60px);
@@ -36,7 +36,7 @@
   z-index: 1;
 }
 .story-copy .eyebrow {
-  color: #66796a;
+  color: #555555;
   font-weight: 600;
 }
 .story-copy h1 {
@@ -46,12 +46,12 @@
   margin: 20px 0;
 }
 .story-copy h1 span {
-  color: #75866a;
+  color: #444444;
 }
 .story-copy p {
   max-width: 430px;
   font-size: 16px;
-  color: #63716a;
+  color: #555555;
 }
 .orbit-art {
   position: relative;
@@ -66,7 +66,7 @@
 }
 .orbit-ring {
   position: absolute;
-  border: 1px solid #78927e40;
+  border: 1px solid #88888840;
   border-radius: 50%;
   top: 50%;
   left: 50%;
@@ -93,11 +93,11 @@
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: #8caa8e;
-  box-shadow: 0 0 0 5px #8caa8e15;
+  background: #888888;
+  box-shadow: 0 0 0 5px #88888815;
 }
 .ring-two i {
-  background: #b79c66;
+  background: #aaaaaa;
   width: 12px;
   height: 12px;
 }
@@ -109,12 +109,12 @@
   width: 82px;
   height: 82px;
   border-radius: 24px;
-  background: #284c3e;
+  background: #1a1a1a;
   /* color: #161810; */
   font-size: 60px;
   display: grid;
   place-items: center;
-  box-shadow: 0 12px 40px #284c3e25;
+  box-shadow: 0 12px 40px #00000025;
 }
 .orbit-label {
   position: absolute;
@@ -126,7 +126,7 @@
   border: 1px solid #fff;
   border-radius: 12px;
   background: #fffffff0;
-  box-shadow: 0 5px 20px #284c3e08;
+  box-shadow: 0 5px 20px #00000008;
 }
 .label-learn {
   top: 15%;
@@ -149,7 +149,7 @@
   gap: 8px;
   margin: auto 0 0;
   padding-top: 20px;
-  color: #687b6a;
+  color: #666666;
   font-size: 12px;
 }
 .login-form-panel {
@@ -174,7 +174,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: #728174;
+  color: #666666;
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 1.4px;
@@ -193,11 +193,11 @@
   align-items: flex-start;
   gap: 11px;
   padding: 16px;
-  background: #f6f7f4;
-  border: 1px solid #e7ebe3;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
   border-radius: 12px;
   margin-bottom: 28px;
-  color: #536449;
+  color: #444444;
 }
 .server-status > svg {
   flex-shrink: 0;
@@ -212,7 +212,7 @@
   font-size: 11px;
   line-height: 1.6;
   margin-top: 4px;
-  color: #687260;
+  color: #666666;
 }
 .server-status.unavailable {
   background: #fff9f0;
@@ -220,7 +220,7 @@
 }
 .login-card label {
   font-size: 13px;
-  color: #354338;
+  color: #222222;
   font-weight: 600;
 }
 .login-card select {
@@ -232,22 +232,22 @@
 }
 .profile-description {
   font-size: 12px;
-  color: #777e76;
+  color: #777777;
   min-height: 40px;
   margin: 10px 0 16px;
 }
 .login-submit {
   width: 100%;
   min-height: 52px;
-  background: #294d3e;
-  border-color: #294d3e;
+  background: #111111;
+  border-color: #111111;
   border-radius: 10px;
   font-size: 14px;
   justify-content: space-between;
   padding: 14px 18px;
 }
 .login-submit:hover {
-  background: #1e3b2f;
+  background: #333333;
 }
 .login-submit:disabled {
   opacity: 0.5;
@@ -259,17 +259,17 @@
 .login-disclosure {
   font-size: 11px;
   text-align: center;
-  color: #68726a;
+  color: #666666;
   margin: 22px 0 8px;
 }
 .login-card .fine {
   text-align: center;
   margin: 0;
-  color: #7a807b;
+  color: #777777;
 }
 .login-bottom {
   font-size: 11px;
-  color: #8b918b;
+  color: #888888;
   text-align: center;
   margin: 16px 0 0;
 }
