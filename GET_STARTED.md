@@ -5,7 +5,7 @@ Installation, configuration, local development, and validation. See [README](REA
 ## Prerequisites and dataset placement
 
 Install Git, Node.js 22 LTS with npm, and [uv](https://docs.astral.sh/uv/getting-started/installation/).
-You need PostgreSQL (such as Neon), the supplied CSVs, and a tool-capable LLM API key.
+The personal workspace needs PostgreSQL (such as Neon). Demo CSVs and an LLM API key are only needed for the optional legacy demo.
 Commands start in the repository folder containing `backend/` and `frontend/`.
 On Windows use `npm.cmd` if PowerShell blocks `npm.ps1`. On macOS/Linux use `npm`.
 
@@ -44,12 +44,12 @@ That's the environment setup. `pyproject.toml` declares dependencies, `uv.lock` 
 From `backend/`:
 
 ```powershell
-if (!(Test-Path .env)) { Copy-Item .env.example .env }
+if (!(Test-Path ../.env)) { Copy-Item .env.example ../.env }
 ```
 
-On macOS/Linux, use `test -f .env || cp .env.example .env` instead.
+On macOS/Linux, use `test -f ../.env || cp .env.example ../.env` instead.
 
-Edit `.env` with your settings. Existing credentials are preserved.
+Edit `Orbit/.env` (the repository root) with your settings. Existing credentials are preserved.
 
 | Setting | Value |
 |---|---|
@@ -60,7 +60,17 @@ Edit `.env` with your settings. Existing credentials are preserved.
 | `LLM_MODEL` | An exact tool-capable model ID |
 | `DATASET_DIR` | `../..` for this workspace, relative to `backend/` |
 
-For a new database or missing course index:
+For personal accounts, apply the versioned personal workspace migrations first:
+
+```powershell
+uv run python -m orbit.migrate
+```
+
+Start the backend and frontend, then create an account at `/login`. See
+[implementation phases](docs/IMPLEMENTATION_PHASES.md) for delivered features.
+The demo picker is disabled by default. To enable the legacy demo, set
+`DEMO_ENABLED=true`; its dataset/index setup is separate:
+
 
 ```powershell
 uv run python -m orbit.ingest --verify-only

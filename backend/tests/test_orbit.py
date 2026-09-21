@@ -86,7 +86,10 @@ def engine():
 
 
 @pytest.fixture
-def client(engine):
+def client(engine, monkeypatch):
+    from orbit.config import settings
+
+    monkeypatch.setattr(settings, "demo_enabled", True)
     cache.entries.clear()
     app.dependency_overrides[services] = lambda: Services(engine)
     app.dependency_overrides[session_engine] = lambda: engine

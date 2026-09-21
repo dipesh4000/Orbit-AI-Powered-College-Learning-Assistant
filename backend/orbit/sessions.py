@@ -68,12 +68,12 @@ def query(token):
 
 def load(engine, token):
     if not token:
-        raise HTTPException(401, "Choose a student to begin.")
+        raise HTTPException(401, "Sign in to continue.")
     prepare(engine)
     with engine.connect() as conn:
         data = conn.execute(query(token)).scalar_one_or_none()
     if data is None:
-        raise HTTPException(401, "Choose a student to begin.")
+        raise HTTPException(401, "Sign in to continue.")
     data["lock"] = SessionLock(engine, token, data)
     return data
 
@@ -99,7 +99,7 @@ class SessionLock:
                 query(self.token).with_for_update(nowait=True)
             ).scalar_one_or_none()
             if fresh is None:
-                raise HTTPException(401, "Choose a student to begin.")
+                raise HTTPException(401, "Sign in to continue.")
             self.data.clear()
             self.data.update(fresh)
             self.data["lock"] = self

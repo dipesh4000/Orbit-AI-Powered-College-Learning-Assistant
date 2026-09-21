@@ -32,7 +32,8 @@ async function mockApi(page, { signedIn = false, history = [] } = {}) {
     const path = new URL(route.request().url()).pathname;
     let body = {};
     let status = 200;
-    if (path === "/api/health") body = { status: "ok", model_configured: true };
+    if (path === "/api/health")
+      body = { status: "ok", model_configured: true, demo: true };
     else if (path === "/api/students") body = [student];
     else if (path === "/api/login") {
       session = true;
@@ -65,6 +66,7 @@ test("deep link survives login, navigation, reload, and logout", async ({
   await mockApi(page);
   await page.goto("/dashboard");
   await expect(page).toHaveURL(/\/login$/);
+  await page.getByRole("button", { name: "Explore demo profiles" }).click();
   await page.getByLabel("Student profile").selectOption(student.user_id);
   await page.getByRole("button", { name: "Enter workspace" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
@@ -92,17 +94,19 @@ test("slow health request shows wake-up explanation and recovers", async ({
   });
   await page.route("**/api/health", async (route) => {
     await pending;
-    await route.fulfill({ json: { status: "ok" } });
+    await route.fulfill({ json: { status: "ok", demo: true } });
   });
   await page.goto("/login");
   await expect(page.getByText("Waking up your server…")).toBeVisible({
     timeout: 6000,
   });
   await expect(
-    page.getByRole("button", { name: "Enter workspace" }),
+    page.getByRole("button", { name: "Sign in", exact: true }),
   ).toBeDisabled();
   release();
-  await expect(page.getByText("Your workspace is ready")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Sign in", exact: true }),
+  ).toBeEnabled();
 });
 
 test("failed startup has an actionable retry", async ({ page }) => {
@@ -119,7 +123,9 @@ test("failed startup has an actionable retry", async ({ page }) => {
   );
   await page.unroute("**/api/health", fail);
   await page.getByRole("button", { name: "Try connecting again" }).click();
-  await expect(page.getByText("Your workspace is ready")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Sign in", exact: true }),
+  ).toBeEnabled();
 });
 
 test("expired session returns to profile selection", async ({ page }) => {
@@ -166,6 +172,7 @@ test("login rejection keeps the form usable", async ({ page }) => {
     }),
   );
   await page.goto("/login");
+  await page.getByRole("button", { name: "Explore demo profiles" }).click();
   await page.getByLabel("Student profile").selectOption(student.user_id);
   await page.getByRole("button", { name: "Enter workspace" }).click();
   await expect(page.getByRole("alert")).toContainText(
@@ -186,7 +193,9 @@ for (const width of [360, 768, 1440]) {
     page.on("pageerror", (error) => errors.push(error.message));
     await mockApi(page);
     await page.goto("/login");
-    await expect(page.getByText("Your workspace is ready")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Sign in", exact: true }),
+    ).toBeEnabled();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -196,6 +205,7 @@ for (const width of [360, 768, 1440]) {
       path: `test-results/login-${width}.png`,
       fullPage: true,
     });
+    await page.getByRole("button", { name: "Explore demo profiles" }).click();
     await page.getByLabel("Student profile").selectOption(student.user_id);
     await page.getByRole("button", { name: "Enter workspace" }).click();
     for (const path of ["/dashboard", "/practice", "/chat"]) {
@@ -277,7 +287,10 @@ for (const [width, height] of [
     await page.setViewportSize({ width, height });
     await mockApi(page);
     await page.goto("/login");
-    await expect(page.getByText("Your workspace is ready")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Sign in", exact: true }),
+    ).toBeEnabled();
+    await page.getByRole("button", { name: "Explore demo profiles" }).click();
     await page.getByLabel("Student profile").selectOption(student.user_id);
     const size = await page.evaluate(() => ({
       width: document.documentElement.scrollWidth,

@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.concurrency import run_in_threadpool
 
-from . import conversations, sessions, telemetry
+from . import auth, conversations, sessions, telemetry
 from . import database as db
 from .config import ROOT, settings
 from .embeddings import EmbeddingUnavailable
@@ -21,12 +21,13 @@ from .rag import Retriever, index_ready
 from .services import Services
 from .tools import ToolRegistry
 
-app = FastAPI(title="Orbit", version="0.1.0")
+app = FastAPI(title="Orbit", version="0.2.0")
+app.include_router(auth.router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["Content-Type"],
 )
 retriever, model = Retriever(), Model()
@@ -36,7 +37,7 @@ retriever, model = Retriever(), Model()
 async def origin_guard(request, call_next):
     origin = request.headers.get("origin")
     if (
-        request.method in ("POST", "DELETE")
+        request.method in ("POST", "PUT", "DELETE")
         and origin
         and origin not in {*settings.allowed_origins, str(request.base_url).rstrip("/")}
     ):
@@ -79,7 +80,7 @@ async def model_error(request, exc):
 @app.exception_handler(SQLAlchemyError)
 async def database_error(request, exc):
     return JSONResponse(
-        {"detail": "Database unavailable. Check DATABASE_URL and run the importer."},
+        {"detail": "Database unavailable. Check DATABASE_URL and apply the workspace migrations."},
         status_code=503,
     )
 
@@ -111,8 +112,17 @@ def session_engine(request: Request):
     return db.get_engine() if request.cookies.get("orbit_session") else None
 
 
+def require_demo():
+    if not settings.demo_enabled:
+        raise HTTPException(404, "Demo mode is disabled.")
+
+
 def current_session(request: Request, engine=Depends(session_engine)):
-    return sessions.load(engine, request.cookies.get("orbit_session"))
+    require_demo()
+    state = sessions.load(engine, request.cookies.get("orbit_session"))
+    if state.get("kind") == "personal":
+        raise HTTPException(403, "This endpoint is for demo accounts only.")
+    return state
 
 
 class Login(BaseModel):
@@ -136,19 +146,25 @@ def health():
         ),
         "embedding_configured": bool(settings.hf_token),
         "index_ready": index_ready(),
-        "demo": True,
+        "demo": settings.demo_enabled,
     }
 
 
 @app.get("/api/students")
-def list_students(service=Depends(services)):
+def list_students(_=Depends(require_demo), service=Depends(services)):
     with service.engine.connect() as conn:
         return [dict(r) for r in conn.execute(select(db.students)).mappings()]
 
 
 @app.post("/api/login")
 @app.post("/api/session", include_in_schema=False)
-def login(body: Login, request: Request, response: Response, service=Depends(services)):
+def login(
+    body: Login,
+    request: Request,
+    response: Response,
+    _=Depends(require_demo),
+    service=Depends(services),
+):
     with service.engine.connect() as conn:
         student = (
             conn.execute(
@@ -174,7 +190,17 @@ def login(body: Login, request: Request, response: Response, service=Depends(ser
 
 
 @app.get("/api/session")
-def session_info(session=Depends(current_session)):
+def session_info(request: Request, engine=Depends(session_engine)):
+    session = sessions.load(engine, request.cookies.get("orbit_session"))
+    if session.get("kind") == "personal":
+        owner = auth.current_owner(request, engine)
+        return {
+            "kind": "personal",
+            "owner_id": owner["id"],
+            "name": owner["name"],
+            "email": owner["email"],
+        }
+    require_demo()
     return {
         **{k: session[k] for k in ["user_id", "label", "rationale"]},
         "history": session.get("transcript", session["history"]),

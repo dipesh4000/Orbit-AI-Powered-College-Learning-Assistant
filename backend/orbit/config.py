@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     embedding_timeout_seconds: float = Field(default=20, gt=0, le=30)
     rag_threshold: float = Field(default=0.6, ge=0, le=1)
     cookie_secure: bool = False
+    demo_enabled: bool = False
     cookie_samesite: Literal["lax", "strict", "none"] = "lax"
     allowed_origin: str = "http://localhost:5173"
 

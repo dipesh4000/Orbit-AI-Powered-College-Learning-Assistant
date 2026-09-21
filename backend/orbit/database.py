@@ -3,8 +3,13 @@ from functools import lru_cache
 from sqlalchemy import (
     JSON,
     Boolean,
+    CheckConstraint,
     Column,
+    Date,
     Float,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Index,
     Integer,
     LargeBinary,
     MetaData,
@@ -18,6 +23,86 @@ from sqlalchemy import (
 from .config import settings
 
 metadata = MetaData()
+owners = Table(
+    "workspace_owners",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("email", String(254), nullable=False, unique=True),
+    Column("name", String(100), nullable=False),
+    Column("password_hash", Text, nullable=False),
+)
+subjects = Table(
+    "personal_subjects",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column("name", String(100), nullable=False),
+    Column("code", String(40), nullable=False),
+    Column("semester", String(40), nullable=False),
+    UniqueConstraint("owner_id", "code", "semester"),
+    Index("uq_personal_subject_owner", "id", "owner_id", unique=True),
+)
+personal_assessments = Table(
+    "personal_assessments",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column("subject_id", Integer, nullable=False),
+    Column("title", String(200), nullable=False),
+    Column("score", Float, nullable=False),
+    Column("max_score", Float, nullable=False),
+    Column("assessed_on", Date, nullable=False),
+    Column("kind", String(20), nullable=False),
+    Column("weak_topics", JSON, nullable=False),
+    ForeignKeyConstraint(
+        ["subject_id", "owner_id"],
+        ["personal_subjects.id", "personal_subjects.owner_id"],
+        ondelete="CASCADE",
+    ),
+    CheckConstraint(
+        "max_score > 0 AND score >= 0 AND score <= max_score",
+        name="valid_personal_score",
+    ),
+    CheckConstraint(
+        "kind IN ('quiz', 'midterm', 'final', 'assignment', 'lab')",
+        name="valid_personal_kind",
+    ),
+)
+hackathon_events = Table(
+    "personal_hackathon_events",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column("name", String(200), nullable=False),
+    Column("event_date", Date, nullable=False),
+    Column("role", String(120), nullable=False),
+    Column("project", String(200), nullable=False),
+    Column("summary", Text, nullable=False),
+    Column("technologies", JSON, nullable=False),
+    Column("repo_url", String(500), nullable=False),
+    Column("submission_url", String(500), nullable=False),
+    Column("result", String(200), nullable=False),
+    Column("reflection", Text, nullable=False),
+)
+
 source_archives = Table(
     "source_file_archives",
     metadata,

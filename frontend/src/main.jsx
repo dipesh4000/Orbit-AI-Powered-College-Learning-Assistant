@@ -30,7 +30,8 @@ import {
   useNavigate,
   NavLink,
 } from "react-router-dom";
-import Login from "./Login";
+import Login from "./AccountLogin";
+import PersonalWorkspace from "./PersonalWorkspace";
 import { api, post, wakeServer } from "./api";
 
 const pct = (value) =>
@@ -135,7 +136,9 @@ function App() {
     (async () => {
       try {
         const status = await wakeServer(signal);
-        const profiles = await api("/students", { signal, timeout: 20000 });
+        const profiles = status.demo
+          ? await api("/students", { signal, timeout: 20000 })
+          : [];
         let session = null;
         try {
           session = await api("/session", { signal, timeout: 15000 });
@@ -148,7 +151,7 @@ function App() {
         setStudent(session);
         setMessages(session?.history || []);
         setConversationId(session?.conversation_id || null);
-        if (!profiles.length)
+        if (status.demo && !profiles.length)
           setError(
             "No demo profiles are available yet. Please contact the workspace owner.",
           );
@@ -185,7 +188,7 @@ function App() {
       setConversationId(null);
       setDashboard(null);
       setCourses([]);
-      setError("Your session has ended. Choose your profile to continue.");
+      setError("Your session has ended. Sign in to continue.");
       navigate("/login", { replace: true });
     };
     window.addEventListener("orbit:session-expired", expire);
@@ -193,7 +196,7 @@ function App() {
   }, [navigate]);
   useEffect(() => {
     let active = true;
-    if (student) {
+    if (student && student.kind !== "personal") {
       setDataError("");
       Promise.all([api("/dashboard"), api("/courses"), api("/conversations")])
         .then(([d, c, saved]) => {
@@ -373,6 +376,20 @@ function App() {
         error={error}
         onRetry={initialize}
         onSelect={selectStudent}
+        onAuthenticated={(owner) => {
+          setStudent(owner);
+          setError("");
+          navigate("/dashboard", { replace: true });
+        }}
+      />
+    );
+  if (student.kind === "personal")
+    return (
+      <PersonalWorkspace
+        key={student.owner_id}
+        owner={student}
+        onLogout={logout}
+        error={error}
       />
     );
   return (

@@ -92,7 +92,7 @@ def test_cross_site_cookie_requires_https():
 def test_login_route_and_session_alias():
     from orbit.main import app
 
-    routes = {route.path for route in app.routes}
+    routes = {route.path for route in app.routes if hasattr(route, "path")}
     assert {
         "/api/login",
         "/api/session",

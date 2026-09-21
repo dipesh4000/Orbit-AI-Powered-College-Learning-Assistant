@@ -13,6 +13,8 @@ dependencies = [
     "httpx>=0.28,<1",
     "faiss-cpu>=1.10,<2",
     "numpy>=1.26,<3",
+    "argon2-cffi>=23.1,<26",
+    "alembic>=1.14,<2",
 ]
 
 [dependency-groups]

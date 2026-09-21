@@ -79,7 +79,7 @@ async def chat(question, session, registry, model):
     sources = {}
     history = session["history"]
     messages = (
-        [{"role": "system", "content": SYSTEM}]
+        [{"role": "system", "content": getattr(registry, "system_prompt", SYSTEM)}]
         + history[-20:]
         + [{"role": "user", "content": question}]
     )
@@ -87,7 +87,9 @@ async def chat(question, session, registry, model):
         ids = re.findall(
             r"\b[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}\b", question
         )
-        if any(i.lower() != session["user_id"].lower() for i in ids):
+        if session.get("kind") != "personal" and any(
+            i.lower() != session["user_id"].lower() for i in ids
+        ):
             trace["final_answer"] = (
                 "I can only access the currently selected student’s records. Use the student picker to change the demo session."
             )
@@ -97,12 +99,17 @@ async def chat(question, session, registry, model):
             re.IGNORECASE,
         ):
             trace["final_answer"] = (
-                "Hi! I'm Orbit, your learning assistant. I can help you review your progress, "
+                "Hi! I can help you review your saved subjects, marks, and hackathon records. What would you like to look at?"
+                if session.get("kind") == "personal"
+                else "Hi! I'm Orbit, your learning assistant. I can help you review your progress, "
                 "understand a course topic, or create a practice quiz. What would you like to work on?"
             )
         else:
             for _ in range(6):
-                answer = await model.complete(messages, schemas())
+                answer = await model.complete(
+                    messages,
+                    registry.schemas() if hasattr(registry, "schemas") else schemas(),
+                )
                 calls = answer.get("tool_calls", [])
                 if not calls:
                     trace["final_answer"] = (
@@ -120,7 +127,11 @@ async def chat(question, session, registry, model):
                         if not isinstance(args, dict):
                             raise TypeError("Tool arguments must be an object.")
                         result, hit = await registry.execute(
-                            name, args, session["user_id"]
+                            name,
+                            args,
+                            session["owner_id"]
+                            if session.get("kind") == "personal"
+                            else session["user_id"],
                         )
                     except (ValueError, KeyError, TypeError):
                         args, result, hit = (

@@ -150,7 +150,9 @@ def test_new_materials_use_api_too(hosted_index, monkeypatch):
     assert json.loads((folder / "chunks.json").read_text())["chunks"] == chunks
 
 
-def test_embedding_error_has_safe_api_response():
+def test_embedding_error_has_safe_api_response(monkeypatch):
+    from orbit.config import settings
+    monkeypatch.setattr(settings, "demo_enabled", True)
     from fastapi.testclient import TestClient
     from orbit.main import app, services
 

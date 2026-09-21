@@ -22,10 +22,20 @@ export async function api(path, options = {}) {
       const error = new Error(
         typeof data?.detail === "string"
           ? data.detail
-          : "Orbit is temporarily unavailable. Please try again.",
+          : data?.detail?.errors
+            ? `${data.detail.message} ${data.detail.errors.map((e) => `Row ${e.row}: ${e.message}`).join("; ")}`
+            : Array.isArray(data?.detail)
+              ? data.detail
+                  .map((e) => `${e.loc.slice(1).join(".")}: ${e.msg}`)
+                  .join("; ")
+              : "Orbit is temporarily unavailable. Please try again.",
       );
       error.status = response.status;
-      if (response.status === 401 && path !== "/session")
+      if (
+        response.status === 401 &&
+        path !== "/session" &&
+        !path.startsWith("/auth/")
+      )
         window.dispatchEvent(new Event("orbit:session-expired"));
       throw error;
     }
