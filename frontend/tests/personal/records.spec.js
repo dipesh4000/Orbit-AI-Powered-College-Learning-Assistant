@@ -13,6 +13,7 @@ test("marks, atomic CSV imports, projects and record deletion", async ({
   await page
     .getByRole("button", { name: "Create account", exact: true })
     .click();
+  await page.getByRole("button", { name: "Academics", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Welcome, Dipesh" }),
   ).toBeVisible();
@@ -66,6 +67,7 @@ test("marks, atomic CSV imports, projects and record deletion", async ({
     });
   await expect(page.getByRole("cell", { name: /^Second quiz/ })).toBeVisible();
   await page.reload();
+  await page.getByRole("button", { name: "Academics", exact: true }).click();
   await expect(page.getByText("+20 pp · same type and scale")).toBeVisible();
   await page.screenshot({
     path: "test-results/phase1-academics.png",

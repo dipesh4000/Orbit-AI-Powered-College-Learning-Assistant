@@ -3,8 +3,8 @@ from datetime import date
 
 import pytest
 from fastapi.testclient import TestClient
-from orbit import demo, insights, papers, personal
 from orbit import database as db
+from orbit import demo, insights, papers, personal
 from orbit.main import app
 from orbit.personal_tools import PersonalRegistry
 from sqlalchemy import select

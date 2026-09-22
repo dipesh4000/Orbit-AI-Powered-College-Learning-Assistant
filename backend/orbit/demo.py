@@ -7,8 +7,8 @@ import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from sqlalchemy import select
 from fastapi import HTTPException
+from sqlalchemy import select
 
 from . import accounts, coding, insights, papers, personal
 from . import database as db
@@ -225,6 +225,11 @@ async def reply(message, owner_id, engine):
                 )
                 or "No current suggestions are available. Add confirmed paper questions and refresh suggestions."
             )
+    elif any(term in lower for term in ("practice", "practise")):
+        rows = await read("get_practice_history", {"subject_id": sid})
+        completed = [r for r in rows if r["answered_at"] is not None]
+        answer = "\n".join(f"- {r['topic']}: {r['correct']}/{len(r['questions'])} in practice [{r['evidence_id']}]" for r in completed[:8]) or "No completed practice attempts yet. Open Practice to begin."
+        answer += "\n\nPractice feedback is separate from formal marks."
     elif any(term in lower for term in ("compare", "change", "improv", "trend")):
         pairs = await read("compare_assessments", {"subject_id": sid})
         answer = (

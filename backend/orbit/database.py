@@ -24,6 +24,31 @@ from sqlalchemy import (
 from .config import settings
 
 metadata = MetaData()
+personal_practice = Table(
+    "personal_practice",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column("subject_id", Integer, nullable=False),
+    Column("topic", String(120), nullable=False),
+    Column("difficulty", String(20), nullable=False),
+    Column("questions", JSON, nullable=False),
+    Column("sources", JSON, nullable=False),
+    Column("answers", JSON),
+    Column("correct", Integer),
+    Column("created_at", Float, nullable=False),
+    Column("answered_at", Float),
+    ForeignKeyConstraint(
+        ["subject_id", "owner_id"],
+        ["personal_subjects.id", "personal_subjects.owner_id"],
+    ),
+)
 suggestions = Table(
     "personal_suggestions",
     metadata,

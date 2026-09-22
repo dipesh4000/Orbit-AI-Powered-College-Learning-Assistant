@@ -329,7 +329,7 @@ async def practice(
 
 
 DIST = ROOT.parent / "frontend/dist"
-if DIST.exists():
+if (DIST / "assets").is_dir():
     app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
 
     @app.get("/")

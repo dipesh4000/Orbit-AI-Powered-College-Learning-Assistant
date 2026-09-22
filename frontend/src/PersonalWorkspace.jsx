@@ -12,13 +12,13 @@ import {
   ArrowUpRight,
   Sparkles,
 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import Assistant from "./PersonalChat";
+import PracticeWorkspace from "./PracticeWorkspace";
 import { api, post } from "./api";
 import "./personal.css";
 import CodingWorkspace from "./CodingWorkspace";
 import PaperWorkspace from "./PaperWorkspace";
 import Suggestions from "./Suggestions";
-import EvidenceList from "./Evidence";
 
 const subjectFields = [
   ["name", "Subject name"],
@@ -318,87 +318,6 @@ function Editor({ type, initial, subjects, onSave, onCancel, busy }) {
   );
 }
 
-function Assistant({demoMode}) {
-  const [messages, setMessages] = useState([]),
-    [input, setInput] = useState(""),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
-  useEffect(() => {
-    const c = new AbortController();
-    api("/personal/chat", { signal: c.signal })
-      .then((r) => setMessages(r.history))
-      .catch((e) => {
-        if (!c.signal.aborted) setError(e.message);
-      });
-    return () => c.abort();
-  }, []);
-  async function send(e) {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    try {
-      const result = await post("/personal/chat", { message: input });
-      setMessages((m) => [
-        ...m,
-        { role: "user", content: input },
-        { role: "assistant", content: result.answer, sources: result.sources, demo: result.demo },
-      ]);
-      setInput("");
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <><section className="workspace-card assistant-panel">
-      <div className="section-heading">
-        <div>
-          <span className="eyebrow">GROUNDED IN YOUR RECORDS</span>
-          <h2>Ask Orbit</h2>
-        </div>
-        <Sparkles size={22} />
-      </div>
-      <p>
-        Bring your marks, coding activity, projects, and confirmed papers into the same conversation. Open a supporting record to check the answer.
-      </p>
-      {demoMode && <span className="offline-badge">LOCAL DEMO · RULE-BASED RESPONSES · NO MODEL CONNECTION</span>}
-      {!messages.length && (
-        <div className="assistant-prompts">{["Show my DBMS marks", "SQL test Friday, two hours", "Compare my DBMS results", "Show paper topics"].map(p=><button key={p} onClick={()=>setInput(p)}>{p}</button>)}</div>
-      )}
-      <div className="personal-messages" aria-live="polite">
-        {messages.map((m, i) => (
-          <article key={i} className={m.role}>
-            <strong>{m.role === "user" ? "You" : "Orbit"}</strong>
-            <ReactMarkdown>{m.content}</ReactMarkdown>
-            <EvidenceList sources={m.sources}/>
-          </article>
-        ))}
-      </div>
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
-      <form onSubmit={send} className="ask-form">
-        <label>
-          Message
-          <input
-            value={input}
-            maxLength={2000}
-            required
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="What should I review from my latest marks?"
-          />
-        </label>
-        <button className="primary" disabled={busy || !input.trim()}>
-          {busy ? "Reading records…" : "Ask Orbit"}
-        </button>
-      </form>
-    </section><Suggestions/></>
-  );
-}
-
 function DeleteDialog({ item, busy, onCancel, onConfirm }) {
   const dialog = useRef(null);
   useEffect(() => {
@@ -440,7 +359,7 @@ export default function PersonalWorkspace({
   demoMode,
 }) {
   const [data, setData] = useState(null),
-    [tab, setTab] = useState("Academics"),
+    [tab, setTab] = useState("Assistant"),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [loading, setLoading] = useState(true),
@@ -450,7 +369,7 @@ export default function PersonalWorkspace({
     [deleting, setDeleting] = useState(null),
     [filter, setFilter] = useState("");
   const [subjectVersion, setSubjectVersion] = useState(0);
-  const [semester,setSemester] = useState(demoMode ? "4" : "");
+  const [semester, setSemester] = useState(demoMode ? "4" : "");
   const fileRef = useRef(null);
   const subjects = data?.subjects || [],
     marks = data?.assessments || [],
@@ -554,17 +473,24 @@ export default function PersonalWorkspace({
     );
   }
   const tabs = [
+    ["Assistant", MessageSquare],
     ["Academics", BookOpen],
     ["Projects", FolderGit2],
-    ["Assistant", MessageSquare],
+    ["Actions", Sparkles],
+    ["Practice", BookOpen],
     ["Coding", Code2],
     ["Papers", BookOpen],
   ];
   const shownMarks = marks.filter(
-    (m) => (!filter || String(m.subject_id) === filter) && (!semester || subjects.find(s=>s.id===m.subject_id)?.semester===semester),
+    (m) =>
+      (!filter || String(m.subject_id) === filter) &&
+      (!semester ||
+        subjects.find((s) => s.id === m.subject_id)?.semester === semester),
   );
   return (
-    <div className="personal-shell">
+    <div
+      className={`personal-shell ${tab === "Assistant" ? "chat-shell" : ""}`}
+    >
       <aside className="personal-sidebar">
         <a className="brand" href="/dashboard">
           <span className="orbit-symbol">◌</span> orbit
@@ -603,7 +529,14 @@ export default function PersonalWorkspace({
         </button>
       </aside>
       <main className="personal-workspace">
-        {demoMode && <div className="demo-banner"><strong>Demo workspace · resets when the server stops</strong>42 reference results from the supplied PDF; dates are declaration dates. Quizzes, coding, projects, and papers are labeled illustrative examples. <a href="/">View landing page</a></div>}
+        {demoMode && (
+          <div className="demo-banner">
+            <strong>Demo workspace · resets when the server stops</strong>42
+            reference results from the supplied PDF; dates are declaration
+            dates. Quizzes, coding, projects, and papers are labeled
+            illustrative examples. <a href="/">View landing page</a>
+          </div>
+        )}
         <header className="workspace-topbar">
           <span>
             <LayoutDashboard size={16} />
@@ -611,20 +544,22 @@ export default function PersonalWorkspace({
           </span>
           <span className="private-label">Private account</span>
         </header>
-        <div className="workspace-intro">
-          <div>
-            <p className="eyebrow">YOUR LEARNING, IN ONE PLACE</p>
-            <h1>Welcome, {owner.name}</h1>
-            <p>A little clarity for your next step.</p>
+        {tab !== "Assistant" && (
+          <div className="workspace-intro">
+            <div>
+              <p className="eyebrow">YOUR LEARNING, IN ONE PLACE</p>
+              <h1>Welcome, {owner.name}</h1>
+              <p>A little clarity for your next step.</p>
+            </div>
+            <span className="intro-date">
+              {new Date().toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </span>
           </div>
-          <span className="intro-date">
-            {new Date().toLocaleDateString(undefined, {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </span>
-        </div>
+        )}
         {(error || outerError) && (
           <div role="alert" className="error">
             <span>{error || outerError}</span>
@@ -644,41 +579,62 @@ export default function PersonalWorkspace({
           </p>
         )}
         {loading && <p role="status">Loading records…</p>}
-        <div className="summary-grid">
-          {[
-            ["subjects", "Subjects", "Academics", BookOpen],
-            ["assessments", "Recorded marks", "Academics", LayoutDashboard],
-            ["hackathons", "Hackathons", "Projects", FolderGit2],
-          ].map(([key, label, target, Icon]) => (
-            <button
-              className="summary-card"
-              key={key}
-              onClick={() => {
-                changeTab(target);
-                if (key === "assessments")
-                  setTimeout(
-                    () =>
-                      document
-                        .getElementById("marks-panel")
-                        ?.scrollIntoView({ behavior: "smooth" }),
-                    0,
-                  );
-              }}
-            >
-              <div>
-                <span>{label}</span>
-                <Icon size={20} />
-              </div>
-              <strong>{data ? data.counts[key] : "—"}</strong>
-              <small>
-                View your records <ArrowUpRight size={14} />
-              </small>
-            </button>
-          ))}
-        </div>
+        {tab !== "Assistant" && (
+          <div className="summary-grid">
+            {[
+              ["subjects", "Subjects", "Academics", BookOpen],
+              ["assessments", "Recorded marks", "Academics", LayoutDashboard],
+              ["hackathons", "Hackathons", "Projects", FolderGit2],
+            ].map(([key, label, target, Icon]) => (
+              <button
+                className="summary-card"
+                key={key}
+                onClick={() => {
+                  changeTab(target);
+                  if (key === "assessments")
+                    setTimeout(
+                      () =>
+                        document
+                          .getElementById("marks-panel")
+                          ?.scrollIntoView({ behavior: "smooth" }),
+                      0,
+                    );
+                }}
+              >
+                <div>
+                  <span>{label}</span>
+                  <Icon size={20} />
+                </div>
+                <strong>{data ? data.counts[key] : "—"}</strong>
+                <small>
+                  View your records <ArrowUpRight size={14} />
+                </small>
+              </button>
+            ))}
+          </div>
+        )}
         {data && tab === "Academics" && (
           <>
-            <label className="semester-control">View semester<select aria-label="View semester" value={semester} onChange={e=>{setSemester(e.target.value);setFilter("");}}><option value="">All semesters</option>{[...new Set(subjects.map(s=>s.semester))].sort().map(s=><option key={s} value={s}>Semester {s}</option>)}</select></label>
+            <label className="semester-control">
+              View semester
+              <select
+                aria-label="View semester"
+                value={semester}
+                onChange={(e) => {
+                  setSemester(e.target.value);
+                  setFilter("");
+                }}
+              >
+                <option value="">All semesters</option>
+                {[...new Set(subjects.map((s) => s.semester))]
+                  .sort()
+                  .map((s) => (
+                    <option key={s} value={s}>
+                      Semester {s}
+                    </option>
+                  ))}
+              </select>
+            </label>
             <section className="workspace-card">
               <div className="section-heading">
                 <div>
@@ -692,50 +648,52 @@ export default function PersonalWorkspace({
               </div>
               {subjects.length ? (
                 <ul className="subject-list">
-                  {subjects.filter(s=>!semester || s.semester===semester).map((s) => (
-                    <li key={s.id}>
-                      <div className="subject-symbol">
-                        <BookOpen size={20} />
-                      </div>
-                      <div className="subject-detail">
-                        <strong>{s.name}</strong>
-                        <small>
-                          {s.code} · {s.semester}
-                        </small>
-                        <span className="subtle">
-                          {s.latest
-                            ? `${s.latest.title} · ${s.latest.assessed_on}`
-                            : "No marks recorded yet"}
-                        </span>
-                      </div>
-                      <div className="subject-score">
-                        {s.latest ? (
-                          <>
-                            <button
-                              className="score-link"
-                              onClick={() => {
-                                setFilter(String(s.id));
-                                document
-                                  .getElementById("marks-panel")
-                                  ?.scrollIntoView({ behavior: "smooth" });
-                              }}
-                            >
-                              {s.latest.score}
-                              <span> / {s.latest.max_score}</span>
-                            </button>
-                            <small>
-                              {s.change == null
-                                ? "No comparable earlier result"
-                                : `${s.change > 0 ? "+" : ""}${s.change} pp · same type and scale`}
-                            </small>
-                          </>
-                        ) : (
-                          <span className="subtle">Not available</span>
-                        )}
-                      </div>
-                      {actions("subjects", s, `subject ${s.name}`)}
-                    </li>
-                  ))}
+                  {subjects
+                    .filter((s) => !semester || s.semester === semester)
+                    .map((s) => (
+                      <li key={s.id}>
+                        <div className="subject-symbol">
+                          <BookOpen size={20} />
+                        </div>
+                        <div className="subject-detail">
+                          <strong>{s.name}</strong>
+                          <small>
+                            {s.code} · {s.semester}
+                          </small>
+                          <span className="subtle">
+                            {s.latest
+                              ? `${s.latest.title} · ${s.latest.assessed_on}`
+                              : "No marks recorded yet"}
+                          </span>
+                        </div>
+                        <div className="subject-score">
+                          {s.latest ? (
+                            <>
+                              <button
+                                className="score-link"
+                                onClick={() => {
+                                  setFilter(String(s.id));
+                                  document
+                                    .getElementById("marks-panel")
+                                    ?.scrollIntoView({ behavior: "smooth" });
+                                }}
+                              >
+                                {s.latest.score}
+                                <span> / {s.latest.max_score}</span>
+                              </button>
+                              <small>
+                                {s.change == null
+                                  ? "No comparable earlier result"
+                                  : `${s.change > 0 ? "+" : ""}${s.change} pp · same type and scale`}
+                              </small>
+                            </>
+                          ) : (
+                            <span className="subtle">Not available</span>
+                          )}
+                        </div>
+                        {actions("subjects", s, `subject ${s.name}`)}
+                      </li>
+                    ))}
                 </ul>
               ) : (
                 <div className="empty-state">
@@ -972,7 +930,13 @@ export default function PersonalWorkspace({
             )}
           </section>
         )}
-        {tab === "Assistant" && <Assistant demoMode={demoMode} />}
+        <div hidden={tab !== "Assistant"} className="chat-view">
+          <Assistant demoMode={demoMode} name={owner.name} />
+        </div>
+        {tab === "Actions" && <Suggestions />}
+        {tab === "Practice" && (
+          <PracticeWorkspace subjects={subjects} demoMode={demoMode} />
+        )}
         {tab === "Coding" && <CodingWorkspace />}
         {tab === "Papers" && <PaperWorkspace subjects={subjects} />}
         <footer className="workspace-footer">

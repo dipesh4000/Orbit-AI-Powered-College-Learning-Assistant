@@ -8,10 +8,10 @@ product. This file tracks delivery.
 | 0 | Accounts, login, ownership, demo isolation | Implemented and locally verified |
 | 1 | Subjects, dated marks, CSV, hackathon records, personal tools | Implemented and locally verified |
 | 2 | Coding snapshots, source status, manual fallback | Implemented and locally verified |
-| 3 | Paper ingestion, review, private retrieval | Next |
-| 4 | Tools across all records and evidence-backed suggestions | Pending |
-| 5 | Saved practice attempts and feedback | Pending |
-| 6 | Failure recovery, deletion, reconciliation, demo checks | Pending |
+| 3 | Paper ingestion, review, private retrieval | Implemented; local regression checks pass |
+| 4 | Tools across all records and evidence-backed suggestions | Implemented; local regression checks pass |
+| 5 | Saved practice attempts and feedback | Implemented and locally verified |
+| 6 | Failure recovery, deletion, reconciliation, demo checks | Local hardening implemented; production verification pending |
 
 ## Setup and migrations
 
@@ -137,7 +137,7 @@ never seeded into a new Orbit account.
 | POST /api/coding/manual | Save validated self-reported totals |
 | DELETE /api/coding/manual | Remove manual history |
 
-## Validation
+## Earlier phase 0–2 validation
 
 Validation: 174 backend tests passed, 5 skipped; all 22 browser tests passed.
 Browser checks include existing account/record flows and new coding flows at
@@ -169,5 +169,62 @@ Chromium or set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to a compatible executable
 ## Phase 3 implementation difference
 
 The current code uses hosted `BAAI/bge-small-en-v1.5` with a query prefix, not
-local MiniLM as assumed in the supplied documents. Choose the model and
-re-indexing strategy explicitly; equal dimensions do not make models compatible.
+local MiniLM as assumed in the supplied documents. Personal papers retain that hosted model, store its full signature, and expose an
+explicit re-index action; incompatible signatures are excluded from semantic
+search. Keyword retrieval remains available without embeddings. Equal dimensions
+do not make models compatible.
+
+
+## Phases 5–6 and chat restoration (September 22, 2026)
+
+Chat is the default personal workspace view. It has a full-height conversation,
+a bottom multiline composer (Enter sends; Shift+Enter inserts a newline), visible
+pending replies, Markdown tables/code, and expandable supporting records. Drafts
+and in-flight replies survive switching workspace tabs. Failed sends restore the
+draft. Clearing the session conversation requires confirmation and leaves learning
+records intact. Suggestions live in Actions; academics, projects, coding, papers,
+and practice remain available from navigation.
+
+Revision `0006` adds `personal_practice`, with owner/subject foreign keys. Apply
+with `python -m orbit.migrate` before running against an existing database; the
+launcher already does this. No configured remote database was changed.
+
+- Practice generates 1–10 validated questions from up to five matching confirmed
+  personal questions, using keyword retrieval so embeddings are not required.
+  Existing count, uniqueness, option, and citation validation runs with one retry.
+  A configured model provider is required. The local demo does not fabricate quizzes.
+- Sources must establish the answers. If papers only ask questions, the model is
+  instructed to decline. Validation checks structure/citations, not semantic truth;
+  feedback is visibly labeled AI-generated and should be checked against the source.
+- Answer keys and explanations are withheld until submission, including through
+  evidence and assistant tools. Scores are computed by the server. Submission is
+  immutable and idempotent for identical answers; changed answers return 409.
+- Sets, chosen answers, score, topic, difficulty, timestamps, and source snapshots
+  persist across reloads. Changed/unconfirmed/deleted sources block submission of
+  an old unfinished set. Historical completed attempts retain their snapshots after
+  paper deletion; remove the practice set separately to remove those snapshots.
+- `get_practice_history` is identity-bound. Missed answers in the latest completed
+  subject/topic attempt support revision suggestions, explicitly separate from
+  formal marks. A newer completion makes the old practice suggestion stale.
+- Practice deletion is owner-scoped and confirmed in the UI. Subjects with saved
+  practice sets return a useful conflict rather than a database error.
+- A partially built frontend no longer prevents the backend from starting.
+- Local tests cover second-account isolation, persisted attempts, source changes,
+  provider failure, malformed generation, duplicate submission, deleted records,
+  coding refresh recovery, confirmed-paper counts, and demo mark reconciliation.
+
+| Endpoint | Purpose |
+| --- | --- |
+| GET /api/personal/practice | Owned saved sets and completed attempts |
+| POST /api/personal/practice | Generate and save a validated private set |
+| POST /api/personal/practice/{id}/answers | Grade and persist selected answers |
+| DELETE /api/personal/practice/{id} | Delete an owned set/attempt |
+| DELETE /api/personal/chat | Clear the current personal session conversation |
+
+Backend verification: 188 passed, 5 optional tests skipped; Ruff passed.
+Browser verification: 29 passed across personal (9), populated demo (3), and
+legacy workspace (17) suites, including mobile and desktop layouts. The production
+build passed with the existing-size bundle advisory (main bundle about 505 kB).
+Production PostgreSQL/pgvector migration and live provider generation still require
+verification in the deployment environment. Local tests use disposable SQLite and
+synthetic provider fixtures; they do not establish live-provider semantic quality.

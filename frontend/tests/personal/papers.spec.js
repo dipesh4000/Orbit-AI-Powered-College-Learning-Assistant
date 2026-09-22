@@ -15,9 +15,10 @@ for (const width of [390, 1440]) {
     await page.getByLabel("Email").fill(`paper-${width}@example.com`);
     await page.getByLabel("Password",{exact:true}).fill("a secure paper password");
     await page.getByRole("button",{name:"Create account",exact:true}).click();
+    await page.getByRole("button",{name:"Academics",exact:true}).click();
     await page.getByLabel("Subject name").fill("Database systems");
     await page.getByLabel("Subject code").fill("CS301");
-    await page.getByLabel("Semester").fill("3");
+    await page.getByLabel("Semester", { exact: true }).fill("3");
     await page.getByRole("button",{name:"Add subject",exact:true}).click();
     await expect(page.getByRole("listitem")).toContainText("Database systems");
     await page.getByRole("button",{name:"Papers",exact:true}).click();
@@ -37,7 +38,7 @@ for (const width of [390, 1440]) {
     await expect(cards.nth(0).getByText("Confirmed",{exact:true})).toBeVisible();
     await cards.nth(1).getByLabel("Marks",{exact:true}).fill("8");
     await cards.nth(1).getByRole("button",{name:"Confirm question",exact:true}).click();
-    await expect(page.getByText("2026 · 2/2 confirmed · ready")).toBeVisible();
+    await expect(page.getByText("2025 · 2/2 confirmed · ready")).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({path:`test-results/papers-review-${width}.png`,fullPage:true});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);

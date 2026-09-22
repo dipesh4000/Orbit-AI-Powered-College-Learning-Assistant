@@ -13,6 +13,7 @@ for (const width of [390,1440]) {
     await page.screenshot({path:`test-results/demo/landing-${width}.png`,fullPage:true});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.getByRole("button",{name:"Open preloaded demo"}).click();
+    await page.getByRole("button",{name:"Academics",exact:true}).click();
     await expect(page.getByRole("heading",{name:"Welcome, Demo workspace"})).toBeVisible();
     await expect(page.getByText("42 reference results",{exact:false})).toBeVisible();
     await expect(page.locator(".subject-list > li")).toHaveCount(10);
@@ -22,17 +23,19 @@ for (const width of [390,1440]) {
     await page.evaluate(()=>window.scrollTo(0,0));
     await page.screenshot({path:`test-results/demo/academics-${width}.png`,fullPage:true});
     await page.getByRole("button",{name:"Assistant",exact:true}).click();
-    await expect(page.getByText(/RULE-BASED RESPONSES/)).toBeVisible();
-    await page.getByRole("button",{name:"SQL test Friday, two hours",exact:true}).click();
+    await expect(page.getByText(/rule-based replies/)).toBeVisible();
+    await page.request.post("/api/personal/suggestions/refresh");
+    await page.getByLabel("Message",{exact:true}).fill("SQL test Friday, two hours");
     await page.getByRole("button",{name:"Ask Orbit",exact:true}).click();
-    await expect(page.locator(".personal-messages article.assistant")).toContainText("120-minute");
-    await expect(page.locator(".personal-messages article.assistant")).toContainText("8/10");
-    const evidence=page.locator(".personal-messages .evidence-list");
+    await expect(page.locator(".chat-thread article.assistant")).toContainText("120-minute");
+    await expect(page.locator(".chat-thread article.assistant")).toContainText("8/10");
+    const evidence=page.locator(".chat-thread .evidence-list");
     await evidence.locator("summary").click();
     await evidence.getByRole("button").first().click();
     await expect(evidence.locator(".evidence-detail")).toBeVisible();
     await page.evaluate(()=>window.scrollTo(0,0));
     await page.screenshot({path:`test-results/demo/assistant-${width}.png`,fullPage:true});
+    await page.getByRole("button",{name:"Actions",exact:true}).click();
     const suggestions=page.locator(".suggestions-panel");
     if(width===390){
       await suggestions.getByRole("button",{name:"Dismiss",exact:true}).click();
@@ -64,5 +67,5 @@ for (const width of [390,1440]) {
 
 test("launcher demo route signs in directly",async({page})=>{
   await page.goto("/demo");
-  await expect(page.getByRole("heading",{name:"Welcome, Demo workspace"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"What's on your mind, Demo?"})).toBeVisible();
 });

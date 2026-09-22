@@ -27,6 +27,34 @@ if __name__ == "__main__":
         from orbit import coding
 
         coding.fetch_profile = fetch
+    if os.environ.get("ORBIT_TEST_PRACTICE") == "1":
+        import json
+
+        from orbit import auth
+        from orbit.llm import ModelUnavailable
+
+        class PracticeFixture:
+            async def complete(self, messages, tools=None):
+                if tools is not None:
+                    raise ModelUnavailable("No model provider configured. Configure a provider to enable AI responses.")
+                payload = json.loads(messages[1]["content"])
+                return {
+                    "content": json.dumps(
+                        {
+                            "questions": [
+                                {
+                                    "question": "Which keyword does the source use to read rows?",
+                                    "options": ["SELECT", "DROP", "DELETE", "UPDATE"],
+                                    "correct_answer": "SELECT",
+                                    "explanation": "The supplied text explicitly says SELECT reads rows.",
+                                    "source_reference": payload["passages"][0]["id"],
+                                }
+                            ]
+                        }
+                    )
+                }
+
+        auth.personal_model = PracticeFixture()
     (Path(__file__).resolve().parents[1] / "data").mkdir(exist_ok=True)
     with TemporaryDirectory(
         dir=os.environ.get(

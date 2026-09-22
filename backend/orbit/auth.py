@@ -17,7 +17,7 @@ from fastapi import (
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 
-from . import accounts, coding, insights, papers, personal, sessions
+from . import accounts, coding, insights, papers, personal, personal_practice, sessions
 from . import database as db
 from .config import settings
 from .github import RepoInput, preview_repo
@@ -225,7 +225,13 @@ def signed_in(database, owner, request, response):
         max_age=sessions.MAX_AGE,
         path="/",
     )
-    return {**state, "name": owner["name"], "email": owner["email"], "demo_account": getattr(request.app.state, "demo_owner_id", None) == owner["id"]}
+    return {
+        **state,
+        "name": owner["name"],
+        "email": owner["email"],
+        "demo_account": getattr(request.app.state, "demo_owner_id", None)
+        == owner["id"],
+    }
 
 
 @router.post("/auth/demo")
@@ -491,3 +497,43 @@ def manual_coding(
 @router.delete("/coding/manual")
 def remove_manual_coding(owner=Depends(current_owner), database=Depends(engine)):
     return coding.remove(owner["id"], database, "manual")
+
+
+@router.get("/personal/practice")
+def practice_history(owner=Depends(current_owner), database=Depends(engine)):
+    return personal_practice.listing(owner["id"], database)
+
+
+@router.post("/personal/practice", status_code=201)
+async def create_practice(
+    body: personal_practice.Generate,
+    owner=Depends(current_owner),
+    database=Depends(engine),
+):
+    return await personal_practice.generate(owner["id"], database, body, personal_model)
+
+
+@router.post("/personal/practice/{key}/answers")
+def answer_practice(
+    key: int,
+    body: personal_practice.Answers,
+    owner=Depends(current_owner),
+    database=Depends(engine),
+):
+    return personal_practice.submit(owner["id"], database, key, body)
+
+
+@router.delete("/personal/practice/{key}")
+def delete_practice(key: int, owner=Depends(current_owner), database=Depends(engine)):
+    return personal_practice.remove(owner["id"], database, key)
+
+
+@router.delete("/personal/chat")
+async def clear_personal_chat(
+    request: Request, owner=Depends(current_owner), database=Depends(engine)
+):
+    state = sessions.load(database, request.cookies.get("orbit_session"))
+    async with state["lock"]:
+        state["history"] = []
+        state["transcript"] = []
+    return {"ok": True}

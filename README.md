@@ -113,3 +113,16 @@ For an already installed compatible Chromium, set `PLAYWRIGHT_CHROMIUM_EXECUTABL
 The supplied-data demo remains optional behind `DEMO_ENABLED=true` and uses separate routes. Personal accounts cannot access its tools or records. Demo retrieval and practice are not yet personal paper/practice features. Personal papers, reviewed questions, and private retrieval arrive in Phase 3; broader suggestions and saved personal practice follow later.
 
 Password reset, email verification, and deployment-level authentication rate limits remain future hardening work. Use HTTPS and secure cookies for hosted deployments. Tests check migrations and ownership with SQLite; production PostgreSQL verification is separate.
+
+
+### Chat and saved practice
+
+Personal workspaces now open in chat. Use **Actions** for evidence-backed next
+steps and **Practice** to generate a quiz from confirmed paper material, resume a
+saved set, and review persisted feedback. Practice scores stay separate from
+formal marks. Existing databases need migration `0006`; `start.bat` applies it,
+or run `python -m orbit.migrate` from `backend/`.
+
+Quiz generation needs a configured model and source text that establishes the
+answers. Saved records remain usable when a provider is unavailable. See
+[implementation phases](docs/IMPLEMENTATION_PHASES.md) for validation and limits.

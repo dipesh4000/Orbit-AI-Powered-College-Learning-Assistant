@@ -1,0 +1,72 @@
+.practice-workspace > p {
+  font-size: 13px;
+  color: var(--muted);
+}
+.practice-set {
+  margin: 28px 0;
+}
+.practice-set fieldset {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 22px 0;
+  min-width: 0;
+}
+.practice-set legend {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 8px;
+  overflow-wrap: anywhere;
+}
+.personal-shell .practice-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  padding: 10px 0;
+  cursor: pointer;
+}
+.personal-shell .practice-option input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: #456b48;
+}
+.practice-feedback {
+  background: #f1f5ec;
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 13px;
+  margin-top: 15px;
+}
+.practice-history article {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.practice-history article > div {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.practice-history small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+}
+.practice-history button {
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  background: #fff;
+  border-radius: 8px;
+}
+@media (max-width: 600px) {
+  .practice-history article {
+    flex-wrap: wrap;
+  }
+  .practice-history article > div {
+    flex-basis: 100%;
+  }
+}

@@ -162,6 +162,17 @@ def delete_subject(owner_id, engine, key):
     with engine.begin() as conn:
         _owned(owner_id, conn, db.subjects, key, lock=True)
         if conn.scalar(
+            select(db.personal_practice.c.id)
+            .where(
+                db.personal_practice.c.owner_id == owner_id,
+                db.personal_practice.c.subject_id == key,
+            )
+            .limit(1)
+        ):
+            raise HTTPException(
+                409, "Delete this subject's practice sets before deleting the subject."
+            )
+        if conn.scalar(
             select(db.papers.c.id)
             .where(db.papers.c.owner_id == owner_id, db.papers.c.subject_id == key)
             .limit(1)

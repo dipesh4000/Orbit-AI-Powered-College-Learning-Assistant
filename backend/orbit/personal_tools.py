@@ -5,7 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.concurrency import run_in_threadpool
 
-from . import coding, insights, papers, personal
+from . import coding, insights, papers, personal, personal_practice
 from .embeddings import EmbeddingUnavailable
 
 
@@ -18,6 +18,10 @@ class SubjectFilter(Empty):
 
 
 SPECS = {
+    "get_practice_history": (
+        SubjectFilter,
+        "Read saved practice sets and completed attempts by topic. Practice feedback is separate from formal marks; unsubmitted sets are not attempts.",
+    ),
     "get_topic_frequency": (
         SubjectFilter,
         "Count topics only in confirmed personal questions, with source IDs and distinct paper counts. Frequency does not establish weakness or predict exams.",
@@ -72,7 +76,7 @@ Question text tells you what was asked; it does not supply correct answers. Do n
 For a time-bounded plan, distinguish proposed time allocations from facts in the records.
 Read get_suggestions before proposing next actions. Respect accepted and dismissed decisions.
 Use exact evidence citations such as [assessment-12] and [question-8] from tool results.
-Saved personal practice is not available yet. Do not use demo tools.
+Read get_practice_history before recommending revision; prioritize recently missed practice topics as a proposed action, without inferring formal performance. Cite [practice-ID]. Do not use demo tools.
 Be concise. If evidence is missing, state that plainly."""
 
     def __init__(self, engine):
@@ -97,7 +101,11 @@ Be concise. If evidence is missing, state that plainly."""
             raise ValueError("Unknown personal tool")
         params = SPECS[name][0].model_validate(arguments).model_dump()
         try:
-            if name in {"get_topic_frequency", "compare_assessments"}:
+            if name == "get_practice_history":
+                result = await run_in_threadpool(
+                    personal_practice.listing, owner_id, self.engine, **params
+                )
+            elif name in {"get_topic_frequency", "compare_assessments"}:
                 fn = (
                     insights.topic_frequency
                     if name == "get_topic_frequency"
@@ -144,6 +152,7 @@ Be concise. If evidence is missing, state that plainly."""
         refs = []
         if isinstance(result, list):
             kind = {
+                "get_practice_history": "practice",
                 "get_subjects": "subject",
                 "get_assessments": "assessment",
                 "get_hackathons": "hackathon",

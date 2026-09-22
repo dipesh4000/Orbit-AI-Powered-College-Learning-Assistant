@@ -9,7 +9,7 @@ from typing import Literal
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from . import database as db
 from . import personal
@@ -96,6 +96,7 @@ def compare_assessments(owner_id, engine, subject_id=None):
 
 
 TABLES = {
+    "practice": db.personal_practice,
     "assessment": db.personal_assessments,
     "question": db.paper_questions,
     "subject": db.subjects,
@@ -123,7 +124,28 @@ def source(owner_id, conn, kind, key):
         )
     elif kind == "coding":
         row.pop("raw", None)
+    if kind == "practice":
+        row["latest_completed_id"] = conn.scalar(
+            select(db.personal_practice.c.id)
+            .where(
+                db.personal_practice.c.owner_id == owner_id,
+                db.personal_practice.c.subject_id == row["subject_id"],
+                func.lower(db.personal_practice.c.topic) == row["topic"].lower(),
+                db.personal_practice.c.answered_at.is_not(None),
+            )
+            .order_by(
+                db.personal_practice.c.answered_at.desc(),
+                db.personal_practice.c.id.desc(),
+            )
+            .limit(1)
+        )
+    if kind == "practice" and row["answered_at"] is None:
+        row["questions"] = [
+            {k: v for k, v in q.items() if k not in {"correct_answer", "explanation"}}
+            for q in row["questions"]
+        ]
     label = {
+        "practice": f"Practice: {row.get('topic', '')}",
         "assessment": row.get("title"),
         "question": row.get("topic"),
         "subject": row.get("name"),
@@ -198,6 +220,38 @@ def refresh(owner_id, engine):
         candidates.append((f"Revisit {topic['topic']}", text, refs))
         if len(candidates) >= 4:
             break
+    # Only the latest completed attempt for a subject/topic drives follow-up.
+    with engine.connect() as conn:
+        attempts = list(
+            conn.execute(
+                select(db.personal_practice)
+                .where(
+                    db.personal_practice.c.owner_id == owner_id,
+                    db.personal_practice.c.answered_at.is_not(None),
+                )
+                .order_by(
+                    db.personal_practice.c.answered_at.desc(),
+                    db.personal_practice.c.id.desc(),
+                )
+            ).mappings()
+        )
+        seen = set()
+        for attempt in attempts:
+            key = (attempt["subject_id"], attempt["topic"].casefold())
+            if key in seen:
+                continue
+            seen.add(key)
+            if attempt["correct"] == len(attempt["questions"]):
+                continue
+            ref = source(owner_id, conn, "practice", attempt["id"])
+            candidates.insert(
+                0,
+                (
+                    f"Practise {attempt['topic']} again"[:200],
+                    f"Your latest {attempt['topic']} practice attempt scored {attempt['correct']}/{len(attempt['questions'])}. Review its feedback, then try a fresh set. This is practice feedback, not a formal mark or a prediction of exam performance.",
+                    [ref],
+                ),
+            )
     # A self-reported topic may support an action, but the mark alone cannot.
     for mark in marks:
         if mark["subject_id"] in used or not mark["weak_topics"]:
