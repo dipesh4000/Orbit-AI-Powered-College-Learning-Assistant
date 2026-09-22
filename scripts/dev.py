@@ -78,27 +78,31 @@ def stop(process):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sandbox", action="store_true")
+    parser.add_argument("--demo", action="store_true")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--no-browser", action="store_true")
     args = parser.parse_args()
-    check(args.sandbox)
+    disposable = args.sandbox or args.demo
+    check(disposable)
     if args.check:
         print(
             "Dependencies and local configuration look ready. Database connectivity was not checked; no migrations were run."
         )
         return
-    api_port, web_port = (8011, 4176) if args.sandbox else (8000, 5173)
+    api_port, web_port = (8011, 4176) if disposable else (8000, 5173)
     for port in (api_port, web_port):
         if not available(port):
             raise RuntimeError(
                 f"Port {port} is in use. Stop the existing server and retry."
             )
-    if args.sandbox:
+    if disposable:
         print(
             "SANDBOX: disposable SQLite database. Records reset on shutdown; AI credentials disabled.",
             flush=True,
         )
-        backend_command = [sys.executable, "tests/personal_server.py"]
+        backend_command = [sys.executable, "-m", "orbit.demo_server"] if args.demo else [sys.executable, "tests/personal_server.py"]
+        if args.demo:
+            print("DEMO: reference marks and labeled sample records are preloaded. Assistant uses local rules; no API keys needed.", flush=True)
     else:
         print(
             "Applying personal workspace migrations to the configured PostgreSQL database...",
@@ -136,7 +140,7 @@ def main():
     ):
         sandbox_directory = None
         try:
-            if args.sandbox:
+            if disposable:
                 sandbox_directory = Path(
                     tempfile.mkdtemp(prefix="orbit-sandbox-", dir=BACKEND / "data")
                 )
@@ -192,7 +196,7 @@ def main():
                 flush=True,
             )
             if not args.no_browser:
-                webbrowser.open(url)
+                webbrowser.open(url + ("/demo" if args.demo else ""))
             while all(p.poll() is None for p in processes):
                 time.sleep(0.5)
             raise RuntimeError(f"A server exited. Check logs in {logs}.")

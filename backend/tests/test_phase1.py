@@ -224,7 +224,7 @@ def test_migration_preserves_phase0_and_enforces_parent_ownership(tmp_path):
             == "untouched"
         )
         assert conn.scalar(select(db.subjects.c.name)) == "SQL"
-        assert conn.scalar(text("SELECT version_num FROM alembic_version")) == "0003"
+        assert conn.scalar(text("SELECT version_num FROM alembic_version")) == "0005"
     with pytest.raises(IntegrityError), engine.begin() as conn:
         conn.execute(
             db.personal_assessments.insert().values(
@@ -244,6 +244,10 @@ def test_personal_chat_reads_saved_records_and_rejects_identity_arguments(
                 "get_assessments",
                 "get_hackathons",
                 "get_coding_snapshot",
+                "get_topic_frequency",
+                "search_pyq",
+                "compare_assessments",
+                "get_suggestions",
             }
             if messages[-1]["role"] != "tool":
                 return {

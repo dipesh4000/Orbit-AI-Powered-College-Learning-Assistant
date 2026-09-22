@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -23,6 +24,74 @@ from sqlalchemy import (
 from .config import settings
 
 metadata = MetaData()
+suggestions = Table(
+    "personal_suggestions",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column("fingerprint", String(64), nullable=False),
+    Column("title", String(200), nullable=False),
+    Column("text", Text, nullable=False),
+    Column("evidence", JSON, nullable=False),
+    Column("state", String(20), nullable=False),
+    Column("created_at", Float, nullable=False),
+    UniqueConstraint("owner_id", "fingerprint"),
+    CheckConstraint(
+        "state IN ('proposed', 'accepted', 'dismissed')", name="valid_suggestion_state"
+    ),
+)
+papers = Table(
+    "personal_papers",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column("subject_id", Integer, nullable=False),
+    Column("filename", String(200), nullable=False),
+    Column("year", Integer, nullable=False),
+    Column("topics", JSON, nullable=False),
+    Column("source", LargeBinary, nullable=False),
+    Column("status", String(30), nullable=False),
+    Column("error", Text),
+    Column("started_at", Float, nullable=False),
+    Column("lease", String(36), nullable=False),
+    ForeignKeyConstraint(
+        ["subject_id", "owner_id"],
+        ["personal_subjects.id", "personal_subjects.owner_id"],
+    ),
+    UniqueConstraint("id", "owner_id"),
+)
+paper_questions = Table(
+    "personal_questions",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("owner_id", Integer, nullable=False, index=True),
+    Column("paper_id", Integer, nullable=False),
+    Column("page", Integer, nullable=False),
+    Column("content", Text, nullable=False),
+    Column("topic", String(100), nullable=False),
+    Column("marks", Integer),
+    Column("confirmed", Boolean, nullable=False),
+    Column("embedding", Vector(384).with_variant(JSON(), "sqlite")),
+    Column("signature", Text),
+    Column("revision", Integer, nullable=False, default=1),
+    ForeignKeyConstraint(
+        ["paper_id", "owner_id"],
+        ["personal_papers.id", "personal_papers.owner_id"],
+        ondelete="CASCADE",
+    ),
+)
 owners = Table(
     "workspace_owners",
     metadata,

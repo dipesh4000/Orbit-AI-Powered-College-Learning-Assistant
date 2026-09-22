@@ -2,7 +2,7 @@
 setlocal
 cd /d "%~dp0"
 if /i "%~1"=="--help" goto help
-if not "%~1"=="" if /i not "%~1"=="--check" if /i not "%~1"=="--sandbox" if /i not "%~1"=="--test" goto help
+if not "%~1"=="" if /i not "%~1"=="--check" if /i not "%~1"=="--sandbox" if /i not "%~1"=="--demo" if /i not "%~1"=="--test" goto help
 where uv >nul 2>nul
 if errorlevel 1 (
   echo Install uv first: https://docs.astral.sh/uv/getting-started/installation/
@@ -72,6 +72,7 @@ exit /b 1
 :help
 echo start.bat             Install dependencies, migrate configured PostgreSQL, and start Orbit.
 echo start.bat --sandbox   Start with a disposable local database; no .env or API keys needed.
+echo start.bat --demo      Open a preloaded local demo, including reference marks and offline assistant.
 echo start.bat --check     Read-only dependency/configuration check; no servers or migrations.
 echo start.bat --test      Install dependencies and run backend, build, and browser checks.
 exit /b 0

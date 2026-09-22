@@ -147,6 +147,7 @@ def health():
         "embedding_configured": bool(settings.hf_token),
         "index_ready": index_ready(),
         "demo": settings.demo_enabled,
+        "local_demo": getattr(app.state, "demo_owner_id", None) is not None,
     }
 
 
@@ -199,6 +200,7 @@ def session_info(request: Request, engine=Depends(session_engine)):
             "owner_id": owner["id"],
             "name": owner["name"],
             "email": owner["email"],
+            "demo_account": getattr(app.state, "demo_owner_id", None) == owner["id"],
         }
     require_demo()
     return {

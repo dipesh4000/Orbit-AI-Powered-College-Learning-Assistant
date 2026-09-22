@@ -146,6 +146,8 @@ async def chat(question, session, registry, model):
                         {k: v for k, v in args.items() if k != "user_id"}
                     )
                     trace["tool_outputs"].append({"result": result, "cache_hit": hit})
+                    if session.get("kind") == "personal":
+                        sources.update(getattr(registry, "evidence", {}))
                     if name == "search_course_content" and isinstance(result, list):
                         sources.update({s["id"]: s for s in result})
                         if not result:

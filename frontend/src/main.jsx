@@ -32,6 +32,7 @@ import {
 } from "react-router-dom";
 import Login from "./AccountLogin";
 import PersonalWorkspace from "./PersonalWorkspace";
+import Landing from "./Landing";
 import { api, post, wakeServer } from "./api";
 
 const pct = (value) =>
@@ -145,6 +146,9 @@ function App() {
         } catch (error) {
           if (error.status !== 401) throw error;
         }
+        if (!session && status.local_demo && location.pathname === "/demo") {
+          session = await post("/auth/demo", {});
+        }
         if (signal.aborted) return;
         setHealth(status);
         setStudents(profiles);
@@ -169,10 +173,10 @@ function App() {
   }, [attempt]);
   useEffect(() => {
     if (loading) return;
-    if (!student && location.pathname !== "/login") {
+    if (!student && !["/", "/login"].includes(location.pathname)) {
       if (routes[location.pathname]) returnPath.current = location.pathname;
       navigate("/login", { replace: true });
-    } else if (student && !routes[location.pathname]) {
+    } else if (student && location.pathname !== "/" && !routes[location.pathname]) {
       navigate(returnPath.current, { replace: true });
     }
   }, [student, loading, location.pathname, navigate]);
@@ -365,6 +369,12 @@ function App() {
     setOpen(false);
     setTimeout(() => inputRef.current?.focus(), 50);
   };
+  async function enterDemo() {
+    setBusy(true); setError("");
+    try { setStudent(await post("/auth/demo", {})); navigate("/dashboard"); }
+    catch (e) { setError(e.message); } finally { setBusy(false); }
+  }
+  if (location.pathname === "/") return <Landing signedIn={!!student} demo={health?.local_demo} onDemo={enterDemo} busy={busy} error={error} />;
   if (!student)
     return (
       <Login
@@ -376,6 +386,7 @@ function App() {
         error={error}
         onRetry={initialize}
         onSelect={selectStudent}
+        onDemo={health?.local_demo ? enterDemo : null}
         onAuthenticated={(owner) => {
           setStudent(owner);
           setError("");
@@ -390,6 +401,7 @@ function App() {
         owner={student}
         onLogout={logout}
         error={error}
+        demoMode={student.demo_account}
       />
     );
   return (

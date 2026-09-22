@@ -2,6 +2,7 @@ const API_BASE = (import.meta.env.VITE_API_BASE_URL || "/api").replace(
   /\/$/,
   "",
 );
+export const apiUrl = (path) => API_BASE + path;
 
 export async function api(path, options = {}) {
   const { timeout = 120000, signal, ...request } = options;
@@ -15,7 +16,12 @@ export async function api(path, options = {}) {
       credentials: "include",
       ...request,
       signal: controller.signal,
-      headers: { "Content-Type": "application/json", ...request.headers },
+      headers: {
+        ...(request.body instanceof FormData
+          ? {}
+          : { "Content-Type": "application/json" }),
+        ...request.headers,
+      },
     });
     const data = await response.json().catch(() => null);
     if (!response.ok) {

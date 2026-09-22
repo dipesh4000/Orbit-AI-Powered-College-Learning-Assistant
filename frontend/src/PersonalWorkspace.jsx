@@ -16,6 +16,9 @@ import ReactMarkdown from "react-markdown";
 import { api, post } from "./api";
 import "./personal.css";
 import CodingWorkspace from "./CodingWorkspace";
+import PaperWorkspace from "./PaperWorkspace";
+import Suggestions from "./Suggestions";
+import EvidenceList from "./Evidence";
 
 const subjectFields = [
   ["name", "Subject name"],
@@ -315,7 +318,7 @@ function Editor({ type, initial, subjects, onSave, onCancel, busy }) {
   );
 }
 
-function Assistant() {
+function Assistant({demoMode}) {
   const [messages, setMessages] = useState([]),
     [input, setInput] = useState(""),
     [busy, setBusy] = useState(false),
@@ -338,7 +341,7 @@ function Assistant() {
       setMessages((m) => [
         ...m,
         { role: "user", content: input },
-        { role: "assistant", content: result.answer },
+        { role: "assistant", content: result.answer, sources: result.sources, demo: result.demo },
       ]);
       setInput("");
     } catch (e) {
@@ -348,7 +351,7 @@ function Assistant() {
     }
   }
   return (
-    <section className="workspace-card assistant-panel">
+    <><section className="workspace-card assistant-panel">
       <div className="section-heading">
         <div>
           <span className="eyebrow">GROUNDED IN YOUR RECORDS</span>
@@ -357,19 +360,18 @@ function Assistant() {
         <Sparkles size={22} />
       </div>
       <p>
-        Ask about your subjects, marks, or hackathons. Answers use your saved
-        records.
+        Bring your marks, coding activity, projects, and confirmed papers into the same conversation. Open a supporting record to check the answer.
       </p>
+      {demoMode && <span className="offline-badge">LOCAL DEMO · RULE-BASED RESPONSES · NO MODEL CONNECTION</span>}
       {!messages.length && (
-        <div className="empty-state">
-          Try “What did I score in SQL?” after adding a mark.
-        </div>
+        <div className="assistant-prompts">{["Show my DBMS marks", "SQL test Friday, two hours", "Compare my DBMS results", "Show paper topics"].map(p=><button key={p} onClick={()=>setInput(p)}>{p}</button>)}</div>
       )}
       <div className="personal-messages" aria-live="polite">
         {messages.map((m, i) => (
           <article key={i} className={m.role}>
             <strong>{m.role === "user" ? "You" : "Orbit"}</strong>
             <ReactMarkdown>{m.content}</ReactMarkdown>
+            <EvidenceList sources={m.sources}/>
           </article>
         ))}
       </div>
@@ -393,7 +395,7 @@ function Assistant() {
           {busy ? "Reading records…" : "Ask Orbit"}
         </button>
       </form>
-    </section>
+    </section><Suggestions/></>
   );
 }
 
@@ -435,6 +437,7 @@ export default function PersonalWorkspace({
   owner,
   onLogout,
   error: outerError,
+  demoMode,
 }) {
   const [data, setData] = useState(null),
     [tab, setTab] = useState("Academics"),
@@ -447,6 +450,7 @@ export default function PersonalWorkspace({
     [deleting, setDeleting] = useState(null),
     [filter, setFilter] = useState("");
   const [subjectVersion, setSubjectVersion] = useState(0);
+  const [semester,setSemester] = useState(demoMode ? "4" : "");
   const fileRef = useRef(null);
   const subjects = data?.subjects || [],
     marks = data?.assessments || [],
@@ -554,9 +558,10 @@ export default function PersonalWorkspace({
     ["Projects", FolderGit2],
     ["Assistant", MessageSquare],
     ["Coding", Code2],
+    ["Papers", BookOpen],
   ];
   const shownMarks = marks.filter(
-    (m) => !filter || String(m.subject_id) === filter,
+    (m) => (!filter || String(m.subject_id) === filter) && (!semester || subjects.find(s=>s.id===m.subject_id)?.semester===semester),
   );
   return (
     <div className="personal-shell">
@@ -598,6 +603,7 @@ export default function PersonalWorkspace({
         </button>
       </aside>
       <main className="personal-workspace">
+        {demoMode && <div className="demo-banner"><strong>Demo workspace · resets when the server stops</strong>42 reference results from the supplied PDF; dates are declaration dates. Quizzes, coding, projects, and papers are labeled illustrative examples. <a href="/">View landing page</a></div>}
         <header className="workspace-topbar">
           <span>
             <LayoutDashboard size={16} />
@@ -672,6 +678,7 @@ export default function PersonalWorkspace({
         </div>
         {data && tab === "Academics" && (
           <>
+            <label className="semester-control">View semester<select aria-label="View semester" value={semester} onChange={e=>{setSemester(e.target.value);setFilter("");}}><option value="">All semesters</option>{[...new Set(subjects.map(s=>s.semester))].sort().map(s=><option key={s} value={s}>Semester {s}</option>)}</select></label>
             <section className="workspace-card">
               <div className="section-heading">
                 <div>
@@ -685,7 +692,7 @@ export default function PersonalWorkspace({
               </div>
               {subjects.length ? (
                 <ul className="subject-list">
-                  {subjects.map((s) => (
+                  {subjects.filter(s=>!semester || s.semester===semester).map((s) => (
                     <li key={s.id}>
                       <div className="subject-symbol">
                         <BookOpen size={20} />
@@ -965,8 +972,9 @@ export default function PersonalWorkspace({
             )}
           </section>
         )}
-        {tab === "Assistant" && <Assistant />}
+        {tab === "Assistant" && <Assistant demoMode={demoMode} />}
         {tab === "Coding" && <CodingWorkspace />}
+        {tab === "Papers" && <PaperWorkspace subjects={subjects} />}
         <footer className="workspace-footer">
           Your records. Your pace. Your next step.
         </footer>

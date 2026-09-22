@@ -4,7 +4,11 @@ import { post } from "./api";
 import "./personal.css";
 
 export default function AccountLogin(props) {
-  const [mode, setMode] = useState("login");
+  const [mode, setMode] = useState(
+    new URLSearchParams(window.location.search).get("mode") === "register"
+      ? "register"
+      : "login",
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function submit(event) {
@@ -32,7 +36,7 @@ export default function AccountLogin(props) {
   return (
     <main className="account-page">
       <section className="account-card">
-        <a className="brand" href="/login">
+        <a className="brand" href="/">
           ◌ orbit
         </a>
         <p className="eyebrow">YOUR PERSONAL LEARNING SPACE</p>
@@ -41,6 +45,7 @@ export default function AccountLogin(props) {
           Keep your subjects, marks, and practice together in your own
           workspace.
         </p>
+        {props.onDemo && <button className="primary" onClick={props.onDemo} disabled={props.busy}>Open preloaded demo</button>}
         {(error || props.error) && (
           <p className="error" role="alert">
             {error || props.error}

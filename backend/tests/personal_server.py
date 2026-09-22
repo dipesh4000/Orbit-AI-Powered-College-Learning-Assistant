@@ -18,6 +18,7 @@ if __name__ == "__main__":
     settings.demo_enabled = False
     settings.llm_api_key = ""
     settings.nvidia_api_key = ""
+    settings.hf_token = ""
     settings.cookie_secure = False
     settings.cookie_samesite = "lax"
     settings.allowed_origin = "http://127.0.0.1:4176"

@@ -1,0 +1,358 @@
+.paper-hero {
+  background: #edf2e1;
+  border: 1px solid #dbe4ca;
+  border-radius: 15px;
+  padding: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 25px;
+  margin-top: 24px;
+}
+.paper-hero h2 {
+  font-size: 29px;
+  letter-spacing: -1px;
+  color: #304329;
+  margin: 13px 0;
+}
+.paper-hero p:last-child {
+  margin: 0;
+  color: #68745e;
+  font-size: 13px;
+}
+.paper-hero-icon {
+  position: relative;
+  color: #718956;
+  padding: 20px;
+}
+.paper-hero-icon > span {
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 30px;
+}
+.paper-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  margin: 26px 0 18px;
+}
+.paper-toolbar > div:last-child {
+  display: flex;
+  gap: 8px;
+}
+.paper-counts {
+  font-size: 12px;
+  color: #79816f;
+}
+.paper-counts strong {
+  color: #32462a;
+  font-size: 17px;
+  margin-right: 3px;
+}
+.paper-counts > span {
+  margin: 0 10px;
+}
+.paper-workspace label {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.paper-workspace input,
+.paper-workspace select,
+.paper-workspace textarea {
+  width: 100%;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #cbd4c1;
+  border-radius: 7px;
+  padding: 11px;
+  font: inherit;
+  color: #304329;
+}
+.paper-workspace input:focus-visible {
+  outline: 2px solid #5e783d;
+  outline-offset: 2px;
+}
+.paper-workspace fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.paper-workspace label small {
+  font-weight: 400;
+  color: #747e68;
+  line-height: 1.5;
+}
+.paper-workspace h3 {
+  font-size: 18px;
+  color: #304329;
+  font-weight: 500;
+  margin: 0 0 9px;
+}
+.paper-upload > p,
+.paper-search > p {
+  font-size: 12px;
+  color: #74806b;
+}
+.paper-upload-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+.paper-workspace .paper-drop {
+  border: 1px dashed #b5c49e;
+  background: #f7f9f2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 25px 20px;
+  border-radius: 9px;
+  color: #5c7542;
+}
+.paper-drop input {
+  max-width: 350px;
+  background: transparent;
+  border: 0;
+  font-size: 12px;
+}
+.paper-notice {
+  background: #eef4e2;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: #4e633c;
+  font-size: 12px;
+}
+.paper-search form {
+  display: grid;
+  gap: 16px;
+}
+.paper-search form > button {
+  justify-self: start;
+}
+.paper-list-card {
+  display: flex;
+  gap: 18px;
+  padding: 24px;
+  background: white;
+  border: 1px solid #dce3d2;
+  border-radius: 12px;
+  margin: 14px 0;
+  align-items: flex-start;
+}
+.paper-file-icon {
+  padding: 15px;
+  background: #eef3e5;
+  border-radius: 9px;
+  color: #637b49;
+}
+.paper-file-info {
+  flex: 1;
+  min-width: 0;
+}
+.paper-file-info h3 {
+  overflow-wrap: anywhere;
+  font-size: 15px;
+}
+.paper-file-info > p {
+  font-size: 12px;
+  color: #798370;
+  margin: 6px 0 10px;
+}
+.paper-file-info > small {
+  font-size: 11px;
+  color: #7c8671;
+  margin-top: 9px;
+}
+.paper-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: capitalize;
+  background: #f7edd6;
+  color: #806128;
+  font-size: 10px;
+  border-radius: 5px;
+  padding: 5px 8px;
+}
+.paper-status.ready {
+  background: #e5f0d4;
+  color: #4c6a33;
+}
+.paper-list-actions {
+  display: grid;
+  gap: 7px;
+  justify-items: end;
+}
+.paper-workspace .paper-remove {
+  background: transparent;
+  border-color: transparent;
+  font-size: 11px;
+  color: #7d6656;
+}
+.paper-empty {
+  text-align: center;
+  border: 1px dashed #d5ddc9;
+  border-radius: 15px;
+  background: #f9fbf5;
+  padding: 48px 24px;
+}
+.paper-empty-icon {
+  background: #eaf1dc;
+  color: #748f51;
+  border-radius: 17px;
+  padding: 19px;
+  display: inline-flex;
+  margin-bottom: 21px;
+}
+.paper-empty h3 {
+  font-size: 24px;
+  letter-spacing: -0.7px;
+}
+.paper-empty p {
+  font-size: 13px;
+  color: #7a856c;
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+.paper-steps {
+  display: flex;
+  justify-content: center;
+  gap: 36px;
+  margin-top: 38px;
+  font-size: 10px;
+  color: #94a283;
+}
+.paper-steps b {
+  margin-left: 8px;
+  color: #6b7e55;
+  font-weight: 500;
+}
+.paper-review {
+  margin-top: 25px;
+}
+.paper-review-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 25px;
+}
+.paper-review-heading h3 {
+  overflow-wrap: anywhere;
+}
+.paper-review-heading p,
+.paper-review-help {
+  font-size: 12px;
+  color: #738067;
+}
+.question-card {
+  background: white;
+  border: 1px solid #dce4d2;
+  border-radius: 11px;
+  padding: 22px;
+  margin: 18px 0;
+}
+.question-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.question-top > span:last-child {
+  font-size: 10px;
+  color: #7b8571;
+}
+.question-card textarea {
+  min-height: 130px;
+  resize: vertical;
+  line-height: 1.65;
+  font-size: 13px;
+}
+.question-fields {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 15px;
+}
+.question-actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.paper-result {
+  padding: 18px 0;
+  border-top: 1px solid #dce4d2;
+}
+.paper-result small {
+  color: #6d805c;
+  font-size: 11px;
+}
+.paper-result p {
+  white-space: pre-wrap;
+  font-size: 13px;
+}
+.paper-inline-error {
+  max-width: 600px;
+}
+.paper-source-link { display:inline-block; color:#4e683c; font-size:12px; margin:0 0 14px; text-underline-offset:3px; }
+@media (max-width: 700px) {
+  .paper-hero {
+    padding: 23px 20px;
+  }
+  .paper-hero h2 {
+    font-size: 24px;
+  }
+  .paper-hero-icon {
+    display: none;
+  }
+  .paper-toolbar {
+    align-items: start;
+    flex-direction: column;
+  }
+  .paper-toolbar > div:last-child {
+    flex-wrap: wrap;
+  }
+  .paper-list-card {
+    flex-wrap: wrap;
+    padding: 20px 16px;
+    gap: 13px;
+  }
+  .paper-file-info {
+    flex-basis: 65%;
+  }
+  .paper-list-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-items: start;
+  }
+  .paper-upload-grid {
+    grid-template-columns: 1fr;
+  }
+  .question-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+  .question-fields > label:first-child {
+    grid-column: 1/-1;
+  }
+  .question-card {
+    padding: 17px;
+  }
+  .paper-review-heading {
+    flex-wrap: wrap;
+  }
+  .paper-empty {
+    padding: 35px 17px;
+  }
+  .paper-steps {
+    gap: 22px;
+  }
+  .question-actions button {
+    font-size: 12px;
+  }
+}
