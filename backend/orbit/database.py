@@ -103,6 +103,39 @@ hackathon_events = Table(
     Column("reflection", Text, nullable=False),
 )
 
+coding_connections = Table(
+    "coding_connections",
+    metadata,
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column("handle", String(60), nullable=False),
+    Column("attempted_at", Float),
+    Column("error", Text),
+    Column("lease", String(36)),
+)
+coding_snapshots = Table(
+    "coding_snapshots",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column("source", String(20), nullable=False),
+    Column("handle", String(60)),
+    Column("fetched_at", Float, nullable=False),
+    Column("raw", JSON, nullable=False),
+    Column("normalized", JSON, nullable=False),
+    CheckConstraint("source IN ('codolio', 'manual')", name="valid_coding_source"),
+)
+
 source_archives = Table(
     "source_file_archives",
     metadata,
@@ -244,7 +277,7 @@ assessment_attempts = Table(
 def get_engine():
     if not settings.database_url:
         raise RuntimeError(
-            "Configure DATABASE_URL in backend/.env, then run the importer."
+            "Configure DATABASE_URL in Orbit/.env, then run python -m orbit.migrate."
         )
     if not settings.database_url.startswith(("postgresql://", "postgresql+psycopg://")):
         raise RuntimeError(

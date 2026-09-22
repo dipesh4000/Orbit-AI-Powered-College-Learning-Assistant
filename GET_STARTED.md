@@ -1,6 +1,23 @@
 # Get started with Orbit
 
-Installation, configuration, local development, and validation. See [README](README.md) for the project and AI diagrams, or [Deployment](docs/DEPLOYMENT.md) for hosting.
+Installation, configuration, local development, and validation. See [README](README.md) for the current personal workspace and a testing walkthrough, or [Deployment](docs/DEPLOYMENT.md) for hosting.
+
+## Windows quick start
+
+From the repository root, run `start.bat --sandbox` to install locked dependencies
+and try a temporary local workspace at http://localhost:4176. No PostgreSQL or AI
+credentials are needed; records reset on restart and AI credentials are disabled.
+Codolio uses the real public provider unless you run automated browser tests.
+
+For persistent records, configure **Orbit/.env** as described below and run
+`start.bat`. It applies migrations to the configured PostgreSQL database before
+starting the API and frontend at http://localhost:5173. It preserves existing env
+files and does not import demo CSVs. Keep the terminal open; Ctrl+C stops both
+servers. Logs are in `backend/logs/dev-backend.log` and `dev-frontend.log`.
+
+Use `start.bat --check` for a read-only dependency/configuration check or
+`start.bat --test` for the automated suite (including Chromium installation).
+Stop the sandbox before browser tests, which need the same 8011/4176 ports.
 
 ## Prerequisites and dataset placement
 

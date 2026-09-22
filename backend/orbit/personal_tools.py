@@ -5,7 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.concurrency import run_in_threadpool
 
-from . import personal
+from . import coding, personal
 
 
 class Empty(BaseModel):
@@ -17,6 +17,10 @@ class SubjectFilter(Empty):
 
 
 SPECS = {
+    "get_coding_snapshot": (
+        Empty,
+        "Read saved coding snapshots, source timestamps and refresh status. Manual and Codolio totals are separate evidence; never sum them.",
+    ),
     "get_subjects": (
         Empty,
         "List the current owner's subjects. Resolve subject names to IDs using this tool.",
@@ -42,7 +46,9 @@ Report marks as score/max_score with their date and title; percentages are compu
 Do not average marks, compute trends, or combine unrelated measures. One mark is not a trend.
 Weak topics are student-reported. Hackathon participation is not proof of skill.
 Identify supporting records by title and ID. Empty records mean missing evidence, never zero performance.
-Personal paper retrieval, coding data, and practice are not available yet. Do not use demo tools.
+Coding snapshots are dated evidence. State the source and saved time; warn if refresh failed.
+Manual totals are self-reported. Never sum sources or infer skill from activity counts.
+Personal paper retrieval and practice are not available yet. Do not use demo tools.
 Be concise. If evidence is missing, state that plainly."""
 
     def __init__(self, engine):
@@ -70,6 +76,8 @@ Be concise. If evidence is missing, state that plainly."""
                 result = await run_in_threadpool(
                     personal.list_subjects, owner_id, self.engine
                 )
+            elif name == "get_coding_snapshot":
+                result = await run_in_threadpool(coding.packet, owner_id, self.engine)
             else:
                 resource = "assessments" if name == "get_assessments" else "hackathons"
                 result = await run_in_threadpool(

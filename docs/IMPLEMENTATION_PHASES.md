@@ -7,8 +7,8 @@ product. This file tracks delivery.
 | --- | --- | --- |
 | 0 | Accounts, login, ownership, demo isolation | Implemented and locally verified |
 | 1 | Subjects, dated marks, CSV, hackathon records, personal tools | Implemented and locally verified |
-| 2 | Coding snapshots, source status, manual fallback | Next |
-| 3 | Paper ingestion, review, private retrieval | Pending |
+| 2 | Coding snapshots, source status, manual fallback | Implemented and locally verified |
+| 3 | Paper ingestion, review, private retrieval | Next |
 | 4 | Tools across all records and evidence-backed suggestions | Pending |
 | 5 | Saved practice attempts and feedback | Pending |
 | 6 | Failure recovery, deletion, reconciliation, demo checks | Pending |
@@ -24,12 +24,16 @@ uv run python -m orbit.migrate
 uv run uvicorn orbit.main:app --reload
 ```
 
-Start the frontend separately with `npm run dev` from `frontend/`.
+Start the frontend separately with `npm run dev` from `frontend/`, or use
+`start.bat` from the repository root to install dependencies, migrate, and launch
+both servers. `start.bat --sandbox` runs an isolated temporary local workspace
+without touching the configured PostgreSQL database.
 
 The Alembic upgrade adopts existing Phase 0 tables and preserves their records.
 Revision `0001` creates/adopts `workspace_owners` and `personal_subjects`.
 Revision `0002` adds `personal_assessments`, `personal_hackathon_events`, and an
 owner/subject composite foreign key that prevents cross-account mark references.
+Revision `0003` adds owner-bound `coding_connections` and `coding_snapshots`.
 
 `uv run alembic upgrade head` is also supported from `backend/`. The Python
 wrapper additionally serializes PostgreSQL upgrades with an advisory lock.
@@ -94,27 +98,59 @@ production PostgreSQL verification remains pending.
 | POST /api/personal/github-preview | Public repository preview via url field |
 | GET/POST /api/personal/chat | Read history/send message |
 
-## Interface references and Phase 2
+## Phase 2
 
 The supplied [problem-solving dashboard](https://codolio.com/profile/dipesh4000/problemSolving)
-and [development dashboard](https://codolio.com/profile/dipesh4000/devStats) were
-inspected on September 21, 2026. Orbit uses a profile/navigation sidebar,
-separate metric cards, and Academics, Projects, Assistant, and Coding sections.
-The Coding section explicitly has no source connected yet.
+and [development dashboard](https://codolio.com/profile/dipesh4000/devStats) informed
+Orbit's separate coding views, metric cards, activity calendar, and language bar.
+The public endpoint was verified on September 22, 2026; reference account data is
+never seeded into a new Orbit account.
 
-Next: Codolio snapshots, refresh timestamps, manual fallback, problem-solving
-totals, activity heatmaps, and development/language panels. Verify each provider
-field, label its source, preserve snapshots on failure, and keep unrelated
-measures separate. Do not seed reference-page statistics as live data.
+- One connected Codolio handle per owner. An explicit refresh starts a bounded
+  background fetch; the page polls saved state and stays usable throughout.
+- Successful refreshes save private raw JSON and normalized evidence, with an
+  Orbit timestamp. The dashboard and assistant read only database snapshots.
+- Provider failures retain the last successful snapshot and show an error.
+  Source timestamps, a 24-hour age label, and a separate provider-reported
+  GitHub update time make freshness visible. Provider time has no timezone.
+- GitHub contribution totals consistently use `githubProfileDetails.totalContributions`.
+  Calendar dates use UTC and missing days remain unknown. Language shares use
+  reported bytes, not proficiency. No difficulty/topic counts are invented.
+- Manual totals save separate dated snapshots; blanks remain null and known
+  zeros remain zero. History shows the latest 20 snapshots per source; all
+  snapshots stay stored until the owner removes that source's history.
+- Disconnect deletes imported history and invalidates in-flight work. Manual
+  history has a separate confirmed removal path. Backend leases prevent
+  overlapping refreshes and allow retry after 60 seconds if a worker stops.
+- `get_coding_snapshot` is now available to the personal assistant. It is
+  owner-bound and exposes no raw profile payload. This brings one Phase 4 tool
+  forward so coding data works in the existing assistant flow.
+- LeetCode enrichment remains optional and deferred. The Orbit backend/database
+  must still be reachable; provider independence is not browser-only offline mode.
+
+| Endpoint | Purpose |
+| --- | --- |
+| GET /api/coding | Saved snapshots, history, and connection status |
+| POST /api/coding/connection | Connect a public Codolio handle |
+| POST /api/coding/refresh | Start background refresh (202); poll GET /api/coding |
+| DELETE /api/coding/connection | Disconnect and remove imported history |
+| POST /api/coding/manual | Save validated self-reported totals |
+| DELETE /api/coding/manual | Remove manual history |
 
 ## Validation
 
-Validation: 154 backend tests passed, 5 skipped; all 20 browser tests passed.
+Validation: 174 backend tests passed, 5 skipped; all 22 browser tests passed.
+Browser checks include existing account/record flows and new coding flows at
+mobile and desktop widths. Launcher startup, API proxy, snapshot persistence,
+and shutdown were smoke-tested with disposable local data.
 Production build and lint passed. The tests cover
 ownership boundaries, CRUD, grading validation, CSV atomicity, migration of
 existing Phase 0 records, database foreign keys, tool binding, GitHub failures,
 and mobile/desktop flows. External model and GitHub calls use test doubles;
 browser record flows use real local FastAPI endpoints and a disposable database.
+Codolio browser fixtures are synthetic and restricted to the test server. The
+normalizer was also checked against the live provider response. No production
+PostgreSQL migration or external model call was performed.
 
 ```sh
 # backend/

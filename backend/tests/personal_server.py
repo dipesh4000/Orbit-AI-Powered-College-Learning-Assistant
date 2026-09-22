@@ -1,5 +1,6 @@
 """Disposable browser-test server; never connects to the configured database."""
 
+import os
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -20,7 +21,17 @@ if __name__ == "__main__":
     settings.cookie_secure = False
     settings.cookie_samesite = "lax"
     settings.allowed_origin = "http://127.0.0.1:4176"
-    with TemporaryDirectory(dir=Path(__file__).resolve().parents[1] / "data") as folder:
+    if os.environ.get("ORBIT_TEST_CODOLIO") == "1":
+        from codolio_fixture import fetch
+        from orbit import coding
+
+        coding.fetch_profile = fetch
+    (Path(__file__).resolve().parents[1] / "data").mkdir(exist_ok=True)
+    with TemporaryDirectory(
+        dir=os.environ.get(
+            "ORBIT_SANDBOX_DIR", Path(__file__).resolve().parents[1] / "data"
+        )
+    ) as folder:
         engine = create_engine("sqlite:///" + (Path(folder) / "browser.db").as_posix())
         accounts.prepare(engine)
         db.get_engine = lambda: engine

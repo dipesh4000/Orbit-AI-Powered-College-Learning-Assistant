@@ -15,6 +15,7 @@ import {
 import ReactMarkdown from "react-markdown";
 import { api, post } from "./api";
 import "./personal.css";
+import CodingWorkspace from "./CodingWorkspace";
 
 const subjectFields = [
   ["name", "Subject name"],
@@ -574,7 +575,6 @@ export default function PersonalWorkspace({
             >
               <Icon size={19} />
               {name}
-              {name === "Coding" && <small>SOON</small>}
             </button>
           ))}
         </nav>
@@ -966,24 +966,7 @@ export default function PersonalWorkspace({
           </section>
         )}
         {tab === "Assistant" && <Assistant />}
-        {tab === "Coding" && (
-          <section className="workspace-card coding-preview">
-            <Code2 size={32} />
-            <span className="eyebrow">COMING IN PHASE 2</span>
-            <h2>A clearer view of your coding activity</h2>
-            <p>
-              Problem-solving totals, activity heatmaps, language breakdowns,
-              and development stats will live here.
-            </p>
-            <div className="empty-state">
-              <strong>No coding source connected</strong>
-              <p>
-                Profile connections and saved snapshots are the next phase. No
-                coding statistics have been imported yet.
-              </p>
-            </div>
-          </section>
-        )}
+        {tab === "Coding" && <CodingWorkspace />}
         <footer className="workspace-footer">
           Your records. Your pace. Your next step.
         </footer>

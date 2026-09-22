@@ -1,10 +1,17 @@
 """Personal authentication routes, separate from demo-only services."""
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+)
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 
-from . import accounts, personal, sessions
+from . import accounts, coding, personal, sessions
 from . import database as db
 from .config import settings
 from .github import RepoInput, preview_repo
@@ -244,3 +251,43 @@ async def personal_chat(
         return await chat(
             body.message, state, PersonalRegistry(database), personal_model
         )
+
+
+@router.get("/coding")
+def coding_snapshot(owner=Depends(current_owner), database=Depends(engine)):
+    return coding.packet(owner["id"], database)
+
+
+@router.post("/coding/connection", status_code=201)
+def connect_coding(
+    body: coding.ConnectionInput, owner=Depends(current_owner), database=Depends(engine)
+):
+    return coding.connect(owner["id"], database, body)
+
+
+@router.post("/coding/refresh", status_code=202)
+async def refresh_coding(
+    background: BackgroundTasks, owner=Depends(current_owner), database=Depends(engine)
+):
+    from starlette.concurrency import run_in_threadpool
+
+    ticket = await run_in_threadpool(coding.claim, owner["id"], database)
+    background.add_task(coding.refresh, owner["id"], database, ticket)
+    return await run_in_threadpool(coding.packet, owner["id"], database)
+
+
+@router.delete("/coding/connection")
+def disconnect_coding(owner=Depends(current_owner), database=Depends(engine)):
+    return coding.remove(owner["id"], database, "codolio")
+
+
+@router.post("/coding/manual", status_code=201)
+def manual_coding(
+    body: coding.ManualInput, owner=Depends(current_owner), database=Depends(engine)
+):
+    return coding.save_manual(owner["id"], database, body)
+
+
+@router.delete("/coding/manual")
+def remove_manual_coding(owner=Depends(current_owner), database=Depends(engine)):
+    return coding.remove(owner["id"], database, "manual")

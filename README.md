@@ -1,171 +1,115 @@
 # Orbit
 
-### Find your focus. Build your momentum.
+A personal learning workspace for academic marks, hackathon projects, and coding activity. Each account owns its records. The assistant reads those records through backend tools rather than inventing progress.
 
-Orbit is a college learning workspace combining student progress, course-grounded AI chat, assessment eligibility, and practice. It turns supplied learning records into useful next steps while keeping identity, data access, and assessment decisions under backend control.
+**Phases 0–2 are implemented. Next is Phase 3: personal paper ingestion and question review.** See the [phase tracker](docs/IMPLEMENTATION_PHASES.md) for delivered features, limits, and the remaining roadmap.
 
-[Get started](GET_STARTED.md) · [Deployment](docs/DEPLOYMENT.md) · [Data and demo assumptions](docs/ARCHITECTURE.md)
+## Run on Windows
 
-## The learning workspace
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and Node.js 22 or newer with npm. Open a terminal in this folder, which contains `backend/`, `frontend/`, and `start.bat`.
 
-| Experience | What Orbit provides |
+For a quick test without a database account or API keys:
+
+```bat
+start.bat --sandbox
+```
+
+The launcher installs locked dependencies, starts a disposable local SQLite database, and opens **http://localhost:4176**. Create an account, add records, and open Coding. Codolio requests still use the real public provider; no sample statistics are preloaded. AI credentials are disabled in this mode. Sandbox records reset when the server restarts; do not use it for records you want to keep.
+
+For normal development with persistent records:
+
+1. Copy `backend/.env.example` to **`.env` in this folder**, if `.env` does not already exist. Keep your existing credentials.
+2. Set `DATABASE_URL` to your PostgreSQL / Neon connection string. Keep `COOKIE_SECURE=false`, `COOKIE_SAMESITE=lax`, and `ALLOWED_ORIGIN=http://localhost:5173` for local HTTP.
+3. Run:
+
+```bat
+start.bat
+```
+
+Normal startup installs dependencies, applies Alembic migrations **to the database named by `DATABASE_URL`**, then opens **http://localhost:5173**. Use a development database. Existing account, subject, mark, and project records are preserved by the upgrades. The latest revision, `0003`, adds coding connections and snapshots. No demo datasets are imported by the launcher.
+
+Keep the launcher window open. **Ctrl+C stops both servers.** Startup checks occupied ports and reports failures instead of opening an unready app. Logs are written to `backend/logs/dev-backend.log` and `backend/logs/dev-frontend.log` and replaced on the next launch.
+
+| Command | Purpose |
 | --- | --- |
-| Student selection | Demo profiles drawn from supplied student records |
-| Dashboard | Course progress, performance, weak topics, and assessment history |
-| AI chat | Multi-step tool use, course references, and persistent conversations |
-| Eligibility | Deterministic decisions with reasons and unmet requirements |
-| Practice | Course-grounded questions with validated options, answers, and citations |
-| Provider resilience | Primary LLM with automatic NVIDIA fallback and recovery cooldown |
+| `start.bat` | Install, migrate configured PostgreSQL, and run on 5173 / 8000 |
+| `start.bat --sandbox` | Install and run a disposable local workspace on 4176 / 8011 |
+| `start.bat --check` | Check installed dependencies and local configuration; no installs, migrations, or database connection |
+| `start.bat --test` | Install dependencies and Chromium; run backend tests, production build, personal browser tests, and legacy UI tests |
 
-## System architecture
+First startup needs internet access for dependency downloads. Normal development needs access to PostgreSQL. An LLM key is optional for record management and coding dashboards; it is needed for assistant answers. Public Codolio imports need no key.
 
-```mermaid
-flowchart TB
-    student([Student]) --> ui["React workspace"]
-    ui --> api["FastAPI routes and session checks"]
-    api --> services["Student data services"]
-    api --> agent["AI orchestration loop"]
-    api --> practice["Practice generation"]
-    agent --> tools["Typed tool registry"]
-    tools --> services
-    tools --> rules["Deterministic eligibility rules"]
-    tools --> rag["Course retrieval"]
-    tools --> practice
-    rules --> services
-    services --> database[("PostgreSQL / Neon")]
-    practice --> rag
-    agent --> model["Shared model interface"]
-    practice --> model
-    model --> primary["Primary LLM API"]
-    model -.-> fallback["NVIDIA Nemotron fallback"]
-    rag --> embeddings["Local MiniLM embeddings"]
-    rag --> index[("FAISS index and source chunks")]
-    api --> conversations["Conversation persistence"]
-    conversations --> database
-    agent -.-> traces["Turn traces and latency metrics"]
-    classDef app fill:#e9f2ec,stroke:#476b56,color:#203b2b;
-    classDef data fill:#eef0fa,stroke:#65739d,color:#27334f;
-    class ui,api,agent,tools,practice,model app;
-    class database,index data;
+## Try the flow
+
+1. **Create an account** with a password of at least 12 characters.
+2. **Academics:** create a subject, add a dated mark, and reload. Edit the mark or try the downloadable CSV template. Invalid imports leave existing marks unchanged.
+3. **Projects:** record a hackathon, your role, project, and reflection. Optionally preview a public GitHub repository before applying its metadata.
+4. **Coding:** connect your public Codolio handle, for example `dipesh4000`. The first refresh runs in the background. Explore **Problem solving** and **Development** for totals, a GitHub calendar, and language shares.
+5. **Refresh and reload:** each successful refresh saves another snapshot. A provider error shows a warning and retains the last successful data. Reloading reads Orbit's database and does not call Codolio.
+6. **Manual fallback:** enter totals manually, leaving unknown fields blank. Switch between Codolio and Manual to inspect each source independently. Updates save dated history; they do not add the two sources together.
+7. **Assistant:** with a provider configured, ask about your marks, hackathons, or saved coding data.
+8. Sign out and create a second account to verify that the workspace starts empty.
+
+Disconnecting Codolio asks for confirmation and removes the connection and its imported history. Manual history has its own removal action. Failed refreshes and disconnected in-flight refreshes cannot replace or restore deleted snapshots.
+
+## What the coding dashboard measures
+
+The interface takes inspiration from the supplied [problem-solving](https://codolio.com/profile/dipesh4000/problemSolving) and [development](https://codolio.com/profile/dipesh4000/devStats) pages, while retaining Orbit's navigation and visual style.
+
+- Problem-solving totals use `codolioCardDetails.totalQuestionsSolved` and `totalActiveDays`.
+- GitHub contributions use **`githubProfileDetails.totalContributions`**, consistently. Codolio exposes another contribution figure in a separate card; Orbit does not mix these measures.
+- Development metrics use reported commits, stars, pull requests (`pushRequestsCount`), and issues. The calendar displays daily activity for the 365-day window ending at the snapshot's saved date, using UTC dates. Missing days are marked as unreported, not zero.
+- Language percentages are calculated from reported code bytes. They do not measure proficiency or time spent.
+- Difficulty, topic breakdowns, and problem-solving calendars are unavailable through this endpoint and are not fabricated. LeetCode enrichment is deferred.
+- Every snapshot has a source and saved timestamp; snapshots older than 24 hours are labeled. Provider update time is separate because Codolio does not supply its timezone.
+- Raw responses and normalized evidence are stored privately. API responses and assistant tools expose normalized coding fields only, not the raw profile payload.
+
+Codolio's endpoint is undocumented and may change. Refresh has a bounded timeout and response-size limit. A refresh interrupted by a server restart can be retried after its 60-second lease expires. Saved dashboards work independently of the provider, but the Orbit backend and database must still be reachable; this is not a browser-only offline app.
+
+## Manual setup and checks
+
+For detailed configuration, optional demo import, and provider settings, see [GET_STARTED.md](GET_STARTED.md). Hosted setup is covered in [Deployment](docs/DEPLOYMENT.md).
+
+```sh
+# backend/
+uv sync --frozen
+uv run python -m orbit.migrate
+uv run uvicorn orbit.main:app --reload --host 127.0.0.1 --port 8000
+
+# frontend/ in another terminal
+npm ci
+npm run dev
 ```
 
-The LLM selects tools and narrates their outputs. Typed services query the database, Python computes eligibility, and retrieval supplies course passages. The model has no direct database connection.
+Tests use temporary SQLite databases and synthetic external responses. They do not migrate your configured PostgreSQL database or spend LLM credits. Personal browser tests start their own API on 8011 and frontend on 4176; stop the interactive sandbox before running them.
 
-## AI flow: a LangGraph-style view
+```sh
+# backend/
+uv run pytest -q
+uv run ruff check orbit migrations tests ../scripts/dev.py
 
-Nodes, conditional routing, and a tool loop describe the existing implementation. Orbit implements this flow in async Python; **LangGraph and LangChain are not runtime dependencies**.
-
-A turn carries messages, tool results, source references, and a trace. The backend binds student identity before executing tools. Chat retains the latest 20 history messages and permits six model rounds, with at most eight tool calls per response.
-
-```mermaid
-flowchart TD
-    startNode(["START: student message"]) --> guards{"Identity restriction or greeting?"}
-    guards -->|Yes| fixed["Return the appropriate fixed response"]
-    guards -->|No| context["System rules plus recent history"]
-    context --> model["Call model with tool schemas"]
-    model --> route{"Tool calls returned?"}
-    route -->|Yes| execute["Validate arguments and execute tools with bound identity"]
-    execute --> state["Append tool results and collect sources"]
-    state --> evidence{"Course search returned no passages?"}
-    evidence -->|Yes| insufficient["Insufficient information plus any eligibility reasons"]
-    evidence -->|No| budget{"Model rounds remaining?"}
-    budget -->|Yes| model
-    budget -->|No| limit["Ask the student to narrow the request"]
-    route -->|No| used{"Any tools used this turn?"}
-    used -->|Yes| answer["Return model answer with collected sources"]
-    used -->|No| insufficient
-    fixed --> finish["Update history and record trace"]
-    insufficient --> finish
-    limit --> finish
-    answer --> finish
-    finish --> endNode([END])
-    classDef action fill:#e9f2ec,stroke:#476b56,color:#203b2b;
-    classDef gate fill:#fff3d9,stroke:#a88a45,color:#54451f;
-    class context,model,execute,state,finish action;
-    class guards,route,evidence,budget,used gate;
+# frontend/
+npm run build
+npx playwright install chromium
+npx playwright test --config playwright.personal.config.js
+npx playwright test --workers=2
 ```
 
-Missing retrieval evidence stops further course-content generation. System instructions treat tool outputs and retrieved text as untrusted data. Citations and tool-use checks support grounded answers; they do not formally verify every generated claim.
+For an already installed compatible Chromium, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. Browser fixtures are enabled only by test configuration; the interactive sandbox uses the live Codolio adapter.
 
-## Model fallback and recovery
+## Architecture and boundaries
 
-Chat and practice share a model interface. NVIDIA defaults to `nvidia/nemotron-3-nano-30b-a3b`, with thinking disabled for lower latency. `nvidia/nemotron-3-super-120b-a12b` is an optional model setting.
+| Layer | Implementation |
+| --- | --- |
+| Interface | React 19, Vite 6, React Router, Lucide, responsive CSS |
+| API | FastAPI, Pydantic validation, HTTPX provider adapters |
+| Persistence | PostgreSQL / Neon, SQLAlchemy, Alembic migrations |
+| Identity | Argon2 passwords, opaque HttpOnly session cookies, owner-scoped records |
+| Personal assistant | Bounded tool loop; subject, assessment, hackathon, and coding snapshot tools |
+| Model providers | Anthropic or OpenAI-compatible primary; optional NVIDIA fallback |
+| Legacy retrieval | Hosted BAAI/bge-small-en-v1.5 embeddings and FAISS; separate demo material |
+| Verification | pytest, Ruff, Playwright, production build |
 
-```mermaid
-flowchart TD
-    requestNode(["Model request"]) --> available{"Primary configured and eligible?"}
-    available -->|Yes| primary["Call primary provider"]
-    available -->|No| fallbackReady{"NVIDIA configured?"}
-    primary --> outcome{"Usable response?"}
-    outcome -->|Yes| success["Return content or tool calls"]
-    outcome -->|No| configured{"NVIDIA configured?"}
-    configured -->|Yes| cooldown["Skip primary for 300 seconds"]
-    cooldown --> nvidia["Call NVIDIA with the same history and tools"]
-    fallbackReady -->|Yes| nvidia
-    fallbackReady -->|No| unavailable["Safe unavailable error"]
-    configured -->|No| unavailable
-    nvidia --> fallbackResult{"Usable response?"}
-    fallbackResult -->|Yes| success
-    fallbackResult -->|No| unavailable
-    cooldown -.-> probe["Later request after cooldown retries primary"]
-```
+The supplied-data demo remains optional behind `DEMO_ENABLED=true` and uses separate routes. Personal accounts cannot access its tools or records. Demo retrieval and practice are not yet personal paper/practice features. Personal papers, reviewed questions, and private retrieval arrive in Phase 3; broader suggestions and saved personal practice follow later.
 
-With fallback enabled, quota errors, rejected access, HTTP failures, timeouts, and unusable responses trigger failover. Each provider call has a default 30-second total budget. Without NVIDIA, the primary retains bounded rate-limit retries before returning an error. Cooldown state is process-local, and both providers can still become unavailable.
-
-## Course retrieval
-
-Demo-authored materials are split into overlapping chunks, embedded locally with `all-MiniLM-L6-v2`, and stored in FAISS with source and course metadata. Search filters by course and similarity threshold before returning evidence.
-
-```mermaid
-flowchart LR
-    materials["Demo course materials"] --> chunks["Overlapping source chunks"]
-    chunks --> embed["MiniLM embeddings"]
-    embed --> index[("FAISS and chunk metadata")]
-    question["Course question"] --> search["Semantic search and course filter"]
-    index --> search
-    search --> threshold{"Relevant evidence?"}
-    threshold -->|Yes| context["Passages and source IDs for chat"]
-    threshold -->|No| stopNode["Insufficient information"]
-```
-
-## Validated practice generation
-
-Known catalog topics use direct passage lookup, with semantic search as a fallback. Generated questions pass schema and citation checks before being saved or displayed.
-
-```mermaid
-flowchart TD
-    inputNode(["Course, topic, difficulty, count"]) --> enrolled{"Enrolled course?"}
-    enrolled -->|No| reject["Reject request"]
-    enrolled -->|Yes| sources["Retrieve topic passages"]
-    sources --> found{"Passages available?"}
-    found -->|No| insufficient["Return no questions and explain missing evidence"]
-    found -->|Yes| generate["Generate JSON through shared model interface"]
-    generate --> validate{"Count, uniqueness, options, answer and citations valid?"}
-    validate -->|Yes| persist["Save practice history in PostgreSQL"]
-    persist --> display(["Display validated questions"])
-    validate -->|No| retry{"Correction already attempted?"}
-    retry -->|No| correct["Add validation feedback"]
-    correct --> generate
-    retry -->|Yes| errorNode["Return validation error"]
-```
-
-## Technology stack
-
-| Layer | Technologies | Role |
-| --- | --- | --- |
-| Interface | React 19, React Router 7, Vite 6, CSS, Lucide | Responsive workspace and navigation |
-| Chat rendering | React Markdown, remark-gfm | Markdown answers and tables |
-| API | Python 3.13, FastAPI, Uvicorn, Pydantic | Routes, validation, sessions, and error handling |
-| Data | PostgreSQL / Neon, SQLAlchemy, Psycopg | Student records, conversations, practice history |
-| AI orchestration | Async Python, HTTPX | Tool loop, provider adapters, timeout and failover |
-| LLM providers | Anthropic or an OpenAI-compatible primary; NVIDIA NIM fallback | Tool-capable chat and question generation |
-| Retrieval | Sentence Transformers, MiniLM, PyTorch, NumPy, FAISS CPU | Local embeddings and course search |
-| State | PostgreSQL sessions and bounded process-local TTL caches | Shared session context and reusable tool/retrieval results |
-| Observability | JSON traces, rotating metrics logs | Tool execution, provider usage, latency, and failures |
-| Tooling | uv, pytest, Ruff, Playwright, Prettier | Dependencies, backend checks, browser validation, formatting |
-
-## Data and trust boundaries
-
-Orbit preserves all **27,456 supplied source rows**, including raw records, source archives, duplicate rows, and separate invalid-UUID splits. Missing scores remain unavailable instead of becoming zero. Eligibility and its inputs are read fresh. Reusable tool data can be cached; final AI answers are not cached.
-
-The student picker is a demo selector. Learning materials and assessment rules are labeled demo assumptions. Sessions, active chat context, conversations, and practice history persist in PostgreSQL across workers and serverless restarts. Session cookies hold opaque tokens, with only their SHA-256 hashes stored in the database; sessions expire after eight hours and are revoked on logout or profile changes. PostgreSQL row locks serialize chat changes across workers. Tool and retrieval caches remain process-local.
+Password reset, email verification, and deployment-level authentication rate limits remain future hardening work. Use HTTPS and secure cookies for hosted deployments. Tests check migrations and ownership with SQLite; production PostgreSQL verification is separate.
