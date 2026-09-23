@@ -228,3 +228,62 @@ build passed with the existing-size bundle advisory (main bundle about 505 kB).
 Production PostgreSQL/pgvector migration and live provider generation still require
 verification in the deployment environment. Local tests use disposable SQLite and
 synthetic provider fixtures; they do not establish live-provider semantic quality.
+
+## Four-section workspace revision
+
+The sidebar now has exactly Chat, Dashboard, Coding stats and Practice. Chat is
+the default, with the composer at the bottom and drafts retained during navigation.
+Academic management and suggested actions live inside Dashboard; hackathons live
+inside Coding stats; question papers and quizzes live inside Practice.
+
+- Dashboard starts empty. Users enter/import reported earned credits, target SGPA
+  and semester SGPAs with a configurable scale. A line chart plots reported values;
+  current subjects expose their marks and editable syllabus. No grades are inferred.
+- Academic PDF/image imports use Gemini structured extraction. Uploads have
+  processing/review/failed states, retry and removal. Review fields can be edited
+  before an atomic, idempotent confirmation writes subjects, marks and reported
+  values. Unmatched/incomplete marks reject the transaction instead of silently
+  dropping rows. Uploads are limited to 10 MB.
+- Coding stats separates DSA and development activity. Hero values come from the
+  connected Codolio snapshot and manually recorded hackathons. Missing values
+  prompt connection/entry. A public GitHub username saves public profile metadata;
+  contribution charts still use the existing Codolio development snapshot.
+- Practice projects collect selected subjects, text/Markdown or recognized PDF/image
+  documents, and public GitHub source. Repository import pins a commit, selects at
+  most 12 readable source files and bounds the stored snapshot to about 145k
+  characters. It excludes hidden paths, symlinks and common generated directories.
+  It does not clone/execute code, import private repositories or claim complete
+  repository coverage. Material text is editable and removable.
+- **Chat about this** selects the project in the main conversation. Tools retrieve
+  query-ranked excerpts with source evidence and explicit coverage limits. The
+  same saved conversation persists across sign-out; clearing chat removes that
+  saved history. Concurrent conflicting saves return a reload conflict.
+- Tool results are cached for 60 seconds by owner, validated arguments, database
+  engine and a shared database revision. Application record writes change that
+  revision in the same transaction, including background extraction/refresh writes.
+  Cached citations are restored on hits; errors are not cached. Revision invalidation
+  is conservative across accounts. Direct external SQL writes bypass the application
+  invalidation hook and remain bounded by the cache TTL.
+
+Migration `0007` adds the new workspace tables, durable history and cache revision.
+Run the normal launcher or `alembic upgrade head` against the intended development
+database. No existing production database was migrated during implementation.
+
+Set `GEMINI_API_KEY` in the server environment to enable PDF/image recognition;
+`GEMINI_MODEL` defaults to `gemini-3.8-flash` and can be overridden. The main chat
+continues to use the existing configured LLM provider. Manual records and text
+documents work without Gemini. API implementation follows Google's
+[document processing](https://ai.google.dev/gemini-api/docs/generate-content/document-processing)
+and [structured output](https://ai.google.dev/gemini-api/docs/structured-output)
+documentation. Provider integrations are exercised with deterministic fixtures;
+live Gemini recognition and deployment PostgreSQL behavior still need environment
+verification.
+
+Verification: backend suite 194 passed, 5 optional tests skipped; six new workspace
+tests passed again after final retrieval changes; Ruff and production build passed.
+The personal browser suite passed all 11 desktop/mobile flows, including empty
+states, reported values, extraction review, public source import, project tool-cache
+hits, account isolation and durable chat. The populated demo (3) and legacy
+workspace (17) browser suites also passed, for 31 browser tests in total.
+The main production bundle is about
+531 kB and retains Vite's advisory to split chunks over 500 kB.

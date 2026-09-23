@@ -22,17 +22,19 @@ for (const width of [360, 1440]) {
     await page
       .getByRole("button", { name: "Create account", exact: true })
       .click();
-    await page.getByRole("button", { name: "Academics", exact: true }).click();
+    await page.getByRole("button", { name: "Dashboard", exact: true }).click();
+    await page.getByRole("button", { name: "Manage subjects & marks", exact: true }).click();
     await expect(
-      page.getByRole("heading", { name: "Welcome, Alice" }),
+      page.getByRole("heading", { name: "Dashboard", exact: true }),
     ).toBeVisible();
     await page.getByLabel("Subject name").fill("Database systems");
     await page.getByLabel("Subject code").fill("CS301");
     await page.getByLabel("Semester", { exact: true }).fill("3");
-    await page.getByRole("button", { name: "Add subject" }).click();
+    await page.getByRole("button", { name: "Add subject", exact: true }).click();
     await expect(page.getByRole("listitem")).toContainText("Database systems");
     await page.reload();
-    await page.getByRole("button", { name: "Academics", exact: true }).click();
+    await page.getByRole("button", { name: "Dashboard", exact: true }).click();
+    await page.getByRole("button", { name: "Manage subjects & marks", exact: true }).click();
     await expect(page.getByRole("listitem")).toContainText("Database systems");
     expect(
       await page.evaluate(
@@ -56,7 +58,8 @@ for (const width of [360, 1440]) {
     await bob
       .getByRole("button", { name: "Create account", exact: true })
       .click();
-    await bob.getByRole("button", { name: "Academics", exact: true }).click();
+    await bob.getByRole("button", { name: "Dashboard", exact: true }).click();
+    await bob.getByRole("button", { name: "Manage subjects & marks", exact: true }).click();
     await expect(
       bob.getByText("No subjects yet.", { exact: false }),
     ).toBeVisible();
@@ -75,7 +78,8 @@ for (const width of [360, 1440]) {
       .getByLabel("Password", { exact: true })
       .fill("a secure password here");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await page.getByRole("button", { name: "Academics", exact: true }).click();
+    await page.getByRole("button", { name: "Dashboard", exact: true }).click();
+    await page.getByRole("button", { name: "Manage subjects & marks", exact: true }).click();
     await expect(page.getByRole("listitem")).toContainText("Database systems");
     expect(errors).toEqual([]);
   });

@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.concurrency import run_in_threadpool
 
-from . import auth, conversations, sessions, telemetry
+from . import auth, conversations, sessions, telemetry, workspace_api
 from . import database as db
 from .config import ROOT, settings
 from .embeddings import EmbeddingUnavailable
@@ -23,6 +23,7 @@ from .tools import ToolRegistry
 
 app = FastAPI(title="Orbit", version="0.2.0")
 app.include_router(auth.router)
+app.include_router(workspace_api.router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,

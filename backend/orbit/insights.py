@@ -96,6 +96,7 @@ def compare_assessments(owner_id, engine, subject_id=None):
 
 
 TABLES = {
+    "material": db.project_materials,
     "practice": db.personal_practice,
     "assessment": db.personal_assessments,
     "question": db.paper_questions,
@@ -145,6 +146,7 @@ def source(owner_id, conn, kind, key):
             for q in row["questions"]
         ]
     label = {
+        "material": row.get("name"),
         "practice": f"Practice: {row.get('topic', '')}",
         "assessment": row.get("title"),
         "question": row.get("topic"),

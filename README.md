@@ -2,7 +2,9 @@
 
 A personal learning workspace for academic marks, hackathon projects, and coding activity. Each account owns its records. The assistant reads those records through backend tools rather than inventing progress.
 
-**Phases 0–2 are implemented. Next is Phase 3: personal paper ingestion and question review.** See the [phase tracker](docs/IMPLEMENTATION_PHASES.md) for delivered features, limits, and the remaining roadmap.
+The personal workspace has four sections: **Chat**, **Dashboard**, **Coding stats**, and **Practice**. Chat is the default conversation view. Dashboard holds reported credits, target SGPA, semester results, subjects, syllabus and marks. Coding stats combines Codolio activity, a public GitHub profile and manually recorded hackathons. Practice holds projects, documents, public repository snapshots, question papers and quizzes; each project's **Chat about this** button selects its context in the main saved conversation.
+
+Image/PDF recognition uses `GEMINI_API_KEY` on the server. Academic extraction produces an editable draft: only **Confirm and save** writes academic records. Manual entry and text documents work without Gemini. See the [phase tracker](docs/IMPLEMENTATION_PHASES.md) for delivered features and integration limits.
 
 ## Run on Windows
 
@@ -26,7 +28,7 @@ For normal development with persistent records:
 start.bat
 ```
 
-Normal startup installs dependencies, applies Alembic migrations **to the database named by `DATABASE_URL`**, then opens **http://localhost:5173**. Use a development database. Existing account, subject, mark, and project records are preserved by the upgrades. The latest revision, `0003`, adds coding connections and snapshots. No demo datasets are imported by the launcher.
+Normal startup installs dependencies, applies Alembic migrations **to the database named by `DATABASE_URL`**, then opens **http://localhost:5173**. Use a development database. Existing records are preserved by the upgrades. The latest revision, `0007`, adds academic profiles/imports, learning projects/materials, public GitHub profiles and durable main chat history. No demo datasets are imported by the launcher.
 
 Keep the launcher window open. **Ctrl+C stops both servers.** Startup checks occupied ports and reports failures instead of opening an unready app. Logs are written to `backend/logs/dev-backend.log` and `backend/logs/dev-frontend.log` and replaced on the next launch.
 

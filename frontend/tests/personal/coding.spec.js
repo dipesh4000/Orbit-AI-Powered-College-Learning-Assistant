@@ -18,7 +18,7 @@ for (const width of [390, 1440]) {
     await page
       .getByRole("button", { name: "Create account", exact: true })
       .click();
-    await page.getByRole("button", { name: "Coding", exact: true }).click();
+    await page.getByRole("button", { name: "Coding stats", exact: true }).click();
     await expect(page.getByText("No coding source connected")).toBeVisible();
     await page.getByPlaceholder("Your Codolio handle").fill(`test-${width}`);
     await page
@@ -28,7 +28,7 @@ for (const width of [390, 1440]) {
       page.locator(".coding-metric").filter({ hasText: "Problems solved" }),
     ).toContainText("128");
     await page
-      .getByRole("button", { name: "Development", exact: true })
+      .getByRole("button", { name: "Development stats", exact: true })
       .click();
     await expect(
       page
@@ -64,7 +64,7 @@ for (const width of [390, 1440]) {
         .filter({ hasText: "GitHub contributions" }),
     ).toContainText("256");
     await page.reload();
-    await page.getByRole("button", { name: "Coding", exact: true }).click();
+    await page.getByRole("button", { name: "Coding stats", exact: true }).click();
     await expect(
       page.locator(".coding-metric").filter({ hasText: "Problems solved" }),
     ).toContainText("128");
@@ -98,7 +98,7 @@ for (const width of [390, 1440]) {
     await expect(page.getByText("No coding source connected")).toBeVisible();
     await expect(page.getByText("Checked my profile today")).toBeVisible();
     await page.reload();
-    await page.getByRole("button", { name: "Coding", exact: true }).click();
+    await page.getByRole("button", { name: "Coding stats", exact: true }).click();
     await expect(page.getByText("Checked my profile today")).toBeVisible();
     // A separate session cannot read any of these records.
     const other = await browser.newContext();

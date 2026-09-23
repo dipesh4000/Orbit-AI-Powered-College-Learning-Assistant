@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
     llm_timeout_seconds: float = Field(default=30, gt=0, le=45)
     llm_fallback_cooldown_seconds: float = Field(default=300, ge=0)
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.8-flash"
     hf_token: str = ""
     hf_embedding_url: str = ""
     embedding_model: str = "BAAI/bge-small-en-v1.5"

@@ -1,0 +1,353 @@
+.workspace-intro > button {
+  flex-shrink: 0;
+}
+.workspace-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0;
+}
+.workspace-subtabs button {
+  padding: 11px 16px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: white;
+  color: var(--muted);
+}
+.workspace-subtabs button[aria-pressed="true"] {
+  background: #e9f0e3;
+  border-color: #b4c9a7;
+  color: #365833;
+}
+.academic-hero {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 20px;
+}
+.academic-hero .workspace-card {
+  margin-top: 0;
+}
+.academic-summary {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.academic-summary > button {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f2f6ed;
+  border: 1px solid #dbe6d2;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #45663e;
+}
+.academic-numbers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  margin: 28px 0;
+}
+.academic-numbers span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.academic-numbers strong {
+  display: block;
+  font-size: 44px;
+  letter-spacing: -2px;
+  line-height: 1.4;
+}
+.academic-numbers small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.academic-chart-empty {
+  min-height: 235px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--muted);
+  text-align: center;
+}
+.chart-ghost {
+  font-size: 48px;
+  color: #b6c7ad;
+}
+.academic-chart-empty p {
+  margin: 10px 0;
+}
+.sgpa-chart {
+  display: block;
+  width: 100%;
+  min-height: 180px;
+}
+.sgpa-chart text {
+  font-size: 11px;
+  fill: #7a8871;
+}
+.subject-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+.subject-tiles button {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 155px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+  background: #fcfdfb;
+}
+.subject-tiles button:hover {
+  border-color: #8eac7c;
+  background: #f3f7ee;
+}
+.subject-tiles strong {
+  font-size: 14px;
+}
+.subject-tiles small,
+.subject-tiles span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.syllabus-editor,
+.material-review {
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+  padding-top: 20px;
+}
+.syllabus-editor .form-actions,
+.material-review .form-actions {
+  margin-top: 14px;
+}
+.preserve-lines {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.semester-results > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  font-size: 13px;
+}
+.semester-results > div > span {
+  flex: 1;
+}
+.file-drop {
+  padding: 20px;
+  border: 1px dashed #a9bd9c;
+  background: #f8faf4;
+  border-radius: 12px;
+  margin: 12px 0;
+}
+.academic-import > p {
+  font-size: 13px;
+  color: var(--muted);
+}
+.import-list article,
+.material-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding: 18px 0;
+  font-size: 12px;
+}
+.import-list article > div,
+.material-row > div {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.import-list small,
+.material-row small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+}
+.import-review fieldset {
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.import-review-row {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin: 14px 0;
+}
+.import-review-row > button {
+  margin-top: 12px;
+}
+.inline-entry {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.inline-entry label {
+  flex: 1;
+  min-width: 180px;
+}
+.github-connection h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.learning-project-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.learning-project-grid .workspace-card {
+  margin-top: 0;
+}
+.learning-project p {
+  font-size: 13px;
+  color: var(--muted);
+}
+.learning-project.selected {
+  border-color: #8baa78;
+}
+.learning-project .form-actions {
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.project-empty {
+  text-align: center;
+  padding: 50px 24px !important;
+}
+.project-empty > svg {
+  color: #88a477;
+}
+.project-empty p {
+  max-width: 540px;
+  margin: 15px auto 24px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.subject-options {
+  display: grid;
+  gap: 12px;
+}
+.personal-shell .subject-options label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.subject-options input {
+  width: 17px;
+  height: 17px;
+  accent-color: #456b48;
+}
+.project-add-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 22px 0;
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.project-add-grid form > button {
+  margin: 14px 0;
+}
+.project-add-grid small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+}
+.project-context {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #eef4e8;
+  border: 1px solid #dbe6d3;
+  border-radius: 10px;
+  font-size: 12px;
+}
+.project-context span {
+  flex: 1;
+}
+.tool-summary {
+  display: block;
+  font-size: 10px;
+  color: #7c8e71;
+  margin-top: 10px;
+}
+.coding-hero {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.coding-hero .workspace-card {
+  margin: 0;
+}
+.coding-hero strong {
+  display: block;
+  font-size: 42px;
+  margin: 18px 0;
+}
+.coding-hero span,
+.coding-hero small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.coding-hero a {
+  font-size: 11px;
+  color: #456b48;
+}
+@media (max-width: 1000px) {
+  .academic-hero {
+    grid-template-columns: 1fr;
+  }
+  .subject-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .workspace-intro {
+    align-items: flex-start;
+    gap: 16px;
+    flex-direction: column;
+  }
+  .learning-project-grid,
+  .project-add-grid,
+  .subject-tiles {
+    grid-template-columns: 1fr;
+  }
+  .coding-hero {
+    gap: 8px;
+  }
+  .coding-hero .workspace-card {
+    padding: 14px 10px;
+  }
+  .coding-hero strong {
+    font-size: 30px;
+  }
+  .coding-hero span,
+  .coding-hero small {
+    font-size: 10px;
+  }
+  .import-list article,
+  .material-row {
+    flex-wrap: wrap;
+  }
+  .import-list article > div,
+  .material-row > div {
+    flex-basis: 100%;
+  }
+  .project-detail .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

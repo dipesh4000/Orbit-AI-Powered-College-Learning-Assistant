@@ -6,7 +6,12 @@ import { api, post } from "./api";
 import EvidenceList from "./Evidence";
 import "./chat.css";
 
-export default function PersonalChat({ demoMode, name }) {
+export default function PersonalChat({
+  demoMode,
+  name,
+  project,
+  onClearProject,
+}) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -44,11 +49,20 @@ export default function PersonalChat({ demoMode, name }) {
     setBusy(true);
     setError("");
     try {
-      const r = await post("/personal/chat", { message });
+      const r = await post("/personal/chat", {
+        message,
+        project_id: project?.id ?? null,
+      });
       setMessages((m) => [
         ...m,
         { role: "user", content: message },
-        { role: "assistant", content: r.answer, sources: r.sources },
+        {
+          role: "assistant",
+          content: r.answer,
+          sources: r.sources,
+          tools: r.tools_called,
+          cache: r.cache_hits,
+        },
       ]);
     } catch (e) {
       setInput(message);
@@ -61,7 +75,7 @@ export default function PersonalChat({ demoMode, name }) {
   async function clear() {
     if (
       !window.confirm(
-        "Clear this session's conversation? Your learning records will be kept.",
+        "Clear your saved conversation? Your learning records will be kept.",
       )
     )
       return;
@@ -101,6 +115,16 @@ export default function PersonalChat({ demoMode, name }) {
         <p className="chat-demo-note">
           Local demo · rule-based replies · no live AI connection
         </p>
+      )}
+      {project && (
+        <div className="project-context">
+          <span>
+            Chatting about <strong>{project.name}</strong>
+          </span>
+          <button type="button" onClick={onClearProject}>
+            All workspace
+          </button>
+        </div>
       )}
       <div
         className="chat-scroll"
@@ -149,6 +173,12 @@ export default function PersonalChat({ demoMode, name }) {
                   {m.content}
                 </ReactMarkdown>
                 <EvidenceList sources={m.sources} />
+                {m.tools?.length > 0 && (
+                  <small className="tool-summary">
+                    Used {m.tools.length} tool calls
+                    {m.cache > 0 ? ` · ${m.cache} cached` : ""}
+                  </small>
+                )}
               </div>
             </article>
           ))}

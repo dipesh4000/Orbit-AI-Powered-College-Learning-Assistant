@@ -1,4 +1,5 @@
 from functools import lru_cache
+from uuid import uuid4
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
@@ -19,11 +20,146 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     create_engine,
+    event,
+    inspect,
 )
+from sqlalchemy.engine import Engine
+from sqlalchemy.sql.dml import Delete, Insert, Update
 
 from .config import settings
 
 metadata = MetaData()
+cache_revisions = Table(
+    "workspace_cache_revisions",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("value", String(32), nullable=False),
+)
+
+personal_chats = Table(
+    "personal_chats",
+    metadata,
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column("history", JSON, nullable=False),
+    Column("transcript", JSON, nullable=False),
+    Column("version", Integer, nullable=False),
+)
+academic_profiles = Table(
+    "academic_profiles",
+    metadata,
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column("program", String(100), nullable=False),
+    Column("current_semester", String(40), nullable=False),
+    Column("total_credits", Float),
+    Column("target_sgpa", Float),
+    Column("sgpa_scale", Float, nullable=False),
+)
+semester_results = Table(
+    "semester_results",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column("semester", String(40), nullable=False),
+    Column("sgpa", Float, nullable=False),
+    UniqueConstraint("owner_id", "semester"),
+)
+subject_syllabi = Table(
+    "subject_syllabi",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("owner_id", Integer, nullable=False, index=True),
+    Column("subject_id", Integer, nullable=False),
+    Column("content", Text, nullable=False),
+    ForeignKeyConstraint(
+        ["subject_id", "owner_id"],
+        ["personal_subjects.id", "personal_subjects.owner_id"],
+        ondelete="CASCADE",
+    ),
+    UniqueConstraint("owner_id", "subject_id"),
+)
+academic_imports = Table(
+    "academic_imports",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column("filename", String(200), nullable=False),
+    Column("mime", String(60), nullable=False),
+    Column("source", LargeBinary, nullable=False),
+    Column("status", String(30), nullable=False),
+    Column("draft", JSON),
+    Column("error", Text),
+    Column("started_at", Float, nullable=False),
+    Column("lease", String(36), nullable=False),
+)
+learning_projects = Table(
+    "learning_projects",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column("name", String(150), nullable=False),
+    Column("description", Text, nullable=False),
+    Column("subject_ids", JSON, nullable=False),
+    Column("created_at", Float, nullable=False),
+    UniqueConstraint("id", "owner_id"),
+)
+project_materials = Table(
+    "project_materials",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("owner_id", Integer, nullable=False, index=True),
+    Column("project_id", Integer, nullable=False),
+    Column("name", String(200), nullable=False),
+    Column("kind", String(20), nullable=False),
+    Column("content", Text, nullable=False),
+    Column("source_url", String(500)),
+    Column("created_at", Float, nullable=False),
+    ForeignKeyConstraint(
+        ["project_id", "owner_id"],
+        ["learning_projects.id", "learning_projects.owner_id"],
+        ondelete="CASCADE",
+    ),
+)
+github_profiles = Table(
+    "github_profiles",
+    metadata,
+    Column(
+        "owner_id",
+        Integer,
+        ForeignKey("workspace_owners.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column("handle", String(40), nullable=False),
+    Column("snapshot", JSON, nullable=False),
+    Column("fetched_at", Float, nullable=False),
+)
 personal_practice = Table(
     "personal_practice",
     metadata,
@@ -381,3 +517,42 @@ def get_engine():
     return create_engine(
         url, pool_pre_ping=True, pool_size=5, max_overflow=5, hide_parameters=True
     )
+
+
+# A committed data write changes the cache namespace in the same transaction.
+# Session/chat writes are excluded. This also covers background refresh workers.
+@event.listens_for(cache_revisions, "after_create")
+def seed_cache_revision(target, connection, **kwargs):
+    connection.execute(target.insert().values(id=1, value=uuid4().hex))
+
+
+@event.listens_for(Engine, "after_execute")
+def invalidate_personal_tools(
+    conn, clauseelement, multiparams, params, execution_options, result
+):
+    if not isinstance(clauseelement, (Insert, Update, Delete)):
+        return
+    name = clauseelement.table.name
+    tracked = {
+        "personal_subjects",
+        "personal_assessments",
+        "personal_hackathon_events",
+        "coding_connections",
+        "coding_snapshots",
+        "personal_papers",
+        "personal_questions",
+        "personal_suggestions",
+        "personal_practice",
+        "academic_profiles",
+        "semester_results",
+        "subject_syllabi",
+        "learning_projects",
+        "project_materials",
+        "github_profiles",
+    }
+    if name in tracked and inspect(conn).has_table("workspace_cache_revisions"):
+        conn.execute(
+            cache_revisions.update()
+            .where(cache_revisions.c.id == 1)
+            .values(value=uuid4().hex)
+        )

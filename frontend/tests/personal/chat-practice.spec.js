@@ -18,8 +18,9 @@ for (const width of [390, 1440]) {
     await message.press("Shift+Enter");
     await message.press("a");
     await expect(message).toHaveValue("Draft\na");
-    await page.getByRole("button", { name: "Academics", exact: true }).click();
-    await page.getByRole("button", { name: "Assistant", exact: true }).click();
+    await page.getByRole("button", { name: "Dashboard", exact: true }).click();
+    await page.getByRole("button", { name: "Manage subjects & marks", exact: true }).click();
+    await page.getByRole("button", { name: "Chat", exact: true }).click();
     await expect(message).toHaveValue("Draft\na");
     await page.screenshot({ path: `test-results/chat-empty-${width}.png` });
     await message.fill("Hi");
@@ -49,6 +50,7 @@ for (const width of [390, 1440]) {
     expect(reviewed.ok()).toBe(true);
     await page.reload();
     await page.getByRole("button", { name: "Practice", exact: true }).click();
+    await page.getByRole("button", { name: "Quizzes", exact: true }).click();
     await page.getByLabel("Practice subject").selectOption(String(subject.id));
     await page.getByLabel("Practice topic").fill("SQL");
     await page.getByLabel("Questions", { exact: true }).fill("1");
@@ -60,14 +62,17 @@ for (const width of [390, 1440]) {
     await expect(page.getByRole("status")).toContainText("0/1");
     await page.reload();
     await page.getByRole("button", { name: "Practice", exact: true }).click();
+    await page.getByRole("button", { name: "Quizzes", exact: true }).click();
     await page.getByRole("button", { name: "Review", exact: true }).click();
     await expect(page.getByLabel("DROP", { exact: true })).toBeChecked();
     await expect(page.getByText("The supplied text explicitly says SELECT reads rows.")).toBeVisible();
     await page.screenshot({ path: `test-results/practice-${width}.png`, fullPage: true });
-    await page.getByRole("button", { name: "Actions", exact: true }).click();
+    await page.getByRole("button", { name: "Dashboard", exact: true }).click();
+    await page.getByRole("button", { name: "Suggested actions", exact: true }).click();
     await page.getByRole("button", { name: "Refresh suggestions" }).click();
     await expect(page.getByRole("heading", { name: "Practise SQL again" })).toBeVisible();
     await page.getByRole("button", { name: "Practice", exact: true }).click();
+    await page.getByRole("button", { name: "Quizzes", exact: true }).click();
     page.once("dialog", d => d.accept());
     await page.getByRole("button", { name: "Delete", exact: true }).click();
     await expect(page.getByText("No practice yet.", { exact: false })).toBeVisible();

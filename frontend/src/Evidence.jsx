@@ -39,6 +39,14 @@ function Evidence({ reference }) {
             <p>Reading source…</p>
           ) : (
             <>
+              {kind === "material" && (
+                <>
+                  <small>
+                    {data.name} · {data.kind}
+                  </small>
+                  <p className="preserve-lines">{data.content}</p>
+                </>
+              )}
               {kind === "practice" && (
                 <p>
                   {data.topic} ·{" "}

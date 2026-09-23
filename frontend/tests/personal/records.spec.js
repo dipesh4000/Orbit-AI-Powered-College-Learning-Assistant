@@ -13,9 +13,10 @@ test("marks, atomic CSV imports, projects and record deletion", async ({
   await page
     .getByRole("button", { name: "Create account", exact: true })
     .click();
-  await page.getByRole("button", { name: "Academics", exact: true }).click();
+  await page.getByRole("button", { name: "Dashboard", exact: true }).click();
+    await page.getByRole("button", { name: "Manage subjects & marks", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Welcome, Dipesh" }),
+    page.getByRole("heading", { name: "Dashboard", exact: true }),
   ).toBeVisible();
   await page.getByLabel("Subject name").fill("Database systems");
   await page.getByLabel("Subject code").fill("DB");
@@ -67,7 +68,8 @@ test("marks, atomic CSV imports, projects and record deletion", async ({
     });
   await expect(page.getByRole("cell", { name: /^Second quiz/ })).toBeVisible();
   await page.reload();
-  await page.getByRole("button", { name: "Academics", exact: true }).click();
+  await page.getByRole("button", { name: "Dashboard", exact: true }).click();
+    await page.getByRole("button", { name: "Manage subjects & marks", exact: true }).click();
   await expect(page.getByText("+20 pp · same type and scale")).toBeVisible();
   await page.screenshot({
     path: "test-results/phase1-academics.png",
@@ -100,7 +102,7 @@ test("marks, atomic CSV imports, projects and record deletion", async ({
     ),
   ).toBe(true);
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.getByRole("button", { name: "Projects", exact: true }).click();
+  await page.getByRole("button", { name: "Coding stats", exact: true }).click();
   await page
     .getByRole("button", { name: "Add hackathon", exact: true })
     .click();
@@ -164,17 +166,18 @@ test("marks, atomic CSV imports, projects and record deletion", async ({
   await page.getByLabel("Result", { exact: false }).fill("Winner");
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(page.getByText("Winner", { exact: false })).toBeVisible();
-  await page.getByRole("button", { name: "Assistant", exact: true }).click();
+  await page.getByRole("button", { name: "Chat", exact: true }).click();
   await page
     .getByLabel("Message", { exact: true })
     .fill("What did I score in SQL?");
   await page.getByRole("button", { name: "Ask Orbit", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("enable AI responses");
-  await page.getByRole("button", { name: "Coding", exact: false }).click();
+  await page.getByRole("button", { name: "Coding stats", exact: true }).click();
   await expect(
     page.getByText("No coding source connected", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Academics", exact: true }).click();
+  await page.getByRole("button", { name: "Dashboard", exact: true }).click();
+    await page.getByRole("button", { name: "Manage subjects & marks", exact: true }).click();
   await page
     .getByRole("button", {
       name: "Delete subject SQL and databases",
@@ -210,7 +213,7 @@ test("marks, atomic CSV imports, projects and record deletion", async ({
   await expect(
     page.getByText("No subjects yet.", { exact: false }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Projects", exact: true }).click();
+  await page.getByRole("button", { name: "Coding stats", exact: true }).click();
   await page
     .getByRole("button", {
       name: "Delete hackathon Campus Build Day",

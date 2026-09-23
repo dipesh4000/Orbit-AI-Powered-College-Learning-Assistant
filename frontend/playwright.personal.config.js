@@ -20,7 +20,7 @@ export default defineConfig({
     {
       command: `"${python}" ../backend/tests/personal_server.py`,
       url: "http://127.0.0.1:8011/api/health",
-      env: { ORBIT_TEST_CODOLIO: "1", ORBIT_TEST_PRACTICE: "1" },
+      env: { ORBIT_TEST_CODOLIO: "1", ORBIT_TEST_PRACTICE: "1", ORBIT_TEST_WORKSPACE: "1" },
     },
     {
       command: "npm run dev -- --host 127.0.0.1 --port 4176",

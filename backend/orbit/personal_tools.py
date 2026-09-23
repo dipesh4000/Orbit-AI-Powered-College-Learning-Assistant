@@ -1,11 +1,18 @@
 """Read-only personal tools with identity bound outside model arguments."""
 
+import json
+
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import select
 from starlette.concurrency import run_in_threadpool
 
-from . import coding, insights, papers, personal, personal_practice
+from . import academics, coding, insights, papers, personal, personal_practice, projects
+from . import database as db
+from .cache import TTLCache
+
+personal_cache = TTLCache(capacity=128, ttl=60)
 from .embeddings import EmbeddingUnavailable
 
 
@@ -17,7 +24,28 @@ class SubjectFilter(Empty):
     subject_id: int | None = Field(default=None, gt=0)
 
 
+class ProjectFilter(Empty):
+    project_id: int = Field(gt=0)
+    query: str = Field(default="", max_length=500)
+
+
 SPECS = {
+    "get_academic_dashboard": (
+        Empty,
+        "Read reported total credits, current semester, target SGPA, saved semester SGPA values and syllabus. Never compute SGPA from marks.",
+    ),
+    "get_projects": (
+        Empty,
+        "List the current owner's learning projects and selected subjects. Resolve project names to IDs here.",
+    ),
+    "get_project_context": (
+        ProjectFilter,
+        "Read a project's saved repository/document excerpts and subject syllabus. Query ranks excerpts. The snapshot is bounded, not a full repository. Cite material-ID for excerpts.",
+    ),
+    "get_github_profile": (
+        Empty,
+        "Read the saved public GitHub username/profile and fetch timestamp. Public repository counts are not commit or contribution totals.",
+    ),
     "get_practice_history": (
         SubjectFilter,
         "Read saved practice sets and completed attempts by topic. Practice feedback is separate from formal marks; unsubmitted sets are not attempts.",
@@ -77,11 +105,14 @@ For a time-bounded plan, distinguish proposed time allocations from facts in the
 Read get_suggestions before proposing next actions. Respect accepted and dismissed decisions.
 Use exact evidence citations such as [assessment-12] and [question-8] from tool results.
 Read get_practice_history before recommending revision; prioritize recently missed practice topics as a proposed action, without inferring formal performance. Cite [practice-ID]. Do not use demo tools.
-Be concise. If evidence is missing, state that plainly."""
+Use get_academic_dashboard for semester SGPA, credits, targets and syllabus; values are reported, not inferred. Use get_projects and get_project_context for project work. You may explain concepts or propose code beyond the source, but label your suggestions and never claim unobserved repository facts. Be concise. If evidence is missing, state that plainly."""
 
-    def __init__(self, engine):
+    def __init__(self, engine, project_id=None):
         self.engine = engine
         self.evidence = {}
+        self.project_id = project_id
+        if project_id:
+            self.system_prompt += f"\nThe user selected project ID {project_id} for this turn. Call get_project_context for that project before answering. Do not mix in other projects unless explicitly requested."
 
     def schemas(self):
         return [
@@ -100,8 +131,50 @@ Be concise. If evidence is missing, state that plainly."""
         if name not in SPECS:
             raise ValueError("Unknown personal tool")
         params = SPECS[name][0].model_validate(arguments).model_dump()
+
+        def revision():
+            with self.engine.connect() as conn:
+                return conn.scalar(
+                    select(db.cache_revisions.c.value).where(
+                        db.cache_revisions.c.id == 1
+                    )
+                )
+
+        epoch = await run_in_threadpool(revision)
+        cache_key = (
+            owner_id,
+            self.engine,
+            epoch,
+            name,
+            json.dumps(params, sort_keys=True),
+        )
+        cached = personal_cache.get(cache_key) if epoch else None
+        if cached is not None:
+            result, refs = cached
+            self.evidence.update(refs)
+            return result, True
         try:
-            if name == "get_practice_history":
+            if name == "get_academic_dashboard":
+                result = await run_in_threadpool(
+                    academics.packet, owner_id, self.engine
+                )
+            elif name == "get_projects":
+                result = await run_in_threadpool(
+                    projects.listing, owner_id, self.engine
+                )
+            elif name == "get_project_context":
+                result = await run_in_threadpool(
+                    projects.context,
+                    owner_id,
+                    self.engine,
+                    params["project_id"],
+                    params["query"],
+                )
+            elif name == "get_github_profile":
+                result = await run_in_threadpool(
+                    projects.github_profile, owner_id, self.engine
+                )
+            elif name == "get_practice_history":
                 result = await run_in_threadpool(
                     personal_practice.listing, owner_id, self.engine, **params
                 )
@@ -177,6 +250,15 @@ Be concise. If evidence is missing, state that plainly."""
                 if row:
                     row["evidence_id"] = f"coding-{row['id']}"
                     refs.append(("coding", row["id"]))
+        if (
+            name == "get_project_context"
+            and isinstance(result, dict)
+            and "materials" in result
+        ):
+            refs.extend(
+                ("material", int(r["evidence_id"].split("-")[1]))
+                for r in result["materials"]
+            )
         for kind, key in dict.fromkeys(refs):
             try:
                 ref = await run_in_threadpool(
@@ -191,4 +273,7 @@ Be concise. If evidence is missing, state that plainly."""
                 }
             except HTTPException:
                 continue
-        return jsonable_encoder(result), False
+        result = jsonable_encoder(result)
+        if epoch and not (isinstance(result, dict) and "error" in result):
+            personal_cache.put(cache_key, (result, dict(self.evidence)))
+        return result, False

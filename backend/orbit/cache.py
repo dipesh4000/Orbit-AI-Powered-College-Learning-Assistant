@@ -24,6 +24,21 @@ class TTLCache:
                 self.entries.popitem(last=False)
         return value, False
 
+    def get(self, key):
+        with self.lock:
+            entry = self.entries.get(key)
+            if entry and entry[0] > monotonic():
+                self.entries.move_to_end(key)
+                return deepcopy(entry[1])
+        return None
+
+    def put(self, key, value):
+        with self.lock:
+            self.entries[key] = (monotonic() + self.ttl, deepcopy(value))
+            self.entries.move_to_end(key)
+            while len(self.entries) > self.capacity:
+                self.entries.popitem(last=False)
+
     def invalidate_user(self, user_id):
         with self.lock:
             for key in list(self.entries):

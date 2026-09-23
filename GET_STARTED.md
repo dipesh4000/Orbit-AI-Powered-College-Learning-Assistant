@@ -19,6 +19,13 @@ Use `start.bat --check` for a read-only dependency/configuration check or
 `start.bat --test` for the automated suite (including Chromium installation).
 Stop the sandbox before browser tests, which need the same 8011/4176 ports.
 
+The sidebar contains Chat, Dashboard, Coding stats and Practice. Enter reported
+credits and SGPA in Dashboard; these are not calculated from grades. For recognition
+of academic images/PDFs and project documents, set `GEMINI_API_KEY` in `Orbit/.env`
+and restart the backend. `GEMINI_MODEL` is configurable. Review extracted academic
+values before confirming them. Public GitHub connections need a username, not OAuth;
+Practice imports selected public source files as a snapshot for the main chat.
+
 ## Prerequisites and dataset placement
 
 Install Git, Node.js 22 LTS with npm, and [uv](https://docs.astral.sh/uv/getting-started/installation/).

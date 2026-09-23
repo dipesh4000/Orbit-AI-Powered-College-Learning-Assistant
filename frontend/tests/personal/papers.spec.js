@@ -15,13 +15,15 @@ for (const width of [390, 1440]) {
     await page.getByLabel("Email").fill(`paper-${width}@example.com`);
     await page.getByLabel("Password",{exact:true}).fill("a secure paper password");
     await page.getByRole("button",{name:"Create account",exact:true}).click();
-    await page.getByRole("button",{name:"Academics",exact:true}).click();
+    await page.getByRole("button", { name: "Dashboard", exact: true }).click();
+    await page.getByRole("button", { name: "Manage subjects & marks", exact: true }).click();
     await page.getByLabel("Subject name").fill("Database systems");
     await page.getByLabel("Subject code").fill("CS301");
     await page.getByLabel("Semester", { exact: true }).fill("3");
     await page.getByRole("button",{name:"Add subject",exact:true}).click();
     await expect(page.getByRole("listitem")).toContainText("Database systems");
-    await page.getByRole("button",{name:"Papers",exact:true}).click();
+    await page.getByRole("button", { name: "Practice", exact: true }).click();
+    await page.getByRole("button", { name: "Question papers", exact: true }).click();
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({path:`test-results/papers-empty-${width}.png`,fullPage:true});
     await page.getByRole("button",{name:"Upload your first paper"}).click();
@@ -50,7 +52,8 @@ for (const width of [390, 1440]) {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({path:`test-results/papers-search-${width}.png`,fullPage:true});
     await page.reload();
-    await page.getByRole("button",{name:"Papers",exact:true}).click();
+    await page.getByRole("button", { name: "Practice", exact: true }).click();
+    await page.getByRole("button", { name: "Question papers", exact: true }).click();
     await expect(page.getByText("2/2 questions confirmed")).toBeVisible();
     await page.getByRole("button",{name:"Delete paper",exact:true}).click();
     await page.getByRole("dialog").getByRole("button",{name:"Delete paper",exact:true}).click();

@@ -141,14 +141,14 @@ function ConfirmRemoval({ source, busy, onCancel, onConfirm }) {
   );
 }
 
-export default function CodingWorkspace() {
+export default function CodingWorkspace({ hackathonCount = null }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [handle, setHandle] = useState("");
   const [source, setSource] = useState("codolio");
-  const [view, setView] = useState("Problem solving");
+  const [view, setView] = useState("DSA stats");
   const [manual, setManual] = useState(null);
   const [removing, setRemoving] = useState(null);
   const [attempt, setAttempt] = useState(0);
@@ -226,6 +226,37 @@ export default function CodingWorkspace() {
 
   return (
     <div className="coding-workspace">
+      <div className="coding-hero">
+        <section className="workspace-card">
+          <span>DSA problems solved</span>
+          <strong>{number(data?.latest.codolio?.normalized.solved)}</strong>
+          <small>
+            {data?.latest.codolio
+              ? "From your Codolio snapshot"
+              : "Add your Codolio username"}
+          </small>
+        </section>
+        <section className="workspace-card">
+          <span>Active days</span>
+          <strong>
+            {number(data?.latest.codolio?.normalized.active_days)}
+          </strong>
+          <small>
+            {data?.latest.codolio
+              ? "Problem-solving activity"
+              : "Connect Codolio to get started"}
+          </small>
+        </section>
+        <section className="workspace-card">
+          <span>Hackathons participated</span>
+          <strong>{hackathonCount ?? "—"}</strong>
+          <a href="#hackathon-records">
+            {hackathonCount == null
+              ? "Add hackathon stats"
+              : "View your hackathons"}
+          </a>
+        </section>
+      </div>
       <section className="workspace-card coding-connect">
         <div className="section-heading">
           <div>
@@ -275,7 +306,7 @@ export default function CodingWorkspace() {
                 </div>
                 <div className="coding-actions">
                   <a
-                    href={`https://codolio.com/profile/${encodeURIComponent(data.connection.handle)}/${view === "Development" ? "devStats" : "problemSolving"}`}
+                    href={`https://codolio.com/profile/${encodeURIComponent(data.connection.handle)}/${view === "Development stats" ? "devStats" : "problemSolving"}`}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -435,6 +466,22 @@ export default function CodingWorkspace() {
               ))}
             </div>
           </div>
+              <div className="coding-view-tabs" aria-label="Coding views">
+                {["DSA stats", "Development stats"].map((v) => (
+                  <button
+                    key={v}
+                    aria-pressed={view === v}
+                    onClick={() => setView(v)}
+                  >
+                    {v === "Development stats" ? (
+                      <Github size={17} />
+                    ) : (
+                      <Code2 size={17} />
+                    )}
+                    {v}
+                  </button>
+                ))}
+              </div>
           {snapshot ? (
             <>
               <div className="coding-provenance">
@@ -455,26 +502,10 @@ export default function CodingWorkspace() {
                   </button>
                 )}
               </div>
-              <div className="coding-view-tabs" aria-label="Coding views">
-                {["Problem solving", "Development"].map((v) => (
-                  <button
-                    key={v}
-                    aria-pressed={view === v}
-                    onClick={() => setView(v)}
-                  >
-                    {v === "Development" ? (
-                      <Github size={17} />
-                    ) : (
-                      <Code2 size={17} />
-                    )}
-                    {v}
-                  </button>
-                ))}
-              </div>
               <div className="coding-metrics">
                 {metrics
                   .filter(([key]) =>
-                    view === "Problem solving"
+                    view === "DSA stats"
                       ? ["solved", "active_days"].includes(key)
                       : !["solved", "active_days"].includes(key),
                   )
@@ -492,7 +523,7 @@ export default function CodingWorkspace() {
                     </article>
                   ))}
               </div>
-              {view === "Problem solving" ? (
+              {view === "DSA stats" ? (
                 <div className="coding-insight">
                   <Activity size={23} />
                   <div>

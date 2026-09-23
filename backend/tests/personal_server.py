@@ -19,6 +19,7 @@ if __name__ == "__main__":
     settings.llm_api_key = ""
     settings.nvidia_api_key = ""
     settings.hf_token = ""
+    settings.gemini_api_key = ""
     settings.cookie_secure = False
     settings.cookie_samesite = "lax"
     settings.allowed_origin = "http://127.0.0.1:4176"
@@ -36,7 +37,9 @@ if __name__ == "__main__":
         class PracticeFixture:
             async def complete(self, messages, tools=None):
                 if tools is not None:
-                    raise ModelUnavailable("No model provider configured. Configure a provider to enable AI responses.")
+                    raise ModelUnavailable(
+                        "No model provider configured. Configure a provider to enable AI responses."
+                    )
                 payload = json.loads(messages[1]["content"])
                 return {
                     "content": json.dumps(
@@ -55,6 +58,10 @@ if __name__ == "__main__":
                 }
 
         auth.personal_model = PracticeFixture()
+    if os.environ.get("ORBIT_TEST_WORKSPACE") == "1":
+        from workspace_fixture import install
+
+        install()
     (Path(__file__).resolve().parents[1] / "data").mkdir(exist_ok=True)
     with TemporaryDirectory(
         dir=os.environ.get(

@@ -15,7 +15,9 @@ from .main import app
 
 def main():
     settings.demo_enabled = False
-    settings.llm_api_key = settings.nvidia_api_key = settings.hf_token = ""
+    settings.llm_api_key = settings.nvidia_api_key = settings.hf_token = (
+        settings.gemini_api_key
+    ) = ""
     settings.cookie_secure = False
     settings.cookie_samesite = "lax"
     settings.allowed_origin = "http://localhost:4176"

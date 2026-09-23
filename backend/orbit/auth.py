@@ -17,7 +17,16 @@ from fastapi import (
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 
-from . import accounts, coding, insights, papers, personal, personal_practice, sessions
+from . import (
+    accounts,
+    coding,
+    insights,
+    papers,
+    personal,
+    personal_chat_history,
+    personal_practice,
+    sessions,
+)
 from . import database as db
 from .config import settings
 from .github import RepoInput, preview_repo
@@ -408,6 +417,7 @@ async def github_preview(body: RepoInput, owner=Depends(current_owner)):
 class PersonalMessage(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     message: str = Field(min_length=1, max_length=2000)
+    project_id: int | None = Field(default=None, gt=0)
 
 
 @router.get("/personal/chat")
@@ -415,7 +425,8 @@ def personal_history(
     request: Request, owner=Depends(current_owner), database=Depends(engine)
 ):
     state = sessions.load(database, request.cookies.get("orbit_session"))
-    return {"history": state.get("transcript", [])}
+    saved = personal_chat_history.load(owner["id"], database)
+    return {"history": saved["transcript"] if saved else state.get("transcript", [])}
 
 
 @router.post("/personal/chat")
@@ -434,13 +445,30 @@ async def personal_chat(
         sessions.load, database, request.cookies.get("orbit_session")
     )
     async with state["lock"]:
+        chat_version = await run_in_threadpool(
+            personal_chat_history.restore, owner["id"], database, state
+        )
+        if body.project_id:
+            from .projects import detail
+
+            await run_in_threadpool(detail, owner["id"], database, body.project_id)
         if (
             getattr(request.app.state, "demo_owner_id", None) == owner["id"]
             and database.dialect.name == "sqlite"
         ):
             from .demo import reply
 
-            result = await reply(body.message, owner["id"], database)
+            if body.project_id:
+                project = await run_in_threadpool(
+                    detail, owner["id"], database, body.project_id
+                )
+                result = {
+                    "answer": f"Project selected: {project['name']}. It has {len(project['materials'])} saved materials and {len(project['subjects'])} linked subjects. This local demo has no model connection; sign in to your personal account to use the configured LLM for project discussion.",
+                    "sources": [],
+                    "demo": True,
+                }
+            else:
+                result = await reply(body.message, owner["id"], database)
             state.setdefault("transcript", []).extend(
                 [
                     {"role": "user", "content": body.message},
@@ -453,10 +481,26 @@ async def personal_chat(
                 ]
             )
             del state["transcript"][:-200]
+            await run_in_threadpool(
+                personal_chat_history.save, owner["id"], database, state, chat_version
+            )
             return result
-        return await chat(
-            body.message, state, PersonalRegistry(database), personal_model
+        result = await chat(
+            body.message,
+            state,
+            PersonalRegistry(database, body.project_id),
+            personal_model,
         )
+        if body.project_id:
+            for message in state["transcript"][-2:]:
+                message["project_id"] = body.project_id
+            state["history"][-2]["content"] = (
+                f"[Project context {body.project_id}] " + body.message
+            )
+        await run_in_threadpool(
+            personal_chat_history.save, owner["id"], database, state, chat_version
+        )
+        return result
 
 
 @router.get("/coding")
@@ -534,6 +578,8 @@ async def clear_personal_chat(
 ):
     state = sessions.load(database, request.cookies.get("orbit_session"))
     async with state["lock"]:
+        version = personal_chat_history.restore(owner["id"], database, state)
         state["history"] = []
         state["transcript"] = []
+        personal_chat_history.save(owner["id"], database, state, version)
     return {"ok": True}
