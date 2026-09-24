@@ -36,18 +36,22 @@ cache_revisions = Table(
     Column("value", String(32), nullable=False),
 )
 
-personal_chats = Table(
-    "personal_chats",
+personal_chat_sessions = Table(
+    "personal_chat_sessions",
     metadata,
+    Column("id", Integer, primary_key=True),
     Column(
         "owner_id",
         Integer,
         ForeignKey("workspace_owners.id", ondelete="CASCADE"),
-        primary_key=True,
+        nullable=False,
+        index=True,
     ),
+    Column("title", String(120), nullable=False),
     Column("history", JSON, nullable=False),
     Column("transcript", JSON, nullable=False),
-    Column("version", Integer, nullable=False),
+    Column("created_at", Float, nullable=False),
+    Column("updated_at", Float, nullable=False),
 )
 academic_profiles = Table(
     "academic_profiles",

@@ -414,23 +414,44 @@ async def github_preview(body: RepoInput, owner=Depends(current_owner)):
     return await preview_repo(body.url)
 
 
+# ── Multi-session personal chat ──────────────────────────────────────────────
+
 class PersonalMessage(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     message: str = Field(min_length=1, max_length=2000)
     project_id: int | None = Field(default=None, gt=0)
 
 
-@router.get("/personal/chat")
-def personal_history(
-    request: Request, owner=Depends(current_owner), database=Depends(engine)
+@router.get("/personal/chats")
+def list_personal_chats(owner=Depends(current_owner), database=Depends(engine)):
+    return personal_chat_history.list_sessions(owner["id"], database)
+
+
+@router.post("/personal/chats", status_code=201)
+def new_personal_chat(owner=Depends(current_owner), database=Depends(engine)):
+    return personal_chat_history.create(owner["id"], database)
+
+
+@router.delete("/personal/chats/{chat_id}")
+def delete_personal_chat(
+    chat_id: int, owner=Depends(current_owner), database=Depends(engine)
 ):
-    state = sessions.load(database, request.cookies.get("orbit_session"))
-    saved = personal_chat_history.load(owner["id"], database)
-    return {"history": saved["transcript"] if saved else state.get("transcript", [])}
+    return personal_chat_history.delete(owner["id"], database, chat_id)
 
 
-@router.post("/personal/chat")
+@router.get("/personal/chats/{chat_id}/messages")
+def personal_history(
+    chat_id: int,
+    owner=Depends(current_owner),
+    database=Depends(engine),
+):
+    row = personal_chat_history.load(owner["id"], database, chat_id)
+    return {"history": row["transcript"]}
+
+
+@router.post("/personal/chats/{chat_id}/messages")
 async def personal_chat(
+    chat_id: int,
     body: PersonalMessage,
     request: Request,
     owner=Depends(current_owner),
@@ -445,8 +466,8 @@ async def personal_chat(
         sessions.load, database, request.cookies.get("orbit_session")
     )
     async with state["lock"]:
-        chat_version = await run_in_threadpool(
-            personal_chat_history.restore, owner["id"], database, state
+        await run_in_threadpool(
+            personal_chat_history.restore, owner["id"], database, state, chat_id
         )
         if body.project_id:
             from .projects import detail
@@ -482,7 +503,7 @@ async def personal_chat(
             )
             del state["transcript"][:-200]
             await run_in_threadpool(
-                personal_chat_history.save, owner["id"], database, state, chat_version
+                personal_chat_history.save, owner["id"], database, state, chat_id
             )
             return result
         result = await chat(
@@ -498,10 +519,28 @@ async def personal_chat(
                 f"[Project context {body.project_id}] " + body.message
             )
         await run_in_threadpool(
-            personal_chat_history.save, owner["id"], database, state, chat_version
+            personal_chat_history.save, owner["id"], database, state, chat_id
         )
         return result
 
+
+@router.delete("/personal/chats/{chat_id}/messages")
+async def clear_personal_chat(
+    chat_id: int,
+    request: Request,
+    owner=Depends(current_owner),
+    database=Depends(engine),
+):
+    state = sessions.load(database, request.cookies.get("orbit_session"))
+    async with state["lock"]:
+        personal_chat_history.restore(owner["id"], database, state, chat_id)
+        state["history"] = []
+        state["transcript"] = []
+        personal_chat_history.save(owner["id"], database, state, chat_id)
+    return {"ok": True}
+
+
+# ── Coding ───────────────────────────────────────────────────────────────────
 
 @router.get("/coding")
 def coding_snapshot(owner=Depends(current_owner), database=Depends(engine)):
@@ -570,16 +609,3 @@ def answer_practice(
 @router.delete("/personal/practice/{key}")
 def delete_practice(key: int, owner=Depends(current_owner), database=Depends(engine)):
     return personal_practice.remove(owner["id"], database, key)
-
-
-@router.delete("/personal/chat")
-async def clear_personal_chat(
-    request: Request, owner=Depends(current_owner), database=Depends(engine)
-):
-    state = sessions.load(database, request.cookies.get("orbit_session"))
-    async with state["lock"]:
-        version = personal_chat_history.restore(owner["id"], database, state)
-        state["history"] = []
-        state["transcript"] = []
-        personal_chat_history.save(owner["id"], database, state, version)
-    return {"ok": True}

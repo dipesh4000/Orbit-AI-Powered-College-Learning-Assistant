@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Activity,
-  ArrowUpRight,
   Code2,
   Github,
   RefreshCw,
-  Unplug,
 } from "lucide-react";
 import { api, post } from "./api";
 import "./coding.css";
@@ -146,7 +144,6 @@ export default function CodingWorkspace({ hackathonCount = null }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
-  const [handle, setHandle] = useState("");
   const [source, setSource] = useState("codolio");
   const [view, setView] = useState("DSA stats");
   const [manual, setManual] = useState(null);
@@ -202,14 +199,6 @@ export default function CodingWorkspace({ hackathonCount = null }) {
       setBusy(false);
     }
   }
-  async function refresh() {
-    const result = await post("/coding/refresh", {});
-    setData(result);
-    if (!result.connection?.error)
-      setNotice(
-        "Refresh started. Your saved snapshot stays available while Codolio responds.",
-      );
-  }
   function openManual() {
     const latest = data.latest.manual?.normalized || {};
     setManual(
@@ -257,133 +246,6 @@ export default function CodingWorkspace({ hackathonCount = null }) {
           </a>
         </section>
       </div>
-      <section className="workspace-card coding-connect">
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">YOUR CODING JOURNEY</span>
-            <h2>Small steps. Visible progress.</h2>
-            <p className="subtle">
-              Bring your problem solving and development activity into one
-              place.
-            </p>
-          </div>
-          <Code2 size={30} />
-        </div>
-        {error && (
-          <p className="form-error" role="alert">
-            {error}
-          </p>
-        )}
-        {notice && (
-          <p className="coding-notice" role="status">
-            {notice}
-          </p>
-        )}
-        {!data ? (
-          <div className="empty-state">
-            {error ? (
-              <button
-                onClick={() => {
-                  setError("");
-                  setAttempt((v) => v + 1);
-                }}
-              >
-                Retry loading coding data
-              </button>
-            ) : (
-              "Loading saved coding data…"
-            )}
-          </div>
-        ) : (
-          <>
-            {data.connection ? (
-              <div className="coding-source-row">
-                <div>
-                  <strong>Codolio / {data.connection.handle}</strong>
-                  <p className="subtle">
-                    Last attempt: {date(data.connection.attempted_at)}
-                  </p>
-                </div>
-                <div className="coding-actions">
-                  <a
-                    href={`https://codolio.com/profile/${encodeURIComponent(data.connection.handle)}/${view === "Development stats" ? "devStats" : "problemSolving"}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    View profile <ArrowUpRight size={14} />
-                  </a>
-                  <button disabled={working} onClick={() => run(refresh)}>
-                    <RefreshCw size={15} />
-                    {working ? "Refreshing…" : "Refresh Codolio"}
-                  </button>
-                  <button
-                    aria-label="Disconnect Codolio"
-                    disabled={busy}
-                    onClick={() => setRemoving("codolio")}
-                  >
-                    <Unplug size={15} />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <form
-                className="coding-connection-form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  run(async () => {
-                    setData(
-                      await post("/coding/connection", {
-                        handle: handle.trim(),
-                      }),
-                    );
-                    setSource("codolio");
-                    await refresh();
-                  });
-                }}
-              >
-                <label htmlFor="codolio-handle">
-                  <strong>No coding source connected</strong>
-                  <span className="subtle">
-                    Enter your public Codolio handle to import a snapshot.
-                  </span>
-                </label>
-                <div className="coding-actions">
-                  <input
-                    id="codolio-handle"
-                    placeholder="Your Codolio handle"
-                    value={handle}
-                    maxLength={60}
-                    required
-                    pattern="[A-Za-z0-9][A-Za-z0-9_.\-]{0,59}"
-                    onChange={(e) => setHandle(e.target.value)}
-                    disabled={busy}
-                  />
-                  <button className="primary-button" disabled={busy}>
-                    {busy ? "Connecting…" : "Connect Codolio"}
-                  </button>
-                </div>
-              </form>
-            )}
-            {data.connection?.error && (
-              <p className="coding-warning" role="status">
-                {data.connection.error}
-              </p>
-            )}
-            <p className="subtle coding-save-hint">
-              Saved in your Orbit account. Refresh only when you choose. No
-              Codolio account?{" "}
-              <button
-                className="text-button"
-                disabled={busy}
-                onClick={openManual}
-              >
-                Enter totals manually
-              </button>
-            </p>
-          </>
-        )}
-      </section>
-
       {manual && (
         <section className="workspace-card">
           <h2>Record your coding totals</h2>
