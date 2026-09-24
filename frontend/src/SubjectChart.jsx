@@ -67,6 +67,12 @@ export default function SubjectChart({ subjects = [] }) {
               role="img"
               aria-label={`${marks ? "Marks out of 100" : "Progress percentage"} by subject. Missing values are gaps. Exact values are in the table below.`}
             >
+              <defs>
+                <linearGradient id="lumaSubjectGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#F65991" />
+                  <stop offset="100%" stopColor="#F79E5C" />
+                </linearGradient>
+              </defs>
               {[0, 25, 50, 75, 100].map((n) => (
                 <g key={n}>
                   <line
@@ -74,14 +80,14 @@ export default function SubjectChart({ subjects = [] }) {
                     x2={width - 20}
                     y1={y(n)}
                     y2={y(n)}
-                    stroke="#eaeaea"
+                    stroke="#ECECEE"
                     strokeDasharray="3 4"
                   />
                   <text
                     x="28"
                     y={y(n) + 4}
                     textAnchor="end"
-                    fill="#777"
+                    fill="#9B9BA0"
                     fontSize="10"
                   >
                     {n}
@@ -91,8 +97,8 @@ export default function SubjectChart({ subjects = [] }) {
               <path
                 d={path}
                 fill="none"
-                stroke={marks ? "#353535" : "#43836d"}
-                strokeWidth="2"
+                stroke={marks ? "#1A1A1A" : "url(#lumaSubjectGrad)"}
+                strokeWidth="2.5"
               />
               {subjects.map((s, i) => (
                 <g key={s.subject}>
@@ -101,7 +107,9 @@ export default function SubjectChart({ subjects = [] }) {
                       cx={x(i)}
                       cy={y(s[metric])}
                       r={active === s.subject ? 6 : 4}
-                      fill={marks ? "#353535" : "#43836d"}
+                      fill={marks ? "#1A1A1A" : "#F65991"}
+                      stroke="#FFFFFF"
+                      strokeWidth="2"
                       tabIndex={0}
                       role="button"
                       aria-label={`${s.subject}: ${s[metric]} ${marks ? "out of 100" : "percent progress"}`}

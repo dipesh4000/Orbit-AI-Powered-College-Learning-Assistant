@@ -66,10 +66,16 @@ function SgpaChart({ rows, scale }) {
         role="img"
         aria-label="Reported SGPA by semester"
       >
+        <defs>
+          <linearGradient id="lumaSgpaGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#F65991" />
+            <stop offset="100%" stopColor="#F79E5C" />
+          </linearGradient>
+        </defs>
         {[0, scale / 2, scale].map((n) => (
           <g key={n}>
-            <line x1="40" x2="485" y1={y(n)} y2={y(n)} stroke="#e3e8df" />
-            <text x="30" y={y(n) + 4} textAnchor="end">
+            <line x1="40" x2="485" y1={y(n)} y2={y(n)} stroke="#ECECEE" strokeDasharray="3 4" />
+            <text x="30" y={y(n) + 4} textAnchor="end" fill="#9B9BA0" fontSize="11">
               {n}
             </text>
           </g>
@@ -77,20 +83,20 @@ function SgpaChart({ rows, scale }) {
         <polyline
           points={rows.map((r, i) => `${x(i)},${y(r.sgpa)}`).join(" ")}
           fill="none"
-          stroke="#557c4d"
+          stroke="url(#lumaSgpaGrad)"
           strokeWidth="3"
         />
         {rows.map((r, i) => (
           <g key={r.id}>
-            <circle cx={x(i)} cy={y(r.sgpa)} r="5" fill="#557c4d">
+            <circle cx={x(i)} cy={y(r.sgpa)} r="5" fill="#F65991" stroke="#fff" strokeWidth="2">
               <title>
                 Semester {r.semester}: {r.sgpa}/{scale}
               </title>
             </circle>
-            <text x={x(i)} y={y(r.sgpa) - 12} textAnchor="middle">
+            <text x={x(i)} y={y(r.sgpa) - 12} textAnchor="middle" fill="#1A1A1A" fontWeight="600" fontSize="12">
               {r.sgpa}
             </text>
-            <text x={x(i)} y="216" textAnchor="middle">
+            <text x={x(i)} y="216" textAnchor="middle" fill="#9B9BA0" fontSize="11">
               Sem {r.semester}
             </text>
           </g>

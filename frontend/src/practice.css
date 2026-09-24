@@ -1,67 +1,93 @@
+/* Luma Design System - Practice Workspace */
 .practice-workspace > p {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
 }
+
 .practice-set {
   margin: 28px 0;
 }
+
 .practice-set fieldset {
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 20px;
-  margin: 22px 0;
+  border-radius: 18px;
+  padding: 24px;
+  margin: 24px 0;
   min-width: 0;
+  background: #FFFFFF;
 }
+
 .practice-set legend {
-  font-size: 14px;
-  font-weight: 600;
-  padding: 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 0 10px;
   overflow-wrap: anywhere;
+  color: var(--ink);
 }
+
 .personal-shell .practice-option {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 13px;
-  padding: 10px 0;
+  font-size: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
+
+.personal-shell .practice-option:hover {
+  background: #F4F5F6;
+}
+
 .personal-shell .practice-option input {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  accent-color: #456b48;
+  accent-color: #F65991;
 }
+
 .practice-feedback {
-  background: #f1f5ec;
-  border-radius: 10px;
-  padding: 16px;
+  background: #FFF8FA;
+  border: 1px solid #FFD6E5;
+  border-radius: 14px;
+  padding: 18px;
   font-size: 13px;
-  margin-top: 15px;
+  margin-top: 18px;
+  line-height: 1.6;
+  color: var(--ink-strong);
 }
+
 .practice-history article {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
-  padding: 16px 0;
+  padding: 18px 0;
   border-bottom: 1px solid var(--line);
 }
+
 .practice-history article > div {
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
 .practice-history small {
   display: block;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
+  margin-top: 2px;
 }
+
 .practice-history button {
   border: 1px solid var(--line);
-  padding: 8px 12px;
-  background: #fff;
-  border-radius: 8px;
+  padding: 8px 16px;
+  background: #FFFFFF;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 12px;
 }
+
 @media (max-width: 600px) {
   .practice-history article {
     flex-wrap: wrap;
