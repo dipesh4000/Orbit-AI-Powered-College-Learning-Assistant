@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Sparkles, Trash2 } from "lucide-react";
+import { ArrowUp, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { api, post } from "./api";
@@ -98,7 +98,11 @@ export default function PersonalChat({
 
   async function clear() {
     if (!chatId) return;
-    if (!window.confirm("Clear this conversation? Your learning records will be kept."))
+    if (
+      !window.confirm(
+        "Clear this conversation? Your learning records will be kept.",
+      )
+    )
       return;
     setBusy(true);
     try {
@@ -124,7 +128,8 @@ export default function PersonalChat({
     <section className="personal-chat" aria-label="Chat with Orbit">
       <div className="chat-heading">
         <span>
-          <Sparkles size={18} /> Orbit <small>Your learning assistant</small>
+          <img src="/orbit-mark.svg" alt="" /> Orbit{" "}
+          <small>Your learning assistant</small>
         </span>
         <button
           onClick={clear}
@@ -157,19 +162,12 @@ export default function PersonalChat({
         aria-live="polite"
         aria-busy={busy || loading}
       >
-        {!chatId ? (
-          <div className="chat-welcome">
-            <span className="chat-orbit">◌</span>
-            <h1>What's on your mind, {name?.split(" ")[0]}?</h1>
-            <p>Select a chat or start a new one.</p>
-          </div>
-        ) : loading ? (
+        {loading ? (
           <p role="status">Loading conversation…</p>
         ) : (
           !messages.length &&
           !pending && (
             <div className="chat-welcome">
-              <span className="chat-orbit">◌</span>
               <h1>What's on your mind, {name?.split(" ")[0]}?</h1>
               <p>
                 Ask a question, make a study plan, or work through your next

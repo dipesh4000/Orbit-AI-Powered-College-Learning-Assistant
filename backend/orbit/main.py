@@ -335,8 +335,10 @@ if (DIST / "assets").is_dir():
 
     @app.get("/")
     @app.get("/login", include_in_schema=False)
+    @app.get("/demo", include_in_schema=False)
     @app.get("/chat", include_in_schema=False)
     @app.get("/dashboard", include_in_schema=False)
+    @app.get("/coding", include_in_schema=False)
     @app.get("/practice", include_in_schema=False)
     def frontend():
         return FileResponse(DIST / "index.html", headers={"Cache-Control": "no-cache"})

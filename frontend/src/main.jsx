@@ -80,6 +80,7 @@ function App() {
     "/chat": "Chat",
     "/dashboard": "Dashboard",
     "/practice": "Practice",
+    "/coding": "Coding stats",
   };
   const view = routes[location.pathname] || "Chat";
   const setView = (name) => navigate("/" + name.toLowerCase());
@@ -181,7 +182,7 @@ function App() {
     }
   }, [student, loading, location.pathname, navigate]);
   useEffect(() => {
-    document.title = `${student ? view : "Welcome"} · Orbit`;
+    document.title = `${student ? view : "Welcome"} · Orbit AI`;
   }, [student, view]);
   useEffect(() => {
     const expire = () => {
@@ -371,7 +372,7 @@ function App() {
   };
   async function enterDemo() {
     setBusy(true); setError("");
-    try { setStudent(await post("/auth/demo", {})); navigate("/dashboard"); }
+    try { setStudent(await post("/auth/demo", {})); navigate("/chat"); }
     catch (e) { setError(e.message); } finally { setBusy(false); }
   }
   if (location.pathname === "/") return <Landing signedIn={!!student} demo={health?.local_demo} onDemo={enterDemo} busy={busy} error={error} />;
@@ -390,7 +391,7 @@ function App() {
         onAuthenticated={(owner) => {
           setStudent(owner);
           setError("");
-          navigate("/dashboard", { replace: true });
+          navigate("/chat", { replace: true });
         }}
       />
     );

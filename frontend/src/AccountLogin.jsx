@@ -37,7 +37,7 @@ export default function AccountLogin(props) {
     <main className="account-page">
       <section className="account-card">
         <a className="brand" href="/">
-          ◌ orbit
+          <img src="/orbit-mark.svg" alt="" /> Orbit AI
         </a>
         <p className="eyebrow">YOUR PERSONAL LEARNING SPACE</p>
         <h1>{mode === "register" ? "Create your account" : "Welcome back"}</h1>

@@ -13,7 +13,7 @@
   display: flex;
   flex-direction: column;
   padding: clamp(32px, 5vh, 64px);
-  background: radial-gradient(circle at 15% 15%, #FFE0E8 0%, #FEECD7 35%, #E3F0EA 65%, #F5F6F8 100%);
+  background: radial-gradient(circle at 15% 15%, #f0f0f0 0%, #f4f4f4 35%, #F1F1F1 65%, #F5F6F8 100%);
   overflow: hidden;
   color: #1A1A1A;
   position: relative;
@@ -30,7 +30,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: linear-gradient(135deg, #F65991, #F79E5C);
+  background: linear-gradient(135deg, #171717, #333333);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -38,23 +38,24 @@
 
 .login-story .brand-icon {
   font-size: 34px;
-  background: linear-gradient(135deg, #F65991, #F79E5C);
+  background: linear-gradient(135deg, #171717, #333333);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   line-height: 1;
 }
+.login-story .brand-icon { width: 31px; height: 31px; background: none; }
 
 .brand-tag {
   font-size: 9px;
   letter-spacing: 1.5px;
   font-weight: 700;
   margin-left: 12px;
-  color: #F65991;
-  background: #FFE0E8;
+  color: #171717;
+  background: #f0f0f0;
   padding: 4px 10px;
   border-radius: 9999px;
-  -webkit-text-fill-color: #F65991;
+  -webkit-text-fill-color: #171717;
 }
 
 .story-copy {
@@ -64,7 +65,7 @@
 }
 
 .story-copy .eyebrow {
-  color: #F65991;
+  color: #171717;
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 1.4px;
@@ -80,7 +81,7 @@
 }
 
 .story-copy h1 span {
-  background: linear-gradient(135deg, #F65991, #F79E5C);
+  background: linear-gradient(135deg, #171717, #333333);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -108,7 +109,7 @@
 
 .orbit-ring {
   position: absolute;
-  border: 1px solid rgba(246, 89, 145, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 50%;
   top: 50%;
   left: 50%;
@@ -124,7 +125,7 @@
   width: 70%;
   animation-duration: 45s;
   animation-direction: reverse;
-  border-color: rgba(247, 158, 92, 0.25);
+  border-color: rgba(0, 0, 0, 0.25);
 }
 
 .ring-three {
@@ -141,13 +142,13 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #F65991;
-  box-shadow: 0 0 12px #F65991;
+  background: #171717;
+  box-shadow: 0 0 12px #171717;
 }
 
 .ring-two i {
-  background: #F79E5C;
-  box-shadow: 0 0 12px #F79E5C;
+  background: #333333;
+  box-shadow: 0 0 12px #333333;
   width: 12px;
   height: 12px;
 }
@@ -161,7 +162,7 @@
   height: 80px;
   border-radius: 24px;
   background: #FFFFFF;
-  box-shadow: 0 8px 30px rgba(246, 89, 145, 0.15);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.8);
   display: grid;
   place-items: center;
@@ -170,7 +171,7 @@
 .orbit-core::after {
   content: "◌";
   font-size: 40px;
-  background: linear-gradient(135deg, #F65991, #F79E5C);
+  background: linear-gradient(135deg, #171717, #333333);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -195,7 +196,7 @@
 }
 
 .orbit-label svg {
-  color: #F65991;
+  color: #171717;
 }
 
 .label-learn {
@@ -253,8 +254,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #F65991;
-  background: #FFE0E8;
+  color: #171717;
+  background: #f0f0f0;
   padding: 4px 12px;
   border-radius: 9999px;
   font-size: 10px;
@@ -291,7 +292,7 @@
 .server-status > svg {
   flex-shrink: 0;
   margin-top: 2px;
-  color: #F65991;
+  color: #171717;
 }
 
 .server-status strong {
@@ -309,18 +310,18 @@
 }
 
 .server-status.ready {
-  background: #E3F0EA;
+  background: #F1F1F1;
   border-color: rgba(5, 150, 105, 0.2);
-  color: #059669;
+  color: #454545;
 }
 
 .server-status.ready strong {
-  color: #059669;
+  color: #454545;
 }
 
 .server-status.unavailable {
-  background: #FFF8FA;
-  border-color: #FFD6E5;
+  background: #fafafa;
+  border-color: #dedede;
   color: #991B1B;
 }
 
@@ -343,8 +344,8 @@
 }
 
 .login-card select:focus {
-  border-color: #F65991;
-  box-shadow: 0 0 0 3px rgba(246, 89, 145, 0.12);
+  border-color: #171717;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.12);
 }
 
 .profile-description {
@@ -358,7 +359,7 @@
 .login-submit {
   width: 100%;
   min-height: 50px;
-  background: linear-gradient(135deg, #F65991, #F79E5C);
+  background: linear-gradient(135deg, #171717, #333333);
   border: 0;
   border-radius: 9999px;
   color: #FFFFFF;
@@ -366,13 +367,13 @@
   font-weight: 600;
   justify-content: space-between;
   padding: 14px 24px;
-  box-shadow: 0 4px 16px rgba(246, 89, 145, 0.32);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.32);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .login-submit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(246, 89, 145, 0.42);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42);
   opacity: 0.95;
 }
 

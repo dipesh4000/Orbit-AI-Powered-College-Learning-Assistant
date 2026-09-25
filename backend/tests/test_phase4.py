@@ -85,7 +85,8 @@ def test_decisions_deduplicate_and_deleted_or_unconfirmed_evidence_is_stale(envi
         assert alice.put(f"/api/personal/suggestions/{row['id']}", json={"state":"dismissed"}).status_code == 200
         assert alice.post("/api/personal/suggestions/refresh").json()[0]["state"] == "dismissed"
         assert len(alice.post("/api/personal/suggestions/refresh").json()) == len(rows)
-        answer = alice.post("/api/personal/chat", json={"message":"SQL test Friday, two hours"}).json()
+        chat_id = alice.post("/api/personal/chats").json()["id"]
+        answer = alice.post(f"/api/personal/chats/{chat_id}/messages", json={"message":"SQL test Friday, two hours"}).json()
         assert "not re-propose" in answer["answer"]
         question = next(r for r in row["evidence"] if r["kind"] == "question")
         with environment.begin() as conn:
@@ -123,15 +124,16 @@ def test_demo_endpoint_off_by_default_and_assistant_is_grounded(environment, mon
         response = client.post("/api/auth/demo")
         assert response.status_code == 200 and response.json()["demo_account"]
         assert client.get("/api/session").json()["demo_account"]
-        answer = client.post("/api/personal/chat", json={"message":"SQL test Friday, two hours"})
+        chat_id = client.post("/api/personal/chats").json()["id"]
+        answer = client.post(f"/api/personal/chats/{chat_id}/messages", json={"message":"SQL test Friday, two hours"})
         assert answer.status_code == 200, answer.text
         body = answer.json()
         assert body["demo"] and "120-minute" in body["answer"]
         assert "8/10" in body["answer"] and "authored examples" in body["answer"]
         assert {r["kind"] for r in body["sources"]} >= {"assessment", "question"}
-        assert client.get("/api/personal/chat").json()["history"][-1]["sources"] == body["sources"]
+        assert client.get(f"/api/personal/chats/{chat_id}/messages").json()["history"][-1]["sources"] == body["sources"]
         for prompt, expected in [("Show coding activity", "136"), ("Show project work", "demo"), ("Show my DBMS marks", "85/100"), ("Compare my DBMS results", "+20 percentage points")]:
-            result = client.post("/api/personal/chat", json={"message": prompt})
+            result = client.post(f"/api/personal/chats/{chat_id}/messages", json={"message": prompt})
             assert result.status_code == 200 and expected in result.json()["answer"]
         with environment.connect() as conn:
             assert conn.scalar(select(db.suggestions.c.state).limit(1)) == "proposed"

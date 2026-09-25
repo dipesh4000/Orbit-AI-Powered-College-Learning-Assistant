@@ -10,7 +10,7 @@
   display: grid;
   place-items: center;
   padding: 32px 20px;
-  background: radial-gradient(circle at 50% 10%, #FFE0E8 0%, #FEECD7 35%, #F5F6F8 75%);
+  background: radial-gradient(circle at 50% 10%, #f0f0f0 0%, #f4f4f4 35%, #F5F6F8 75%);
 }
 
 .account-card {
@@ -29,11 +29,13 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #F65991, #F79E5C);
+  background: linear-gradient(135deg, #171717, #333333);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.account-card .brand { background: none; color: #171717; -webkit-text-fill-color: currentColor; font-size: 20px; letter-spacing: -.4px; }
+.account-card .brand img { width: 30px; height: 30px; display: block; }
 
 .account-card h1,
 .personal-workspace h1 {
@@ -82,8 +84,8 @@
 
 .account-card input:focus,
 .subject-form input:focus {
-  border-color: #F65991;
-  box-shadow: 0 0 0 3px rgba(246, 89, 145, 0.12);
+  border-color: #171717;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.12);
   outline: none;
 }
 
@@ -94,18 +96,18 @@
 
 .account-card .primary {
   border-radius: 9999px;
-  background: linear-gradient(135deg, #F65991, #F79E5C);
+  background: linear-gradient(135deg, #171717, #333333);
   border: 0;
   color: #fff;
   font-weight: 600;
   font-size: 14px;
-  box-shadow: 0 4px 14px rgba(246, 89, 145, 0.3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .account-card .primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(246, 89, 145, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .account-back {
@@ -146,7 +148,7 @@
 }
 
 .workspace-card:hover {
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03), 0 16px 36px -4px rgba(246, 89, 145, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03), 0 16px 36px -4px rgba(0, 0, 0, 0.08);
 }
 
 .workspace-card li {
@@ -176,7 +178,7 @@
   --ink: #1A1A1A;
   --muted: #9B9BA0;
   --line: #ECECEE;
-  --accent: #F65991;
+  --accent: #171717;
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
   min-height: 100dvh;
@@ -207,7 +209,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #F65991, #F79E5C);
+  background: linear-gradient(135deg, #171717, #333333);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -255,8 +257,8 @@
 }
 
 .personal-sidebar nav button.active {
-  background: #FFE0E8;
-  color: #F65991;
+  background: #f0f0f0;
+  color: #171717;
   font-weight: 700;
 }
 
@@ -272,8 +274,8 @@
 
 .sidebar-note {
   margin-top: auto;
-  border: 1px solid #FFD6E5;
-  background: #FFF8FA;
+  border: 1px solid #dedede;
+  background: #fafafa;
   padding: 16px;
   border-radius: 16px;
   font-size: 12px;
@@ -305,9 +307,9 @@
   height: 36px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #FFE0E8, #FEECD7);
+  background: linear-gradient(135deg, #f0f0f0, #f4f4f4);
   border-radius: 50%;
-  color: #F65991;
+  color: #171717;
   font-weight: 700;
   font-size: 13px;
   flex-shrink: 0;
@@ -440,7 +442,7 @@
 
 .summary-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03), 0 16px 36px -4px rgba(246, 89, 145, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03), 0 16px 36px -4px rgba(0, 0, 0, 0.1);
   border-color: #D4D4D8;
 }
 
@@ -532,9 +534,9 @@
   width: 42px;
   height: 42px;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #FFE0E8, #FEECD7);
+  background: linear-gradient(135deg, #f0f0f0, #f4f4f4);
   border-radius: 12px;
-  color: #F65991;
+  color: #171717;
   font-weight: 700;
 }
 
@@ -599,7 +601,7 @@
 }
 
 .record-actions button:hover {
-  background: #FFE0E8;
+  background: #f0f0f0;
   color: var(--accent);
   transform: none;
 }
@@ -657,7 +659,7 @@
 .personal-shell select:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(246, 89, 145, 0.12);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.12);
 }
 
 .personal-shell button:focus-visible {
@@ -676,20 +678,20 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(135deg, var(--button-start, #F65991), var(--button-end, #F79E5C));
+  background: linear-gradient(135deg, var(--button-start, #171717), var(--button-end, #333333));
   border: 0;
   border-radius: 9999px;
   padding: 12px 20px;
   font-size: 13px;
   font-weight: 600;
   color: #fff;
-  box-shadow: 0 4px 14px rgba(246, 89, 145, 0.28);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .personal-shell .primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(246, 89, 145, 0.38);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
 }
 
 .personal-shell button:disabled {
@@ -704,8 +706,8 @@
 
 .personal-shell .empty-state {
   padding: 36px 20px;
-  background: #FFF8FA;
-  border: 1px dashed #FFD6E5;
+  background: #fafafa;
+  border: 1px dashed #dedede;
   border-radius: 16px;
   text-align: center;
   color: var(--muted);
@@ -797,7 +799,7 @@
 .success-message {
   padding: 14px 18px;
   color: #fff;
-  background: linear-gradient(135deg, #F65991, #F79E5C);
+  background: linear-gradient(135deg, #171717, #333333);
   border-radius: 14px;
   font-size: 13px;
   font-weight: 600;
@@ -818,7 +820,7 @@
   padding: 18px;
   border: 1px solid #ECECEE;
   border-radius: 14px;
-  background: #FFF8FA;
+  background: #fafafa;
   font-size: 13px;
 }
 
@@ -842,7 +844,7 @@
 
 .project-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(246, 89, 145, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .project-card p {
@@ -867,11 +869,11 @@
 }
 
 .tech-tags span {
-  background: #FFE0E8;
+  background: #f0f0f0;
   border-radius: 9999px;
   padding: 4px 12px;
   font-size: 11px;
-  color: #F65991;
+  color: #171717;
   font-weight: 600;
 }
 
@@ -917,7 +919,7 @@
 }
 
 .personal-messages article.user {
-  background: linear-gradient(135deg, #FFE0E8, #FEECD7);
+  background: linear-gradient(135deg, #f0f0f0, #f4f4f4);
   border: 0;
 }
 
@@ -972,7 +974,7 @@
 }
 
 .delete-dialog .danger {
-  background: linear-gradient(135deg, #F65991, #DC2626);
+  background: linear-gradient(135deg, #171717, #DC2626);
   color: #fff;
   border: 0;
   box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
@@ -1001,8 +1003,8 @@
 }
 
 .owner-settings-btn:hover {
-  background: #FFE0E8;
-  color: #F65991;
+  background: #f0f0f0;
+  color: #171717;
 }
 
 .settings-backdrop {
@@ -1065,8 +1067,8 @@
 
 .settings-nav-item.active,
 .settings-nav-item:hover {
-  background: #FFE0E8;
-  color: #F65991;
+  background: #f0f0f0;
+  color: #171717;
   font-weight: 700;
 }
 
@@ -1105,8 +1107,8 @@
 }
 
 .settings-close:hover {
-  background: #FFE0E8;
-  color: #F65991;
+  background: #f0f0f0;
+  color: #171717;
 }
 
 .settings-connection-block {
@@ -1152,8 +1154,8 @@
 
 .settings-connected-badge {
   display: inline-block;
-  background: #E3F0EA;
-  color: #059669;
+  background: #F1F1F1;
+  color: #454545;
   font-size: 11px;
   font-weight: 700;
   padding: 4px 12px;
@@ -1198,7 +1200,7 @@
 .settings-input-row .primary-button {
   border-radius: 0;
   border: 0;
-  background: linear-gradient(135deg, #F65991, #F79E5C);
+  background: linear-gradient(135deg, #171717, #333333);
   color: #fff;
   font-weight: 600;
   white-space: nowrap;
@@ -1230,20 +1232,20 @@
 }
 
 .primary-button {
-  background: linear-gradient(135deg, var(--button-start, #F65991), var(--button-end, #F79E5C));
+  background: linear-gradient(135deg, var(--button-start, #171717), var(--button-end, #333333));
   color: #fff;
   border: 0;
   border-radius: 9999px;
   padding: 10px 18px;
   font-weight: 600;
   font-size: 13px;
-  box-shadow: 0 4px 12px rgba(246, 89, 145, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   transition: all 0.2s ease;
 }
 
 .primary-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(246, 89, 145, 0.35);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
 
 .form-error {
@@ -1305,8 +1307,8 @@
 }
 
 .chat-history-new:hover {
-  background: #FFE0E8;
-  color: #F65991;
+  background: #f0f0f0;
+  color: #171717;
 }
 
 .chat-history-new:disabled {
@@ -1355,8 +1357,8 @@
 }
 
 .chat-history-item.active {
-  background: #FFE0E8;
-  color: #F65991;
+  background: #f0f0f0;
+  color: #171717;
   font-weight: 700;
 }
 

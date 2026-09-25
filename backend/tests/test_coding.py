@@ -27,7 +27,16 @@ def profile():
         "status": {"success": True},
         "data": {
             "userDetails": {"email": "private@example.invalid"},
-            "codolioCardDetails": {"totalQuestionsSolved": 42, "totalActiveDays": 0},
+            "codolioCardDetails": {
+                "totalQuestionsSolved": 42,
+                "totalActiveDays": 0,
+                "totalSubmissions": 57,
+            },
+            "questionDistribution": {
+                "DSA": {"Easy": 20, "Medium": 18, "Hard": 4},
+                "email": "private@example.invalid",
+            },
+            "problemSolvingActivity": {stamp: 3},
             "githubProfileDetails": {
                 "totalContributions": 80,
                 "commitCounts": 61,
@@ -49,6 +58,9 @@ def test_normalizer_preserves_unknown_zero_and_metric_provenance():
     assert result["pull_requests"] == 3
     assert len(result["activity"]) == 1
     assert result["languages"][0]["percent"] == 75
+    assert result["problem_activity"][0]["count"] == 3
+    assert result["problem_details"]["questionDistribution"]["DSA"]["Hard"] == 4
+    assert "codolioDevelopmentCardDetails" not in result["problem_details"]
     assert "email" not in str(result)
 
 

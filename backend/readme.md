@@ -2,6 +2,14 @@
 
 FastAPI, PostgreSQL, local retrieval, and model orchestration, managed with uv.
 
+## Source navigation
+
+Implementation is organized under `orbit/api`, `orbit/features`, `orbit/core`,
+`orbit/ai`, and `orbit/demo`. The root `orbit/*.py` modules are compatibility
+imports for existing commands and integrations. New code belongs in the grouped
+folders. See [orbit/README.md](orbit/README.md) for the module map and where to
+place each kind of change.
+
 ## Setup and run
 
 From this directory:

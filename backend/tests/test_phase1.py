@@ -224,7 +224,7 @@ def test_migration_preserves_phase0_and_enforces_parent_ownership(tmp_path):
             == "untouched"
         )
         assert conn.scalar(select(db.subjects.c.name)) == "SQL"
-        assert conn.scalar(text("SELECT version_num FROM alembic_version")) == "0007"
+        assert conn.scalar(text("SELECT version_num FROM alembic_version")) == "0008"
     with pytest.raises(IntegrityError), engine.begin() as conn:
         conn.execute(
             db.personal_assessments.insert().values(
@@ -280,12 +280,14 @@ def test_personal_chat_reads_saved_records_and_rejects_identity_arguments(
         register(client, "a@b.com")
         key = subject(client)
         client.post("/api/assessments", json=mark(key))
+        chat_id = client.post("/api/personal/chats").json()["id"]
         result = client.post(
-            "/api/personal/chat", json={"message": "What did I score in SQL?"}
+            f"/api/personal/chats/{chat_id}/messages",
+            json={"message": "What did I score in SQL?"},
         )
         assert result.status_code == 200, result.text
         assert "12/20" in result.json()["answer"]
-        assert len(client.get("/api/personal/chat").json()["history"]) == 2
+        assert len(client.get(f"/api/personal/chats/{chat_id}/messages").json()["history"]) == 2
     with pytest.raises(ValidationError):
         asyncio.run(
             PersonalRegistry(environment).execute("get_assessments", {"owner_id": 2}, 1)

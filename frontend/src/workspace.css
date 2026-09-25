@@ -28,9 +28,9 @@
 }
 
 .workspace-subtabs button[aria-pressed="true"] {
-  background: #FFE0E8;
-  border-color: #F65991;
-  color: #F65991;
+  background: #f0f0f0;
+  border-color: #171717;
+  color: #171717;
   font-weight: 700;
 }
 
@@ -55,11 +55,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #FFE0E8;
-  border: 1px solid rgba(246, 89, 145, 0.2);
+  background: #f0f0f0;
+  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 9999px;
   padding: 8px 16px;
-  color: #F65991;
+  color: #171717;
   font-weight: 600;
   font-size: 12px;
   transition: all 0.2s ease;
@@ -67,7 +67,7 @@
 
 .academic-summary > button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(246, 89, 145, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .academic-numbers {
@@ -112,7 +112,7 @@
 
 .chart-ghost {
   font-size: 50px;
-  color: #F65991;
+  color: #171717;
   opacity: 0.4;
 }
 
@@ -157,10 +157,10 @@
 }
 
 .subject-tiles button:hover {
-  border-color: #F65991;
-  background: #FFF8FA;
+  border-color: #171717;
+  background: #fafafa;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(246, 89, 145, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .subject-tiles strong {
@@ -211,8 +211,8 @@
 
 .file-drop {
   padding: 24px;
-  border: 1px dashed #FFD6E5;
-  background: #FFF8FA;
+  border: 1px dashed #dedede;
+  background: #fafafa;
   border-radius: 16px;
   margin: 14px 0;
   text-align: center;
@@ -300,8 +300,8 @@
 }
 
 .learning-project.selected {
-  border-color: #F65991;
-  background: #FFF8FA;
+  border-color: #171717;
+  background: #fafafa;
 }
 
 .learning-project .form-actions {
@@ -315,7 +315,7 @@
 }
 
 .project-empty > svg {
-  color: #F65991;
+  color: #171717;
 }
 
 .project-empty p {
@@ -340,7 +340,7 @@
 .subject-options input {
   width: 18px;
   height: 18px;
-  accent-color: #F65991;
+  accent-color: #171717;
 }
 
 .project-add-grid {
@@ -367,8 +367,8 @@
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  background: #FFF8FA;
-  border: 1px solid #FFD6E5;
+  background: #fafafa;
+  border: 1px solid #dedede;
   border-radius: 12px;
   font-size: 12px;
   color: #1A1A1A;
@@ -412,7 +412,7 @@
 
 .coding-hero a {
   font-size: 12px;
-  color: #F65991;
+  color: #171717;
   font-weight: 600;
 }
 

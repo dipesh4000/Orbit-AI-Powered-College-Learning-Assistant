@@ -4,13 +4,20 @@ Installation, configuration, local development, and validation. See [README](REA
 
 ## Windows quick start
 
-From the repository root, run `start.bat --sandbox` to install locked dependencies
-and try a temporary local workspace at http://localhost:4176. No PostgreSQL or AI
-credentials are needed; records reset on restart and AI credentials are disabled.
-Codolio uses the real public provider unless you run automated browser tests.
+From the repository root, run `start.bat` to install locked dependencies and open
+the preloaded demo at http://localhost:4176/demo. No PostgreSQL or AI credentials
+are needed. Its chat uses local rule-based replies, and its coding dashboard uses
+illustrative sample data. Records reset when the server stops. Use
+`start.bat --sandbox` for an empty disposable workspace.
+
+The public landing page is already available at http://localhost:4176/. The demo
+opens at `/demo` by design so it can be shown immediately. To visit the landing
+page after startup, replace `/demo` in the browser address bar with `/`; choose
+**Open preloaded demo** there to return to the sample workspace. In live mode, the
+same landing page is at http://localhost:5173/.
 
 For persistent records, configure **Orbit/.env** as described below and run
-`start.bat`. It applies migrations to the configured PostgreSQL database before
+`start.bat --live`. It applies migrations to the configured PostgreSQL database before
 starting the API and frontend at http://localhost:5173. It preserves existing env
 files and does not import demo CSVs. Keep the terminal open; Ctrl+C stops both
 servers. Logs are in `backend/logs/dev-backend.log` and `dev-frontend.log`.
@@ -19,7 +26,8 @@ Use `start.bat --check` for a read-only dependency/configuration check or
 `start.bat --test` for the automated suite (including Chromium installation).
 Stop the sandbox before browser tests, which need the same 8011/4176 ports.
 
-The sidebar contains Chat, Dashboard, Coding stats and Practice. Enter reported
+The sidebar contains Chat, Dashboard, Coding stats and Practice. You can also open
+`/chat`, `/dashboard`, `/coding`, or `/practice` directly after signing in. Enter reported
 credits and SGPA in Dashboard; these are not calculated from grades. For recognition
 of academic images/PDFs and project documents, set `GEMINI_API_KEY` in `Orbit/.env`
 and restart the backend. `GEMINI_MODEL` is configurable. Review extracted academic
@@ -29,7 +37,7 @@ Practice imports selected public source files as a snapshot for the main chat.
 ## Prerequisites and dataset placement
 
 Install Git, Node.js 22 LTS with npm, and [uv](https://docs.astral.sh/uv/getting-started/installation/).
-The personal workspace needs PostgreSQL (such as Neon). Demo CSVs and an LLM API key are only needed for the optional legacy demo.
+Persistent personal workspaces need PostgreSQL (such as Neon). The local demo needs no database service or API key.
 Commands start in the repository folder containing `backend/` and `frontend/`.
 On Windows use `npm.cmd` if PowerShell blocks `npm.ps1`. On macOS/Linux use `npm`.
 

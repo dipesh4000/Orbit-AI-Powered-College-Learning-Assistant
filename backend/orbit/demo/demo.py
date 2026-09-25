@@ -10,8 +10,9 @@ from pathlib import Path
 from fastapi import HTTPException
 from sqlalchemy import select
 
-from . import accounts, coding, insights, papers, personal
-from . import database as db
+from ..core import accounts
+from ..core import database as db
+from ..features import academics, coding, insights, papers, personal
 
 
 def seed(engine):
@@ -21,7 +22,7 @@ def seed(engine):
         if conn.scalar(select(db.owners.c.id).limit(1)):
             raise RuntimeError("Demo fixtures require an empty database.")
     fixture = json.loads(
-        (Path(__file__).resolve().parents[1] / "demo_data/results.json").read_text()
+        (Path(__file__).resolve().parents[2] / "demo_data/results.json").read_text()
     )
     owner = accounts.register(
         engine,
@@ -32,6 +33,21 @@ def seed(engine):
         ),
     )
     oid, ids = owner["id"], {}
+    academics.save_profile(
+        oid,
+        engine,
+        academics.Profile(
+            program="CSE · demo reference",
+            current_semester="3",
+            total_credits=82,
+            target_sgpa=9,
+            sgpa_scale=10,
+        ),
+    )
+    for index, value in enumerate(fixture["reported_sgpa"][:2], 1):
+        academics.save_semester(
+            oid, engine, academics.Semester(semester=str(index), sgpa=value)
+        )
     for row in fixture["subjects"]:
         subject = personal.create_subject(
             oid,
@@ -133,6 +149,75 @@ def seed(engine):
                 .where(db.coding_snapshots.c.id == key)
                 .values(fetched_at=time.time() - days * 86400)
             )
+    sample = {
+        "status": {"success": True},
+        "data": {
+            "codolioCardDetails": {
+                "totalQuestionsSolved": 326,
+                "totalActiveDays": 181,
+                "totalSubmissions": 395,
+                "maxStreak": 24,
+                "currentStreak": 4,
+                "totalContestAttended": 16,
+            },
+            "questionDistribution": {
+                "Fundamentals": {"GFG Basic": 6, "HackerRank": 9},
+                "DSA": {"Easy": 119, "Medium": 145, "Hard": 19},
+                "Competitive Programming": {"CodeChef": 21, "AtCoder": 7},
+            },
+            "contestDetails": {
+                "LeetCode": {"attended": 7, "rating": 1585},
+                "CodeChef": {"attended": 2},
+                "AtCoder": {"attended": 5},
+                "CodeChef DSA": {"attended": 2},
+            },
+            "problemSolvingActivity": {
+                str(
+                    int(
+                        (datetime.now(UTC) - timedelta(days=i))
+                        .replace(hour=0, minute=0, second=0, microsecond=0)
+                        .timestamp()
+                    )
+                ): (i * 5) % 7
+                for i in range(365)
+            },
+            "githubProfileDetails": {
+                "totalContributions": 412,
+                "commitCounts": 284,
+                "pushRequestsCount": 12,
+                "stars": 8,
+                "issues": 5,
+                "totalActiveDays": 126,
+                "developmentActivity": {
+                    str(
+                        int(
+                            (datetime.now(UTC) - timedelta(days=i))
+                            .replace(hour=0, minute=0, second=0, microsecond=0)
+                            .timestamp()
+                        )
+                    ): (i * 11) % 8
+                    for i in range(365)
+                },
+                "languageDistributions": {
+                    "TypeScript": 470,
+                    "Python": 310,
+                    "CSS": 140,
+                    "SQL": 80,
+                },
+            },
+        },
+    }
+    with engine.begin() as conn:
+        conn.execute(
+            db.coding_snapshots.insert().values(
+                owner_id=oid,
+                source="codolio",
+                handle="illustrative-demo",
+                fetched_at=time.time(),
+                raw=sample,
+                normalized=coding.normalize(sample, time.time()),
+            )
+        )
     personal.save_record(
         oid,
         engine,
@@ -154,7 +239,7 @@ def seed(engine):
 
 async def reply(message, owner_id, engine):
     """Bounded offline walkthrough, visibly distinguished from a language model."""
-    from .personal_tools import PersonalRegistry
+    from ..personal_tools import PersonalRegistry
 
     registry = PersonalRegistry(engine)
     subjects, _ = await registry.execute("get_subjects", {}, owner_id)
@@ -228,7 +313,13 @@ async def reply(message, owner_id, engine):
     elif any(term in lower for term in ("practice", "practise")):
         rows = await read("get_practice_history", {"subject_id": sid})
         completed = [r for r in rows if r["answered_at"] is not None]
-        answer = "\n".join(f"- {r['topic']}: {r['correct']}/{len(r['questions'])} in practice [{r['evidence_id']}]" for r in completed[:8]) or "No completed practice attempts yet. Open Practice to begin."
+        answer = (
+            "\n".join(
+                f"- {r['topic']}: {r['correct']}/{len(r['questions'])} in practice [{r['evidence_id']}]"
+                for r in completed[:8]
+            )
+            or "No completed practice attempts yet. Open Practice to begin."
+        )
         answer += "\n\nPractice feedback is separate from formal marks."
     elif any(term in lower for term in ("compare", "change", "improv", "trend")):
         pairs = await read("compare_assessments", {"subject_id": sid})

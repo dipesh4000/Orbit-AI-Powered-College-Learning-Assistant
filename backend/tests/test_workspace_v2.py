@@ -242,8 +242,9 @@ def test_main_chat_uses_project_and_survives_logout(environment, monkeypatch):
             f"/api/projects/{project['id']}/documents",
             files={"file": ("notes.txt", b"SELECT reads rows.")},
         )
+        chat_id = client.post("/api/personal/chats").json()["id"]
         response = client.post(
-            "/api/personal/chat",
+            f"/api/personal/chats/{chat_id}/messages",
             json={"message": "Explain the notes", "project_id": project["id"]},
         )
         assert response.status_code == 200, response.text
@@ -259,11 +260,11 @@ def test_main_chat_uses_project_and_survives_logout(environment, monkeypatch):
             ).status_code
             == 200
         )
-        history = client.get("/api/personal/chat").json()["history"]
+        history = client.get(f"/api/personal/chats/{chat_id}/messages").json()["history"]
         assert len(history) == 2 and history[0]["project_id"] == project["id"]
-        row = personal_chat_history.load(project["owner_id"], environment)
+        personal_chat_history.load(project["owner_id"], environment, chat_id)
         with pytest.raises(HTTPException):
-            personal_chat_history.save(project["owner_id"], environment, row, 0)
+            personal_chat_history.load(project["owner_id"], environment, 0)
 
 
 def test_github_import_is_bounded_to_public_api_and_preserves_source(

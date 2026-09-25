@@ -67,12 +67,6 @@ export default function SubjectChart({ subjects = [] }) {
               role="img"
               aria-label={`${marks ? "Marks out of 100" : "Progress percentage"} by subject. Missing values are gaps. Exact values are in the table below.`}
             >
-              <defs>
-                <linearGradient id="lumaSubjectGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#F65991" />
-                  <stop offset="100%" stopColor="#F79E5C" />
-                </linearGradient>
-              </defs>
               {[0, 25, 50, 75, 100].map((n) => (
                 <g key={n}>
                   <line
@@ -97,7 +91,7 @@ export default function SubjectChart({ subjects = [] }) {
               <path
                 d={path}
                 fill="none"
-                stroke={marks ? "#1A1A1A" : "url(#lumaSubjectGrad)"}
+                stroke="#353535"
                 strokeWidth="2.5"
               />
               {subjects.map((s, i) => (
@@ -107,7 +101,7 @@ export default function SubjectChart({ subjects = [] }) {
                       cx={x(i)}
                       cy={y(s[metric])}
                       r={active === s.subject ? 6 : 4}
-                      fill={marks ? "#1A1A1A" : "#F65991"}
+                      fill="#353535"
                       stroke="#FFFFFF"
                       strokeWidth="2"
                       tabIndex={0}

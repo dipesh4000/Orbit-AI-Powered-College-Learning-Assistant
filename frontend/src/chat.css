@@ -52,8 +52,8 @@
 .chat-heading small {
   font-weight: 600;
   font-size: 11px;
-  color: var(--brand-pink, #F65991);
-  background: var(--promo-pink, #FFE0E8);
+  color: var(--brand-pink, #171717);
+  background: var(--promo-pink, #f0f0f0);
   padding: 3px 8px;
   border-radius: 9999px;
   margin-left: 8px;
@@ -97,14 +97,14 @@
 
 .chat-orbit {
   font-size: 72px;
-  background: linear-gradient(135deg, var(--brand-start, #DA60BF), var(--brand-end, #F79E5C));
+  background: linear-gradient(135deg, var(--brand-start, #171717), var(--brand-end, #333333));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   line-height: 1;
   display: inline-block;
   margin-bottom: 8px;
-  filter: drop-shadow(0 4px 12px rgba(246, 89, 145, 0.2));
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
 }
 
 .personal-shell .chat-welcome h1 {
@@ -149,14 +149,14 @@
 
 .chat-starters button:hover {
   background: #FFFFFF;
-  border-color: var(--brand-pink, #F65991);
-  color: var(--brand-pink, #F65991);
-  box-shadow: 0 8px 24px -4px rgba(246, 89, 145, 0.15);
+  border-color: var(--brand-pink, #171717);
+  color: var(--brand-pink, #171717);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
 }
 
 .chat-starters button svg {
-  color: var(--brand-pink, #F65991);
+  color: var(--brand-pink, #171717);
   flex-shrink: 0;
 }
 
@@ -185,7 +185,7 @@
 }
 
 .chat-message.user .chat-message-body {
-  background: linear-gradient(135deg, var(--promo-pink, #FFE0E8) 0%, var(--promo-yellow, #FEECD7) 100%);
+  background: linear-gradient(135deg, var(--promo-pink, #f0f0f0) 0%, var(--promo-yellow, #f4f4f4) 100%);
   border-radius: 22px;
   padding: 12px 22px;
   max-width: 85%;
@@ -211,10 +211,10 @@
 }
 
 .chat-message pre {
-  background: #FFF8FA;
+  background: #fafafa;
   padding: 18px;
   border-radius: 16px;
-  border: 1px solid #FFD6E5;
+  border: 1px solid #dedede;
   font-size: 13px;
 }
 
@@ -225,7 +225,7 @@
 
 .chat-thinking {
   font-size: 13px;
-  color: var(--brand-pink, #F65991);
+  color: var(--brand-pink, #171717);
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -243,7 +243,7 @@
   border-radius: 26px;
   background: #FFFFFF;
   padding: 16px 20px 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03), 0 14px 32px -4px rgba(246, 89, 145, 0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03), 0 14px 32px -4px rgba(0, 0, 0, 0.08);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -260,7 +260,7 @@
 }
 
 .personal-shell .chat-composer textarea::placeholder {
-  color: var(--placeholder, #B0B0B5);
+  color: var(--placeholder, #8a8a8a);
 }
 
 .personal-shell .chat-composer textarea:focus {
@@ -268,8 +268,8 @@
 }
 
 .chat-composer:focus-within {
-  border-color: var(--brand-pink, #F65991);
-  box-shadow: 0 0 0 3px rgba(246, 89, 145, 0.14), 0 16px 36px -4px rgba(246, 89, 145, 0.12);
+  border-color: var(--brand-pink, #171717);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.14), 0 16px 36px -4px rgba(0, 0, 0, 0.12);
 }
 
 .chat-composer-bottom {
@@ -290,17 +290,17 @@
   height: 40px;
   min-height: 40px;
   padding: 0;
-  background: linear-gradient(135deg, var(--button-start, #F65991), var(--button-end, #F79E5C));
+  background: linear-gradient(135deg, var(--button-start, #171717), var(--button-end, #333333));
   border: 0;
   display: grid;
   place-items: center;
-  box-shadow: 0 4px 14px rgba(246, 89, 145, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .personal-shell .chat-composer .primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(246, 89, 145, 0.48);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.48);
 }
 
 .personal-shell .chat-composer .primary:active {

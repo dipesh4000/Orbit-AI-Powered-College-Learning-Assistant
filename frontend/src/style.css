@@ -14,29 +14,29 @@
   --ink: #1A1A1A;
   --ink-strong: #4C4B4C;
   --muted: #9B9BA0;
-  --placeholder: #B0B0B5;
+  --placeholder: #8a8a8a;
   --line: #ECECEE;
 
   /* Luma Brand Gradients & Accents */
-  --brand-start: #DA60BF;
-  --brand-pink: #F65A90;
-  --brand-end: #F79E5C;
-  --button-start: #F65991;
-  --button-end: #F79E5C;
+  --brand-start: #171717;
+  --brand-pink: #171717;
+  --brand-end: #333333;
+  --button-start: #171717;
+  --button-end: #333333;
 
   /* Luma Pastel Badges */
-  --promo-pink: #FFE0E8;
-  --promo-yellow: #FEECD7;
-  --promo-mint: #E3F0EA;
-  --promo-blue: #CEF0F5;
+  --promo-pink: #f0f0f0;
+  --promo-yellow: #f4f4f4;
+  --promo-mint: #F1F1F1;
+  --promo-blue: #F1F1F1;
 
   /* Luma Detail / Dark Accent */
-  --detail-bg: #0A0922;
+  --detail-bg: #202020;
   --detail-muted: #9CA3AF;
   --near-capacity: #D97706;
   --near-capacity-bg: #FEF3C7;
-  --waitlist-blue: #2563EB;
-  --waitlist-bg: #EFF6FF;
+  --waitlist-blue: #454545;
+  --waitlist-bg: #F2F2F2;
 
   /* Tactile Shapes & Radii */
   --radius-pill: 9999px;
@@ -48,8 +48,8 @@
   /* Tactile Shadows */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.03);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 24px -2px rgba(0, 0, 0, 0.04);
-  --shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.03), 0 16px 36px -4px rgba(246, 89, 145, 0.08);
-  --shadow-button: 0 4px 14px rgba(246, 89, 145, 0.28);
+  --shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.03), 0 16px 36px -4px rgba(0, 0, 0, 0.08);
+  --shadow-button: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 
 * {
@@ -58,7 +58,7 @@
 
 body {
   margin: 0;
-  background: radial-gradient(ellipse 70% 35% at 50% -5%, rgba(246, 90, 144, 0.07) 0%, rgba(247, 158, 92, 0.03) 40%, transparent 80%), #F5F6F8;
+  background: radial-gradient(ellipse 70% 35% at 50% -5%, rgba(246, 90, 144, 0.07) 0%, rgba(0, 0, 0, 0.03) 40%, transparent 80%), #F5F6F8;
   color: var(--ink);
   font-family: "Plus Jakarta Sans", sans-serif;
   min-height: 100dvh;
@@ -467,7 +467,7 @@ header {
   display: inline-block;
   width: 6px;
   height: 6px;
-  background: #10B981;
+  background: #454545;
   border-radius: 50%;
 }
 
@@ -505,13 +505,13 @@ header {
   border-radius: 24px;
   padding: 16px 20px 12px;
   background: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03), 0 12px 28px -4px rgba(246, 89, 145, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03), 0 12px 28px -4px rgba(0, 0, 0, 0.06);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .composer:focus-within {
   border-color: var(--brand-pink);
-  box-shadow: 0 0 0 3px rgba(246, 89, 145, 0.12), 0 12px 32px -4px rgba(246, 89, 145, 0.10);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.12), 0 12px 32px -4px rgba(0, 0, 0, 0.10);
 }
 
 .composer textarea {
@@ -552,7 +552,7 @@ header {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(246, 89, 145, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   display: grid;
   place-items: center;
   padding: 0;
@@ -562,7 +562,7 @@ header {
 .send:hover,
 .primary:hover {
   transform: translateY(-1.5px);
-  box-shadow: 0 6px 16px rgba(246, 89, 145, 0.45);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
   opacity: 0.95;
 }
 
@@ -598,7 +598,7 @@ header {
   border-color: var(--brand-pink);
   color: var(--brand-pink);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(246, 89, 145, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .suggestions svg {
@@ -770,7 +770,7 @@ summary {
 .demo-label {
   font-size: 11px;
   background: var(--promo-pink);
-  border: 1px solid rgba(246, 89, 145, 0.25);
+  border: 1px solid rgba(0, 0, 0, 0.25);
   color: var(--brand-pink);
   padding: 5px 12px;
   border-radius: var(--radius-pill);
@@ -780,8 +780,8 @@ summary {
 
 .notice {
   padding: 14px 18px;
-  background: #FFF8FA;
-  border: 1px solid #FFD6E5;
+  background: #fafafa;
+  border: 1px solid #dedede;
   border-radius: 14px;
   color: var(--ink-strong);
   font-size: 13px;
@@ -987,7 +987,7 @@ progress::-moz-progress-bar {
   font-size: 13px;
   font-weight: 600;
   border-radius: 12px;
-  box-shadow: 0 4px 14px rgba(246, 89, 145, 0.28);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 
 .full {
@@ -1191,14 +1191,14 @@ label {
 }
 
 .options .selected > span {
-  background: rgba(246, 89, 145, 0.2);
+  background: rgba(0, 0, 0, 0.2);
   color: var(--brand-pink);
 }
 
 .options .correct {
-  border-color: #059669;
+  border-color: #454545;
   background: var(--promo-mint);
-  color: #059669;
+  color: #454545;
   opacity: 1;
 }
 
@@ -1207,12 +1207,12 @@ label {
 }
 
 .explanation {
-  background: #FFF8FA;
+  background: #fafafa;
   padding: 18px;
   border-radius: 14px;
   font-size: 13px;
   color: var(--ink-strong);
-  border: 1px solid #FFD6E5;
+  border: 1px solid #dedede;
   line-height: 1.7;
 }
 
@@ -1459,9 +1459,9 @@ main > .error {
 
 .message-body pre {
   overflow-x: auto;
-  background: #FFF8FA;
+  background: #fafafa;
   padding: 16px;
-  border: 1px solid #FFD6E5;
+  border: 1px solid #dedede;
   border-radius: 14px;
   font-size: 13px;
   white-space: pre;
@@ -1495,7 +1495,7 @@ main > .error {
   border-left: 3px solid var(--brand-pink);
   padding-left: 16px;
   color: var(--ink-strong);
-  background: #FFF8FA;
+  background: #fafafa;
   padding-top: 8px;
   padding-bottom: 8px;
   border-radius: 0 8px 8px 0;
@@ -1781,7 +1781,7 @@ a:focus-visible,
 }
 
 .message-body th {
-  background: #FFF8FA;
+  background: #fafafa;
   color: var(--ink);
   font-size: 12px;
 }

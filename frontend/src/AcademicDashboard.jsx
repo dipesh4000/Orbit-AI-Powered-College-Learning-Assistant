@@ -66,12 +66,6 @@ function SgpaChart({ rows, scale }) {
         role="img"
         aria-label="Reported SGPA by semester"
       >
-        <defs>
-          <linearGradient id="lumaSgpaGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#F65991" />
-            <stop offset="100%" stopColor="#F79E5C" />
-          </linearGradient>
-        </defs>
         {[0, scale / 2, scale].map((n) => (
           <g key={n}>
             <line x1="40" x2="485" y1={y(n)} y2={y(n)} stroke="#ECECEE" strokeDasharray="3 4" />
@@ -83,12 +77,12 @@ function SgpaChart({ rows, scale }) {
         <polyline
           points={rows.map((r, i) => `${x(i)},${y(r.sgpa)}`).join(" ")}
           fill="none"
-          stroke="url(#lumaSgpaGrad)"
+          stroke="#353535"
           strokeWidth="3"
         />
         {rows.map((r, i) => (
           <g key={r.id}>
-            <circle cx={x(i)} cy={y(r.sgpa)} r="5" fill="#F65991" stroke="#fff" strokeWidth="2">
+            <circle cx={x(i)} cy={y(r.sgpa)} r="5" fill="#353535" stroke="#fff" strokeWidth="2">
               <title>
                 Semester {r.semester}: {r.sgpa}/{scale}
               </title>
@@ -160,6 +154,7 @@ export default function AcademicDashboard({ owner, subjects, onChanged }) {
   const currentSubjects = subjects.filter(
     (s) => !current || s.semester === current,
   );
+  if (!data && !error) return <div className="workspace-loading" role="status">Loading your dashboard…</div>;
   return (
     <>
       <div className="workspace-intro">

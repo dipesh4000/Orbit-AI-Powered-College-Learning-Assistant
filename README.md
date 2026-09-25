@@ -4,19 +4,35 @@ A personal learning workspace for academic marks, hackathon projects, and coding
 
 The personal workspace has four sections: **Chat**, **Dashboard**, **Coding stats**, and **Practice**. Chat is the default conversation view. Dashboard holds reported credits, target SGPA, semester results, subjects, syllabus and marks. Coding stats combines Codolio activity, a public GitHub profile and manually recorded hackathons. Practice holds projects, documents, public repository snapshots, question papers and quizzes; each project's **Chat about this** button selects its context in the main saved conversation.
 
+## Landing page and navigation
+
+Orbit already includes a public landing page at **`/`**. With `start.bat` running,
+open [http://localhost:4176/](http://localhost:4176/) to view it. The normal demo
+launcher opens [http://localhost:4176/demo](http://localhost:4176/demo) directly
+in the preloaded workspace so it is ready to present. From the landing page, use
+**Open preloaded demo** to enter that workspace, or **Create your workspace** to
+reach registration in a live setup.
+
+Once signed in, the sidebar provides **Chat**, **Dashboard**, **Coding stats**, and
+**Practice**. These paths can also be opened directly: `/chat`, `/dashboard`,
+`/coding`, and `/practice`. A production build served by FastAPI supports the same
+paths, including `/demo`.
+
+For backend source navigation, see [backend/orbit/README.md](backend/orbit/README.md).
+
 Image/PDF recognition uses `GEMINI_API_KEY` on the server. Academic extraction produces an editable draft: only **Confirm and save** writes academic records. Manual entry and text documents work without Gemini. See the [phase tracker](docs/IMPLEMENTATION_PHASES.md) for delivered features and integration limits.
 
 ## Run on Windows
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and Node.js 22 or newer with npm. Open a terminal in this folder, which contains `backend/`, `frontend/`, and `start.bat`.
 
-For a quick test without a database account or API keys:
+For a presentation-ready local demo without a database account or API keys:
 
 ```bat
-start.bat --sandbox
+start.bat
 ```
 
-The launcher installs locked dependencies, starts a disposable local SQLite database, and opens **http://localhost:4176**. Create an account, add records, and open Coding. Codolio requests still use the real public provider; no sample statistics are preloaded. AI credentials are disabled in this mode. Sandbox records reset when the server restarts; do not use it for records you want to keep.
+The launcher installs locked dependencies, starts a disposable local SQLite database, and opens **http://localhost:4176/demo** with a preloaded workspace. Chat uses local, rule-based responses; Coding stats contains clearly labeled illustrative problem solving, contest, activity, and development data. No API keys or PostgreSQL are needed. Demo records reset when the server stops.
 
 For normal development with persistent records:
 
@@ -25,16 +41,18 @@ For normal development with persistent records:
 3. Run:
 
 ```bat
-start.bat
+start.bat --live
 ```
 
-Normal startup installs dependencies, applies Alembic migrations **to the database named by `DATABASE_URL`**, then opens **http://localhost:5173**. Use a development database. Existing records are preserved by the upgrades. The latest revision, `0007`, adds academic profiles/imports, learning projects/materials, public GitHub profiles and durable main chat history. No demo datasets are imported by the launcher.
+Normal startup installs dependencies, applies Alembic migrations **to the database named by `DATABASE_URL`**, then opens **http://localhost:5173**. Use a development database. Existing records are preserved by the upgrades. Revision `0007` adds academic profiles/imports, learning projects/materials, and public GitHub profiles; the latest revision, `0008`, adds durable multi-chat history. No demo datasets are imported by the launcher.
 
 Keep the launcher window open. **Ctrl+C stops both servers.** Startup checks occupied ports and reports failures instead of opening an unready app. Logs are written to `backend/logs/dev-backend.log` and `backend/logs/dev-frontend.log` and replaced on the next launch.
 
 | Command | Purpose |
 | --- | --- |
-| `start.bat` | Install, migrate configured PostgreSQL, and run on 5173 / 8000 |
+| `start.bat` | Install and open the preloaded local demo on 4176 / 8011 |
+| `start.bat --live` | Install, migrate configured PostgreSQL, and run on 5173 / 8000 |
+| `start.bat --demo` | Explicit form of the default local demo |
 | `start.bat --sandbox` | Install and run a disposable local workspace on 4176 / 8011 |
 | `start.bat --check` | Check installed dependencies and local configuration; no installs, migrations, or database connection |
 | `start.bat --test` | Install dependencies and Chromium; run backend tests, production build, personal browser tests, and legacy UI tests |
@@ -46,7 +64,7 @@ First startup needs internet access for dependency downloads. Normal development
 1. **Create an account** with a password of at least 12 characters.
 2. **Academics:** create a subject, add a dated mark, and reload. Edit the mark or try the downloadable CSV template. Invalid imports leave existing marks unchanged.
 3. **Projects:** record a hackathon, your role, project, and reflection. Optionally preview a public GitHub repository before applying its metadata.
-4. **Coding:** connect your public Codolio handle, for example `dipesh4000`. The first refresh runs in the background. Explore **Problem solving** and **Development** for totals, a GitHub calendar, and language shares.
+4. **Coding:** connect your public Codolio handle, for example `dipesh4000`, then select **Refresh** to save a snapshot. Explore **Problem solving** and **Development** for all reported breakdowns, activity calendars, totals, and language shares.
 5. **Refresh and reload:** each successful refresh saves another snapshot. A provider error shows a warning and retains the last successful data. Reloading reads Orbit's database and does not call Codolio.
 6. **Manual fallback:** enter totals manually, leaving unknown fields blank. Switch between Codolio and Manual to inspect each source independently. Updates save dated history; they do not add the two sources together.
 7. **Assistant:** with a provider configured, ask about your marks, hackathons, or saved coding data.
@@ -62,9 +80,9 @@ The interface takes inspiration from the supplied [problem-solving](https://codo
 - GitHub contributions use **`githubProfileDetails.totalContributions`**, consistently. Codolio exposes another contribution figure in a separate card; Orbit does not mix these measures.
 - Development metrics use reported commits, stars, pull requests (`pushRequestsCount`), and issues. The calendar displays daily activity for the 365-day window ending at the snapshot's saved date, using UTC dates. Missing days are marked as unreported, not zero.
 - Language percentages are calculated from reported code bytes. They do not measure proficiency or time spent.
-- Difficulty, topic breakdowns, and problem-solving calendars are unavailable through this endpoint and are not fabricated. LeetCode enrichment is deferred.
-- Every snapshot has a source and saved timestamp; snapshots older than 24 hours are labeled. Provider update time is separate because Codolio does not supply its timezone.
-- Raw responses and normalized evidence are stored privately. API responses and assistant tools expose normalized coding fields only, not the raw profile payload.
+- Available problem-solving sections in the public provider response are saved and displayed, including difficulty, platform, contest, rating, topic, and activity details when reported. Missing fields stay unreported. The local demo shows illustrative examples of those sections.
+- Every snapshot has a source and saved timestamp. Provider update time is separate because Codolio does not supply its timezone.
+- Raw responses and normalized evidence are stored privately. API responses expose bounded public coding sections while excluding account details; they do not expose the raw profile payload.
 
 Codolio's endpoint is undocumented and may change. Refresh has a bounded timeout and response-size limit. A refresh interrupted by a server restart can be retried after its 60-second lease expires. Saved dashboards work independently of the provider, but the Orbit backend and database must still be reachable; this is not a browser-only offline app.
 

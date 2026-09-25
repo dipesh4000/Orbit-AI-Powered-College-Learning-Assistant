@@ -1,6 +1,6 @@
 /* Luma Design System - Papers Workspace */
 .paper-hero {
-  background: linear-gradient(135deg, #0A0922 0%, #151433 100%);
+  background: linear-gradient(135deg, #202020 0%, #303030 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   padding: 32px 36px;
@@ -30,7 +30,7 @@
 
 .paper-hero-icon {
   position: relative;
-  color: #F65991;
+  color: #171717;
   padding: 20px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 50%;
@@ -99,8 +99,8 @@
 .paper-workspace select:focus-visible,
 .paper-workspace textarea:focus-visible {
   outline: none;
-  border-color: #F65991;
-  box-shadow: 0 0 0 3px rgba(246, 89, 145, 0.12);
+  border-color: #171717;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.12);
 }
 
 .paper-workspace fieldset {
@@ -138,21 +138,21 @@
 }
 
 .paper-workspace .paper-drop {
-  border: 1px dashed #FFD6E5;
-  background: #FFF8FA;
+  border: 1px dashed #dedede;
+  background: #fafafa;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 32px 20px;
   border-radius: 18px;
-  color: #F65991;
+  color: #171717;
   text-align: center;
   transition: all 0.2s ease;
 }
 
 .paper-workspace .paper-drop:hover {
-  background: #FFE0E8;
-  border-color: #F65991;
+  background: #f0f0f0;
+  border-color: #171717;
 }
 
 .paper-drop input {
@@ -164,10 +164,10 @@
 }
 
 .paper-notice {
-  background: #FFE0E8;
+  background: #f0f0f0;
   padding: 14px 18px;
   border-radius: 12px;
-  color: #F65991;
+  color: #171717;
   font-size: 13px;
   font-weight: 500;
 }
@@ -196,14 +196,14 @@
 
 .paper-list-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(246, 89, 145, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .paper-file-icon {
   padding: 16px;
-  background: #FFF8FA;
+  background: #fafafa;
   border-radius: 14px;
-  color: #F65991;
+  color: #171717;
 }
 
 .paper-file-info {
@@ -234,7 +234,7 @@
   align-items: center;
   gap: 6px;
   text-transform: capitalize;
-  background: #FEECD7;
+  background: #f4f4f4;
   color: #D97706;
   font-size: 11px;
   font-weight: 600;
@@ -243,8 +243,8 @@
 }
 
 .paper-status.ready {
-  background: #E3F0EA;
-  color: #059669;
+  background: #F1F1F1;
+  color: #454545;
 }
 
 .paper-list-actions {
@@ -275,8 +275,8 @@
 }
 
 .paper-empty-icon {
-  background: #FFE0E8;
-  color: #F65991;
+  background: #f0f0f0;
+  color: #171717;
   border-radius: 20px;
   padding: 20px;
   display: inline-flex;
@@ -397,7 +397,7 @@
 
 .paper-source-link {
   display: inline-block;
-  color: #F65991;
+  color: #171717;
   font-size: 13px;
   margin: 0 0 14px;
   text-underline-offset: 3px;

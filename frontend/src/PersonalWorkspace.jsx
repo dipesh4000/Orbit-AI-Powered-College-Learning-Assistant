@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   MessageSquare,
   LayoutDashboard,
@@ -10,16 +11,21 @@ import {
   ChevronDown,
   ChevronRight,
   Trash2,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  X,
 } from "lucide-react";
 import { api, post } from "./api";
 import PersonalChat from "./PersonalChat";
 import AcademicDashboard from "./AcademicDashboard";
-import CodingWorkspace from "./CodingWorkspace";
+import CodingDashboard from "./CodingDashboard";
 import RecordWorkspace from "./RecordWorkspace";
 import ProjectWorkspace from "./ProjectWorkspace";
 import SettingsModal from "./SettingsModal";
 import "./personal.css";
 import "./workspace.css";
+import "./product.css";
 
 const navigation = [
   ["Chat", MessageSquare],
@@ -27,6 +33,14 @@ const navigation = [
   ["Coding stats", Code2],
   ["Practice", FolderGit2],
 ];
+const tabPaths = {
+  Chat: "/chat",
+  Dashboard: "/dashboard",
+  "Coding stats": "/coding",
+  Practice: "/practice",
+};
+const tabFromPath = (path) =>
+  Object.keys(tabPaths).find((name) => tabPaths[name] === path);
 
 export default function PersonalWorkspace({
   owner,
@@ -34,7 +48,11 @@ export default function PersonalWorkspace({
   error: outerError,
   demoMode,
 }) {
-  const [tab, setTab] = useState("Chat"),
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [tab, setTab] = useState(
+      () => tabFromPath(location.pathname) || "Chat",
+    ),
     [project, setProject] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [data, setData] = useState(null),
@@ -46,14 +64,43 @@ export default function PersonalWorkspace({
   const [chatId, setChatId] = useState(null);
   const [chatsOpen, setChatsOpen] = useState(true);
   const [chatBusy, setChatBusy] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(
+    () => localStorage.getItem("orbit-personal-sidebar") === "collapsed",
+  );
 
   const refresh = () => setVersion((n) => n + 1);
+  useEffect(() => {
+    document.title = `${tab} · Orbit AI`;
+  }, [tab]);
+  useEffect(() => {
+    const next = tabFromPath(location.pathname);
+    if (next) setTab(next);
+  }, [location.pathname]);
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const close = (event) => {
+      if (event.key === "Escape") setSidebarOpen(false);
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [sidebarOpen]);
+  const openTab = (name) => {
+    setTab(name);
+    navigate(tabPaths[name]);
+    setSidebarOpen(false);
+  };
 
   useEffect(() => {
     const c = new AbortController();
     api("/personal/workspace", { signal: c.signal })
-      .then((r) => { setData(r); setError(""); })
-      .catch((e) => { if (!c.signal.aborted) setError(e.message); });
+      .then((r) => {
+        setData(r);
+        setError("");
+      })
+      .catch((e) => {
+        if (!c.signal.aborted) setError(e.message);
+      });
     return () => c.abort();
   }, [owner.owner_id, version]);
 
@@ -75,7 +122,7 @@ export default function PersonalWorkspace({
       const session = await post("/personal/chats", {});
       setChats((prev) => [session, ...prev]);
       setChatId(session.id);
-      setTab("Chat");
+      openTab("Chat");
     } catch (e) {
       setError(e.message);
     } finally {
@@ -111,22 +158,71 @@ export default function PersonalWorkspace({
   const subjects = data?.subjects || [];
 
   return (
-    <div className={`personal-shell ${tab === "Chat" ? "chat-shell" : ""}`}>
-      <aside className="personal-sidebar">
-        <a className="brand" href="/chat">
-          <span className="orbit-symbol">◌</span> orbit
-        </a>
-        <p className="eyebrow">YOUR WORKSPACE</p>
+    <div
+      className={`personal-shell ${tab === "Chat" ? "chat-shell" : ""} ${collapsed ? "personal-collapsed" : ""} ${sidebarOpen ? "sidebar-open" : ""}`}
+    >
+      <button
+        className="personal-scrim"
+        aria-label="Close navigation"
+        onClick={() => setSidebarOpen(false)}
+      />
+      <aside className="personal-sidebar" aria-label="Workspace sidebar">
+        <div className="personal-sidebar-head">
+          <a className="brand" href="/chat">
+            <img className="orbit-mark" src="/orbit-mark.svg" alt="" />{" "}
+            <span>Orbit AI</span>
+          </a>
+          <button
+            className="personal-collapse"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            onClick={() => {
+              setCollapsed(!collapsed);
+              localStorage.setItem(
+                "orbit-personal-sidebar",
+                collapsed ? "expanded" : "collapsed",
+              );
+            }}
+          >
+            {collapsed ? (
+              <PanelLeftOpen size={18} />
+            ) : (
+              <PanelLeftClose size={18} />
+            )}
+          </button>
+          <button
+            className="personal-mobile-close"
+            aria-label="Close navigation"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <button
+          className="personal-new-chat"
+          aria-label="New chat"
+          onClick={() => {
+            newChat();
+            setSidebarOpen(false);
+          }}
+          disabled={chatBusy}
+        >
+          <Plus size={17} />
+          <span>New chat</span>
+        </button>
+        <p className="eyebrow">WORKSPACE</p>
         <nav aria-label="Personal navigation">
           {navigation.map(([name, Icon]) => (
             <button
               key={name}
               className={tab === name ? "active" : ""}
               aria-current={tab === name ? "page" : undefined}
-              onClick={() => setTab(name)}
+              onClick={() => openTab(name)}
+              aria-label={name}
+              title={name}
             >
               <Icon size={19} />
-              {name}
+              <span>{name}</span>
             </button>
           ))}
         </nav>
@@ -139,7 +235,11 @@ export default function PersonalWorkspace({
               onClick={() => setChatsOpen((v) => !v)}
               aria-expanded={chatsOpen}
             >
-              {chatsOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+              {chatsOpen ? (
+                <ChevronDown size={13} />
+              ) : (
+                <ChevronRight size={13} />
+              )}
               <span>Recent chats</span>
             </button>
             <button
@@ -159,12 +259,19 @@ export default function PersonalWorkspace({
               )}
               {chats.map((c) => (
                 <li key={c.id}>
-                  <button
+                  <div
                     className={`chat-history-item ${chatId === c.id ? "active" : ""}`}
-                    onClick={() => { setChatId(c.id); setTab("Chat"); }}
                     title={c.title}
                   >
-                    <span className="chat-history-title">{c.title}</span>
+                    <button
+                      className="chat-history-select"
+                      onClick={() => {
+                        setChatId(c.id);
+                        openTab("Chat");
+                      }}
+                    >
+                      <span className="chat-history-title">{c.title}</span>
+                    </button>
                     <button
                       className="chat-history-delete"
                       onClick={(e) => deleteChat(c.id, e)}
@@ -172,17 +279,13 @@ export default function PersonalWorkspace({
                     >
                       <Trash2 size={12} />
                     </button>
-                  </button>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
         </div>
 
-        <div className="sidebar-note">
-          <strong>A little progress, every day.</strong>
-          <p>Your subjects, projects and learning, together.</p>
-        </div>
         <div className="owner-card">
           <span className="owner-avatar">
             {owner.name.slice(0, 1).toUpperCase()}
@@ -205,17 +308,19 @@ export default function PersonalWorkspace({
         </button>
       </aside>
       <main className="personal-workspace">
-        {demoMode && (
-          <div className="demo-banner">
-            <strong>Demo workspace · resets when the server stops</strong>
-            Reference marks and illustrative coding, hackathon and paper
-            examples. New academic values and projects start empty.
-          </div>
-        )}
         <header className="workspace-topbar">
-          <span>Workspace / {tab}</span>
+          <span>
+            <button
+              className="personal-mobile-menu"
+              aria-label="Open navigation"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={19} />
+            </button>
+            <strong>{tab === "Chat" ? "Orbit" : tab}</strong>
+          </span>
           <span className="private-label">
-            {demoMode ? "Local demo" : "Private account"}
+            {demoMode ? "Demo workspace" : "Private workspace"}
           </span>
         </header>
         {(error || outerError) && (
@@ -251,8 +356,9 @@ export default function PersonalWorkspace({
                 <p>DSA, development, and the things you build with others.</p>
               </div>
             </div>
-            <CodingWorkspace
+            <CodingDashboard
               hackathonCount={data?.hackathons?.length || null}
+              demoMode={demoMode}
             />
             <div id="hackathon-records">
               <RecordWorkspace
@@ -270,7 +376,7 @@ export default function PersonalWorkspace({
             demoMode={demoMode}
             onChat={(p) => {
               setProject(p);
-              setTab("Chat");
+              openTab("Chat");
             }}
           />
         )}

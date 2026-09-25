@@ -168,15 +168,19 @@ def test_routes_restore_attempts_and_clear_only_owned_chat(environment, monkeypa
             == 1
         )
         assert alice.get("/api/personal/practice").json()[0]["correct"] == 1
+        alice_chat = alice.post("/api/personal/chats").json()["id"]
+        bob_chat = bob.post("/api/personal/chats").json()["id"]
         assert (
             alice.post(
-                "/api/personal/chat", json={"message": "Show practice results"}
+                f"/api/personal/chats/{alice_chat}/messages",
+                json={"message": "Show practice results"},
             ).status_code
             == 200
         )
-        assert alice.get("/api/personal/chat").json()["history"]
-        assert bob.delete("/api/personal/chat").status_code == 200
-        assert alice.get("/api/personal/chat").json()["history"]
-        assert alice.delete("/api/personal/chat").status_code == 200
-        assert alice.get("/api/personal/chat").json()["history"] == []
+        assert alice.get(f"/api/personal/chats/{alice_chat}/messages").json()["history"]
+        assert bob.delete(f"/api/personal/chats/{alice_chat}/messages").status_code == 404
+        assert bob.delete(f"/api/personal/chats/{bob_chat}/messages").status_code == 200
+        assert alice.get(f"/api/personal/chats/{alice_chat}/messages").json()["history"]
+        assert alice.delete(f"/api/personal/chats/{alice_chat}/messages").status_code == 200
+        assert alice.get(f"/api/personal/chats/{alice_chat}/messages").json()["history"] == []
         assert alice.get("/api/personal/practice").json()[0]["correct"] == 1

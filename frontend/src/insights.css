@@ -1,12 +1,12 @@
 /* Luma Design System - Insights & Suggestions */
 .demo-banner {
-  background: #FFE0E8;
-  border: 1px solid #FFD6E5;
+  background: #f0f0f0;
+  border: 1px solid #dedede;
   border-radius: 14px;
   padding: 14px 18px;
   font-size: 13px;
   line-height: 1.6;
-  color: #F65991;
+  color: #171717;
   margin: 18px 0;
   font-weight: 500;
 }
@@ -14,7 +14,7 @@
 .demo-banner strong {
   display: block;
   font-weight: 700;
-  color: #F65991;
+  color: #171717;
 }
 
 .demo-banner a {
@@ -69,15 +69,15 @@
 }
 
 .suggestion-tabs button[aria-pressed="true"] {
-  background: #FFE0E8;
-  border-color: #F65991;
-  color: #F65991;
+  background: #f0f0f0;
+  border-color: #171717;
+  color: #171717;
   font-weight: 700;
 }
 
 .suggestion-tabs span {
   font-size: 11px;
-  background: rgba(246, 89, 145, 0.15);
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 9999px;
   padding: 2px 7px;
   margin-left: 4px;
@@ -146,17 +146,17 @@
 
 .evidence-list {
   margin-top: 16px;
-  border: 1px solid #FFD6E5;
+  border: 1px solid #dedede;
   border-radius: 14px;
   padding: 14px 18px;
-  background: #FFF8FA;
+  background: #fafafa;
 }
 
 .evidence-list summary {
   cursor: pointer;
   font-size: 13px;
   font-weight: 700;
-  color: #F65991;
+  color: #171717;
 }
 
 .evidence-list > p {
@@ -180,8 +180,8 @@
   font-family: inherit;
   font-size: 11px;
   font-weight: 700;
-  color: #F65991;
-  background: #FFE0E8;
+  color: #171717;
+  background: #f0f0f0;
   padding: 2px 6px;
   border-radius: 6px;
   margin-right: 8px;
@@ -191,7 +191,7 @@
 .evidence-detail {
   padding: 14px 16px;
   background: #FFFFFF;
-  border-left: 3px solid #F65991;
+  border-left: 3px solid #171717;
   border-radius: 0 10px 10px 0;
   font-size: 13px;
   overflow-wrap: anywhere;
@@ -226,25 +226,25 @@
 }
 
 .assistant-prompts button:hover {
-  background: #FFE0E8;
-  border-color: #F65991;
-  color: #F65991;
+  background: #f0f0f0;
+  border-color: #171717;
+  color: #171717;
 }
 
 .offline-badge {
   display: inline-block;
   padding: 4px 10px;
-  border: 1px solid #FEECD7;
+  border: 1px solid #f4f4f4;
   border-radius: 9999px;
   color: #D97706;
-  background: #FEECD7;
+  background: #f4f4f4;
   font-size: 11px;
   font-weight: 600;
   margin-bottom: 14px;
 }
 
 .personal-messages .evidence-list {
-  background: #FFF8FA;
+  background: #fafafa;
 }
 
 .suggestions-panel .section-heading {
