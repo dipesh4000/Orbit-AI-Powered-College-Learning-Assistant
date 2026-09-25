@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Trash2 } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { api, post } from "./api";
@@ -13,6 +13,8 @@ export default function PersonalChat({
   onClearProject,
   chatId,
   onChatChanged,
+  initialDraft,
+  onInitialDraftUsed,
 }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -20,10 +22,26 @@ export default function PersonalChat({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [pending, setPending] = useState("");
+  const [streaming, setStreaming] = useState(false);
+  const generation = useRef(0);
+  const createdChat = useRef(null);
+  const streamTimer = useRef(null);
+  const scrollArea = useRef(null);
+  const followBottom = useRef(true);
   const bottom = useRef(null),
     composer = useRef(null);
 
   useEffect(() => {
+    if (createdChat.current === chatId && chatId) {
+      createdChat.current = null;
+      return;
+    }
+    generation.current += 1;
+    clearInterval(streamTimer.current);
+    setStreaming(false);
+    setBusy(false);
+    setPending("");
+    setLoading(false);
     if (!chatId) {
       setMessages([]);
       setError("");
@@ -46,23 +64,47 @@ export default function PersonalChat({
     return () => c.abort();
   }, [chatId]);
 
+  useEffect(
+    () => () => {
+      generation.current += 1;
+      clearInterval(streamTimer.current);
+    },
+    [],
+  );
+
   useEffect(() => {
-    bottom.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+    if (followBottom.current && scrollArea.current) {
+      scrollArea.current.scrollTop = scrollArea.current.scrollHeight;
+    }
   }, [messages, pending]);
+
+  useEffect(() => {
+    if (!initialDraft) return;
+    setInput(initialDraft);
+    composer.current?.focus();
+    onInitialDraftUsed?.();
+  }, [initialDraft, onInitialDraftUsed]);
 
   async function send(e) {
     e.preventDefault();
     const message = input.trim();
     if (!message || busy || loading) return;
+    const request = ++generation.current;
+    setBusy(true);
+    followBottom.current = true;
     // Auto-create a chat session if none exists
     let activeChatId = chatId;
     if (!activeChatId) {
       try {
         const session = await post("/personal/chats", {});
+        if (request !== generation.current) return;
         activeChatId = session.id;
+        createdChat.current = session.id;
         onChatChanged?.(session.id);
       } catch (e) {
+        if (request !== generation.current) return;
         setError(e.message);
+        setBusy(false);
         return;
       }
     }
@@ -75,53 +117,66 @@ export default function PersonalChat({
         message,
         project_id: project?.id ?? null,
       });
+      if (request !== generation.current) return;
+      const animate =
+        demoMode &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      setPending("");
       setMessages((m) => [
         ...m,
         { role: "user", content: message },
         {
           role: "assistant",
-          content: r.answer,
+          content: animate ? "" : r.answer,
           sources: r.sources,
           tools: r.tools_called,
           cache: r.cache_hits,
         },
       ]);
       onChatChanged?.();
+      if (animate) {
+        setStreaming(true);
+        const words = r.answer.match(/\S+\s*|\s+/g) || [];
+        let index = 0;
+        let text = "";
+        streamTimer.current = setInterval(() => {
+          if (request !== generation.current) {
+            clearInterval(streamTimer.current);
+            return;
+          }
+          text += words[index++] || "";
+          setMessages((m) =>
+            m.map((item, i) =>
+              i === m.length - 1 ? { ...item, content: text } : item,
+            ),
+          );
+          if (index >= words.length) {
+            clearInterval(streamTimer.current);
+            setStreaming(false);
+            setBusy(false);
+          }
+        }, 30);
+      } else setBusy(false);
     } catch (e) {
+      if (request !== generation.current) return;
       setInput(message);
       setError(e.message);
-    } finally {
       setBusy(false);
       setPending("");
     }
   }
 
-  async function clear() {
-    if (!chatId) return;
-    if (
-      !window.confirm(
-        "Clear this conversation? Your learning records will be kept.",
-      )
-    )
-      return;
-    setBusy(true);
-    try {
-      await api(`/personal/chats/${chatId}/messages`, { method: "DELETE" });
-      setMessages([]);
-      setError("");
-      onChatChanged?.();
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
-  }
-
   const prompts = [
+    "Tell about my Study room finder project",
+    "Show my development and DSA coding stats together",
+    ...(project
+      ? [
+          `Quiz me on the architecture of ${project.name}`,
+          `Ask me five questions about files in ${project.name}`,
+        ]
+      : []),
     "What should I focus on next?",
-    "Compare my latest marks",
     "Help me plan a revision session",
-    "Review my practice results",
   ];
 
   return (
@@ -131,14 +186,6 @@ export default function PersonalChat({
           <img src="/orbit-mark.svg" alt="" /> Orbit{" "}
           <small>Your learning assistant</small>
         </span>
-        <button
-          onClick={clear}
-          disabled={busy || loading || !messages.length || !chatId}
-          title="Clear conversation"
-          aria-label="Clear conversation"
-        >
-          <Trash2 size={17} />
-        </button>
       </div>
       {demoMode && (
         <p className="chat-demo-note">
@@ -157,6 +204,12 @@ export default function PersonalChat({
       )}
       <div
         className="chat-scroll"
+        ref={scrollArea}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          followBottom.current =
+            el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+        }}
         role="log"
         aria-label="Conversation"
         aria-live="polite"
@@ -200,13 +253,16 @@ export default function PersonalChat({
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {m.content}
                 </ReactMarkdown>
-                <EvidenceList sources={m.sources} />
-                {m.tools?.length > 0 && (
-                  <small className="tool-summary">
-                    Used {m.tools.length} tool calls
-                    {m.cache > 0 ? ` · ${m.cache} cached` : ""}
-                  </small>
+                {!(streaming && i === messages.length - 1) && (
+                  <EvidenceList sources={m.sources} />
                 )}
+                {!(streaming && i === messages.length - 1) &&
+                  m.tools?.length > 0 && (
+                    <small className="tool-summary">
+                      Used {m.tools.length} tool calls
+                      {m.cache > 0 ? ` · ${m.cache} cached` : ""}
+                    </small>
+                  )}
               </div>
             </article>
           ))}

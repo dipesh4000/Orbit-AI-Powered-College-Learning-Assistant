@@ -14,7 +14,7 @@
   padding: 10px 18px;
   border: 1px solid var(--line);
   border-radius: 9999px;
-  background: #FFFFFF;
+  background: #ffffff;
   color: var(--muted);
   font-weight: 500;
   font-size: 13px;
@@ -22,7 +22,7 @@
 }
 
 .workspace-subtabs button:hover {
-  background: #F4F5F6;
+  background: #f4f5f6;
   color: var(--ink);
   transform: translateY(-1px);
 }
@@ -125,8 +125,9 @@
 
 .sgpa-chart {
   display: block;
-  width: 100%;
-  min-height: 180px;
+  width: min(100%, 510px);
+  height: auto;
+  margin: 12px auto 16px;
 }
 
 .sgpa-chart text {
@@ -151,7 +152,7 @@
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 22px;
-  background: #FFFFFF;
+  background: #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -259,7 +260,7 @@
   border: 1px solid var(--line);
   border-radius: 16px;
   margin: 16px 0;
-  background: #FFFFFF;
+  background: #ffffff;
 }
 
 .import-review-row > button {
@@ -362,6 +363,160 @@
   color: var(--muted);
 }
 
+.subject-browser {
+  margin-top: 28px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.subject-browser-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 26px 20px;
+}
+
+.subject-browser-heading h3 {
+  margin: 5px 0;
+  font-size: 24px;
+}
+
+.subject-browser-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.subject-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-block: 1px solid var(--line);
+  background: #fafafa;
+}
+
+.subject-tabs button {
+  min-height: 48px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.subject-tabs button:last-child {
+  border-right: 0;
+}
+
+.subject-tabs button[aria-selected="true"] {
+  background: #202020;
+  color: #fff;
+}
+
+.unit-list {
+  padding: 0 26px 24px;
+}
+
+.unit-list details {
+  border-bottom: 1px solid var(--line);
+}
+
+.unit-list summary {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  min-height: 66px;
+  cursor: pointer;
+  list-style-position: outside;
+}
+
+.unit-list summary span {
+  color: var(--ink);
+  font-weight: 750;
+  font-size: 13px;
+}
+
+.unit-list summary small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.unit-list details > p {
+  margin: -3px 0 20px 128px;
+  color: #555;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.syllabus-edit-field {
+  display: grid;
+  gap: 8px;
+  padding-top: 22px;
+}
+
+.subject-tab-empty {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  padding: 35px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.subject-tab-empty h4 {
+  margin: 12px 0 0;
+  color: var(--ink);
+}
+
+.subject-tab-empty p {
+  margin: 5px 0;
+}
+
+.project-create-modes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0 22px;
+}
+
+.project-create-modes button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 54px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--muted);
+}
+
+.project-create-modes button[aria-pressed="true"] {
+  color: var(--ink);
+  border-color: #171717;
+  background: #f5f5f5;
+  font-weight: 700;
+}
+
+.project-code-drop {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.project-code-drop span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .project-context {
   display: flex;
   align-items: center;
@@ -371,7 +526,7 @@
   border: 1px solid #dedede;
   border-radius: 12px;
   font-size: 12px;
-  color: #1A1A1A;
+  color: #1a1a1a;
 }
 
 .project-context span {
@@ -435,6 +590,22 @@
   .project-add-grid,
   .subject-tiles {
     grid-template-columns: 1fr;
+  }
+  .project-create-modes {
+    grid-template-columns: 1fr;
+  }
+  .subject-tabs {
+    display: flex;
+    overflow-x: auto;
+  }
+  .subject-tabs button {
+    flex: 0 0 105px;
+  }
+  .unit-list summary {
+    grid-template-columns: 82px minmax(0, 1fr);
+  }
+  .unit-list details > p {
+    margin-left: 0;
   }
   .coding-hero {
     gap: 10px;

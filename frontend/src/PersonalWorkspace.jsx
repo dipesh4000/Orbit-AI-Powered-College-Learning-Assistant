@@ -26,6 +26,7 @@ import SettingsModal from "./SettingsModal";
 import "./personal.css";
 import "./workspace.css";
 import "./product.css";
+import "./theme.css";
 
 const navigation = [
   ["Chat", MessageSquare],
@@ -53,8 +54,24 @@ export default function PersonalWorkspace({
   const [tab, setTab] = useState(
       () => tabFromPath(location.pathname) || "Chat",
     ),
-    [project, setProject] = useState(null);
+    [project, setProject] = useState(null),
+    [projectPrompt, setProjectPrompt] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem("orbit-theme") === "dark" ? "dark" : "light";
+    } catch {
+      return "light";
+    }
+  });
+  function changeTheme(next) {
+    setTheme(next);
+    try {
+      localStorage.setItem("orbit-theme", next);
+    } catch {
+      /* Preference still applies for this session. */
+    }
+  }
   const [data, setData] = useState(null),
     [error, setError] = useState("");
   const [version, setVersion] = useState(0);
@@ -160,6 +177,7 @@ export default function PersonalWorkspace({
   return (
     <div
       className={`personal-shell ${tab === "Chat" ? "chat-shell" : ""} ${collapsed ? "personal-collapsed" : ""} ${sidebarOpen ? "sidebar-open" : ""}`}
+      data-theme={theme}
     >
       <button
         className="personal-scrim"
@@ -317,7 +335,9 @@ export default function PersonalWorkspace({
             >
               <Menu size={19} />
             </button>
-            <strong>{tab === "Chat" ? "Orbit" : tab}</strong>
+            {tab !== "Coding stats" && (
+              <strong>{tab === "Chat" ? "Orbit" : tab}</strong>
+            )}
           </span>
           <span className="private-label">
             {demoMode ? "Demo workspace" : "Private workspace"}
@@ -337,6 +357,8 @@ export default function PersonalWorkspace({
             onClearProject={() => setProject(null)}
             chatId={chatId}
             onChatChanged={refreshChatList}
+            initialDraft={projectPrompt}
+            onInitialDraftUsed={() => setProjectPrompt("")}
           />
         </div>
         {tab === "Dashboard" && (
@@ -349,13 +371,6 @@ export default function PersonalWorkspace({
         )}
         {tab === "Coding stats" && (
           <>
-            <div className="workspace-intro">
-              <div>
-                <p className="eyebrow">BUILD YOUR MOMENTUM</p>
-                <h1>Coding stats</h1>
-                <p>DSA, development, and the things you build with others.</p>
-              </div>
-            </div>
             <CodingDashboard
               hackathonCount={data?.hackathons?.length || null}
               demoMode={demoMode}
@@ -374,14 +389,21 @@ export default function PersonalWorkspace({
             owner={owner}
             subjects={subjects}
             demoMode={demoMode}
-            onChat={(p) => {
+            onChat={(p, prompt = "") => {
               setProject(p);
+              setProjectPrompt(prompt);
               openTab("Chat");
             }}
           />
         )}
       </main>
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showSettings && (
+        <SettingsModal
+          theme={theme}
+          onThemeChange={changeTheme}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   );
 }

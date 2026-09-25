@@ -239,26 +239,6 @@ export default function CodingDashboard({
           {data.connection.error}
         </div>
       )}
-      <div className="cd-highlights">
-        {[
-          ["Questions solved", featured.solved],
-          ["Active days", featured.active_days],
-          ["Contests", contestCount],
-          ["Hackathons", hackathonCount],
-        ].map(([name, value]) => (
-          <article key={name}>
-            <span>{name}</span>
-            <strong>{number(value)}</strong>
-            <small>
-              {demoMode
-                ? "Illustrative demo data"
-                : value == null
-                  ? "Not reported"
-                  : "Saved snapshot"}
-            </small>
-          </article>
-        ))}
-      </div>
       {!data && !error && (
         <div className="cd-panel" role="status">
           Loading coding statistics…
@@ -268,13 +248,42 @@ export default function CodingDashboard({
         <>
           <div className="cd-heading">
             <div>
-              <h2>Coding statistics</h2>
+              <h1>Coding statistics</h1>
               <p>
                 {demoMode
                   ? "Illustrative statistics for exploring the full dashboard."
                   : "Your problem solving and development activity in one place."}
               </p>
             </div>
+            <div className="cd-actions">
+              <div
+                className="cd-segments"
+                role="group"
+                aria-label="Snapshot source"
+              >
+                {["codolio", "manual"].map((item) => (
+                  <button
+                    key={item}
+                    aria-pressed={source === item}
+                    onClick={() => setSource(item)}
+                  >
+                    {item === "codolio" ? "Codolio" : "Manual"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="cd-source">
+            {snapshot && (
+              <span>
+                {demoMode && source === "codolio"
+                  ? "Illustrative sample"
+                  : source === "manual"
+                    ? "Self reported"
+                    : "Saved profile"}{" "}
+                · {when(snapshot.fetched_at)}
+              </span>
+            )}
             <div className="cd-actions">
               {data.connection && (
                 <button
@@ -348,29 +357,6 @@ export default function CodingDashboard({
               </button>
             </form>
           )}
-          <div className="cd-source">
-            <div className="cd-segments" aria-label="Snapshot source">
-              {["codolio", "manual"].map((item) => (
-                <button
-                  key={item}
-                  aria-pressed={source === item}
-                  onClick={() => setSource(item)}
-                >
-                  {item === "codolio" ? "Codolio" : "Manual"}
-                </button>
-              ))}
-            </div>
-            {snapshot && (
-              <span>
-                {demoMode && source === "codolio"
-                  ? "Illustrative sample"
-                  : source === "manual"
-                    ? "Self reported"
-                    : "Saved profile"}{" "}
-                · {when(snapshot.fetched_at)}
-              </span>
-            )}
-          </div>
           {snapshot ? (
             <>
               <div className="cd-tabs" aria-label="Coding views">
@@ -391,23 +377,31 @@ export default function CodingDashboard({
               </div>
               <div className="cd-metrics">
                 {(view === "Problem solving"
-                  ? metrics.slice(0, 2)
+                  ? [
+                      ...metrics.slice(0, 2),
+                      ["contests", "Contests", contestCount],
+                      ["hackathons", "Hackathons", hackathonCount],
+                    ]
                   : metrics.slice(2)
-                ).map(([key, title]) => (
-                  <article key={key}>
-                    <span>{title}</span>
-                    <strong>{number(n[key])}</strong>
-                    <small>
-                      {n[key] == null
-                        ? "Not reported"
-                        : source === "manual"
-                          ? "Self reported"
-                          : demoMode
-                            ? "Illustrative demo data"
-                            : "Provider reported"}
-                    </small>
-                  </article>
-                ))}
+                ).map(([key, title, suppliedValue]) => {
+                  const value =
+                    suppliedValue === undefined ? n[key] : suppliedValue;
+                  return (
+                    <article key={key}>
+                      <span>{title}</span>
+                      <strong>{number(value)}</strong>
+                      <small>
+                        {value == null
+                          ? "Not reported"
+                          : source === "manual"
+                            ? "Self reported"
+                            : demoMode
+                              ? "Illustrative demo data"
+                              : "Provider reported"}
+                      </small>
+                    </article>
+                  );
+                })}
                 {view === "Problem solving" &&
                   Object.entries(n.problem_details?.codolioCardDetails || {})
                     .filter(

@@ -6,6 +6,7 @@ import "./practice.css";
 export default function PracticeWorkspace({ subjects, demoMode }) {
   const [sets, setSets] = useState([]),
     [active, setActive] = useState(null);
+  const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({}),
     [busy, setBusy] = useState(false);
   const [error, setError] = useState(""),
@@ -31,6 +32,7 @@ export default function PracticeWorkspace({ subjects, demoMode }) {
   }, [retry]);
   function choose(row) {
     setActive(row);
+    setQuestionIndex(0);
     setAnswers(Object.fromEntries((row.answers || []).map((a, i) => [i, a])));
   }
   function update(row) {
@@ -58,6 +60,7 @@ export default function PracticeWorkspace({ subjects, demoMode }) {
   }
   async function submit(e) {
     e.preventDefault();
+    if (busy || active.questions.some((_, i) => !answers[i])) return;
     setBusy(true);
     setError("");
     try {
@@ -103,71 +106,73 @@ export default function PracticeWorkspace({ subjects, demoMode }) {
       </p>
       {demoMode && (
         <p className="subtle">
-          The local demo has no quiz model connection. Saved attempts remain
-          available; generation requires a configured provider.
+          Try a saved demo quiz below or review a completed attempt. These
+          authored examples work without an AI connection.
         </p>
       )}
-      <form className="record-form" onSubmit={generate}>
-        <fieldset disabled={busy || loading}>
-          <div className="form-grid">
-            <label>
-              Practice subject
-              <select
-                required
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-              >
-                <option value="">Choose a subject</option>
-                {subjects.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} · {s.code}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Practice topic
-              <input
-                required
-                minLength={2}
-                maxLength={120}
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="Use a confirmed topic, e.g. SQL"
-              />
-            </label>
-            <label>
-              Difficulty
-              <select
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-              >
-                {["foundation", "intermediate", "advanced"].map((d) => (
-                  <option key={d}>{d}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Questions
-              <input
-                type="number"
-                min={1}
-                max={10}
-                value={count}
-                required
-                onChange={(e) => setCount(e.target.value)}
-              />
-            </label>
-          </div>
-          <small>
-            Generation needs source text that establishes the answers. Questions
-            without answer evidence may not support a quiz.
-          </small>
-          <button className="primary" disabled={!subjects.length}>
-            {busy ? "Working…" : "Generate practice"}
-          </button>
-        </fieldset>
-      </form>
+      {!demoMode && (
+        <form className="record-form" onSubmit={generate}>
+          <fieldset disabled={busy || loading}>
+            <div className="form-grid">
+              <label>
+                Practice subject
+                <select
+                  required
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                >
+                  <option value="">Choose a subject</option>
+                  {subjects.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} · {s.code}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Practice topic
+                <input
+                  required
+                  minLength={2}
+                  maxLength={120}
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="Use a confirmed topic, e.g. SQL"
+                />
+              </label>
+              <label>
+                Difficulty
+                <select
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value)}
+                >
+                  {["foundation", "intermediate", "advanced"].map((d) => (
+                    <option key={d}>{d}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Questions
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={count}
+                  required
+                  onChange={(e) => setCount(e.target.value)}
+                />
+              </label>
+            </div>
+            <small>
+              Generation needs source text that establishes the answers.
+              Questions without answer evidence may not support a quiz.
+            </small>
+            <button className="primary" disabled={!subjects.length}>
+              {busy ? "Working…" : "Generate practice"}
+            </button>
+          </fieldset>
+        </form>
+      )}
       {error && (
         <p role="alert" className="error">
           {error}{" "}
@@ -183,56 +188,99 @@ export default function PracticeWorkspace({ subjects, demoMode }) {
             {active.topic} · {active.difficulty}
           </h3>
           {active.answered_at !== null && (
-            <p className="success-message" role="status">
+            <p className="practice-result" role="status">
               Saved practice result: {active.correct}/{active.questions.length}.
               This is practice feedback, not a formal grade.
             </p>
           )}
-          {active.questions.map((q, i) => (
-            <fieldset
-              key={`${active.id}-${i}`}
-              disabled={busy || active.answered_at !== null}
-            >
-              <legend>
-                {i + 1}. {q.question}
-              </legend>
-              {q.options.map((option) => (
-                <label className="practice-option" key={option}>
-                  <input
-                    type="radio"
-                    name={`question-${i}`}
-                    required
-                    checked={answers[i] === option}
-                    onChange={() => setAnswers((a) => ({ ...a, [i]: option }))}
-                  />
-                  <span>{option}</span>
-                </label>
-              ))}
-              {active.answered_at !== null && (
-                <div className="practice-feedback">
-                  <strong>
-                    {answers[i] === q.correct_answer
-                      ? "Correct"
-                      : "Review this answer"}
-                  </strong>
-                  <p>Answer: {q.correct_answer}</p>
-                  <p>{q.explanation}</p>
-                  <small>
-                    AI-generated feedback. Check the source material.
-                  </small>
-                </div>
-              )}
-            </fieldset>
-          ))}
+          <div className="practice-progress" aria-live="polite">
+            <span>
+              Question {questionIndex + 1} of {active.questions.length}
+            </span>
+            <progress
+              value={questionIndex + 1}
+              max={active.questions.length}
+              aria-label="Quiz progress"
+            />
+          </div>
+          {active.questions.slice(questionIndex, questionIndex + 1).map((q) => {
+            const i = questionIndex;
+            return (
+              <fieldset
+                key={`${active.id}-${i}`}
+                disabled={busy || active.answered_at !== null}
+              >
+                <legend>
+                  {i + 1}. {q.question}
+                </legend>
+                {q.options.map((option) => (
+                  <label className="practice-option" key={option}>
+                    <input
+                      type="radio"
+                      name={`question-${i}`}
+                      required
+                      checked={answers[i] === option}
+                      onChange={() =>
+                        setAnswers((a) => ({ ...a, [i]: option }))
+                      }
+                    />
+                    <span>{option}</span>
+                  </label>
+                ))}
+                {active.answered_at !== null && (
+                  <div className="practice-feedback">
+                    <strong>
+                      {answers[i] === q.correct_answer
+                        ? "Correct"
+                        : "Review this answer"}
+                    </strong>
+                    <p>Answer: {q.correct_answer}</p>
+                    <p>{q.explanation}</p>
+                    <small>
+                      {demoMode
+                        ? "Authored demo explanation."
+                        : "AI-generated feedback. Check the source material."}
+                    </small>
+                  </div>
+                )}
+              </fieldset>
+            );
+          })}
           <EvidenceList sources={active.sources} />
-          {active.answered_at === null && (
+          <div className="practice-navigation">
             <button
-              className="primary"
-              disabled={busy || active.questions.some((_, i) => !answers[i])}
+              type="button"
+              disabled={busy || questionIndex === 0}
+              onClick={() => setQuestionIndex((i) => i - 1)}
             >
-              Check and save answers
+              Back
             </button>
-          )}
+            {questionIndex < active.questions.length - 1 ? (
+              <button
+                type="button"
+                className="primary"
+                disabled={
+                  busy ||
+                  (active.answered_at === null && !answers[questionIndex])
+                }
+                onClick={() => setQuestionIndex((i) => i + 1)}
+              >
+                Next question
+              </button>
+            ) : active.answered_at === null ? (
+              <button
+                type="submit"
+                className="primary"
+                disabled={busy || active.questions.some((_, i) => !answers[i])}
+              >
+                Check and save answers
+              </button>
+            ) : (
+              <button type="button" onClick={() => setActive(null)}>
+                Finish review
+              </button>
+            )}
+          </div>
         </form>
       )}
       <h3>Saved sets & attempts</h3>

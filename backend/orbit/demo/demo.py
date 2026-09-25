@@ -12,7 +12,7 @@ from sqlalchemy import select
 
 from ..core import accounts
 from ..core import database as db
-from ..features import academics, coding, insights, papers, personal
+from ..features import academics, coding, insights, papers, personal, personal_practice
 
 
 def seed(engine):
@@ -123,6 +123,45 @@ def seed(engine):
                     error="Authored demo questions; not an actual university past paper. Keyword search is ready.",
                 )
             )
+    quiz_questions = [
+        {
+            "question": "Which SQL clause filters groups after aggregation?",
+            "options": ["WHERE", "HAVING", "ORDER BY", "SELECT"],
+            "correct_answer": "HAVING",
+            "explanation": "HAVING filters grouped results; WHERE filters individual rows before grouping.",
+        },
+        {
+            "question": "Which join keeps every row from the left table, even without a match?",
+            "options": ["INNER JOIN", "LEFT JOIN", "CROSS JOIN", "SELF JOIN"],
+            "correct_answer": "LEFT JOIN",
+            "explanation": "A LEFT JOIN retains all left-table rows and uses NULL for unmatched right-table columns.",
+        },
+        {
+            "question": "What is a primary goal of database normalization?",
+            "options": ["Duplicate every row", "Remove all keys", "Reduce redundant data", "Sort every table"],
+            "correct_answer": "Reduce redundant data",
+            "explanation": "Normalization organizes relations to reduce redundancy and insertion, update, and deletion anomalies.",
+        },
+    ]
+    # Authored fixtures use the same persistence, answer hiding and grading as real sets.
+    for completed in (True, False):
+        with engine.begin() as conn:
+            quiz_id = conn.execute(
+                db.personal_practice.insert().values(
+                    owner_id=oid,
+                    subject_id=sid,
+                    topic="DBMS fundamentals · demo" if not completed else "SQL revision · demo",
+                    difficulty="foundation",
+                    questions=quiz_questions,
+                    sources=[],
+                    created_at=time.time() - (86400 if completed else 3600),
+                )
+            ).inserted_primary_key[0]
+        if completed:
+            personal_practice.submit(
+                oid, engine, quiz_id,
+                personal_practice.Answers(answers=["WHERE", "LEFT JOIN", "Reduce redundant data"]),
+            )
     for days, solved in [(14, 118), (0, 136)]:
         coding.save_manual(
             oid,
@@ -149,6 +188,23 @@ def seed(engine):
                 .where(db.coding_snapshots.c.id == key)
                 .values(fetched_at=time.time() - days * 86400)
             )
+    def demo_activity(day_offset, problem=False):
+        """Deterministic, irregular demo activity with breaks and study sprints."""
+        day = datetime.now(UTC) - timedelta(days=day_offset)
+        pulse = (day_offset * 37 + day.month * 11 + day.day * 7) % 101
+        # Exam breaks, holidays, and naturally quieter weekends create real gaps.
+        if 72 <= day_offset <= 88 or 201 <= day_offset <= 219:
+            return 0
+        if day.weekday() >= 5 and pulse < 72:
+            return 0
+        # A few multi-week build/revision windows produce clustered activity.
+        sprint = any(start <= day_offset <= start + width for start, width in ((4, 18), (112, 27), (286, 22)))
+        threshold = 70 if sprint else (48 if problem else 42)
+        if pulse > threshold:
+            return 0
+        base = 1 + ((pulse * 13 + day_offset) % (7 if problem else 11))
+        return base + (3 if sprint and pulse < 28 else 0)
+
     sample = {
         "status": {"success": True},
         "data": {
@@ -178,7 +234,7 @@ def seed(engine):
                         .replace(hour=0, minute=0, second=0, microsecond=0)
                         .timestamp()
                     )
-                ): (i * 5) % 7
+                ): demo_activity(i, problem=True)
                 for i in range(365)
             },
             "githubProfileDetails": {
@@ -195,7 +251,7 @@ def seed(engine):
                             .replace(hour=0, minute=0, second=0, microsecond=0)
                             .timestamp()
                         )
-                    ): (i * 11) % 8
+                    ): demo_activity(i)
                     for i in range(365)
                 },
                 "languageDistributions": {
@@ -310,6 +366,54 @@ async def reply(message, owner_id, engine):
                 )
                 or "No current suggestions are available. Add confirmed paper questions and refresh suggestions."
             )
+        answer += (
+            "\n\n## Turn this into a focused study session\n\n"
+            "### 1. Start with recall\n\n"
+            "Pick one topic from the records above. Close your notes and explain the main idea in a few sentences. "
+            "Write down the exact step you cannot explain; that gives the session a concrete target. "
+            "If no current suggestion is available, choose a topic from your own syllabus instead.\n\n"
+            "### 2. Work through one example\n\n"
+            "Use a confirmed paper question or an example from your notes. Attempt it before checking the explanation. "
+            "For a database question, use a tiny table and trace which rows survive each operation. "
+            "Record your reasoning as well as the final answer.\n\n"
+            "### 3. Check understanding\n\n"
+            "- Explain why your answer works.\n"
+            "- Change one assumption and predict how the result changes.\n"
+            "- Identify one common mistake and show how you would detect it.\n\n"
+            "### 4. Finish with a next step\n\n"
+            "Save a short note: **what I understood, what I missed, and what I will practise next**. "
+            "Try a saved quiz in Practice when you want feedback. A quiz result helps you choose another exercise; "
+            "it remains separate from your formal marks.\n\n"
+            "This is a suggested study method, not an assessment of weaknesses beyond the available records."
+        )
+        if "focus" in lower:
+            answer += (
+                "\n\n## Decide what deserves attention first\n\n"
+                "Use three questions to order your work: **What is due soon? What can I currently explain without help? "
+                "What source material can I use to check my answer?** Start with a nearby deadline when you have one, "
+                "then choose a manageable topic with a clear exercise. The workspace does not establish your deadlines, "
+                "so this ordering is a decision rule you can apply, rather than a claim about your schedule.\n\n"
+                "Keep the session narrow. Finishing one worked example, explaining the mistake you made, and trying a variation "
+                "usually gives you a more useful checkpoint than opening several subjects and reading a little of each. "
+                "If you can already solve the example independently, move on to a harder variation or another topic. "
+                "If you need the solution throughout, revisit the prerequisite concept and try again later.\n\n"
+                "**Your stopping point:** one completed exercise, a short explanation in your own words, and a specific next action. "
+                "That makes the next study session easier to start and gives you something concrete to compare over time."
+            )
+        else:
+            answer += (
+                "\n\n## A practical 60-minute session template\n\n"
+                "| Time | Activity | What to produce |\n|---|---|---|\n"
+                "| 0–10 minutes | Recall the concept without notes | A short explanation and one uncertainty |\n"
+                "| 10–35 minutes | Attempt one question | A worked solution with reasoning |\n"
+                "| 35–50 minutes | Check and retry the difficult step | A corrected explanation |\n"
+                "| 50–60 minutes | Try a variation and record the next task | A concrete follow-up |\n\n"
+                "Use this as a default template when you have not specified a duration; if a tailored allocation appears above, "
+                "follow that allocation instead. Put your notes out of sight for the first attempt. When you get stuck, "
+                "identify the exact step before looking up the explanation, then close the notes and reproduce it independently. "
+                "The aim is to practise retrieval and reasoning, rather than simply recognize a familiar solution.\n\n"
+                "At the end, write a two-line handoff to yourself: what you can now do, and the first exercise to attempt next time."
+            )
     elif any(term in lower for term in ("practice", "practise")):
         rows = await read("get_practice_history", {"subject_id": sid})
         completed = [r for r in rows if r["answered_at"] is not None]
@@ -336,11 +440,42 @@ async def reply(message, owner_id, engine):
             )
             or "No comparable marks are saved."
         )
-    elif any(term in lower for term in ("coding", "solved", "github")):
+    elif any(term in lower for term in ("coding", "solved", "github", "development", "dsa")):
         packet = await read("get_coding_snapshot", {})
         row = packet["latest"]["manual"]
         answer = (
-            f"The saved manual snapshot reports {row['normalized']['solved']} problems solved and {row['normalized']['contributions']} contributions [{row['evidence_id']}]. These are illustrative demo counts, not live imported statistics or proof of skill."
+            f"## Coding activity snapshot\n\n"
+            f"Your latest saved snapshot reports **{row['normalized']['solved']} problems solved** and "
+            f"**{row['normalized']['contributions']} GitHub contributions** [{row['evidence_id']}].\n\n"
+            "### DSA / problem solving\n\n"
+            f"- **Problems solved:** {row['normalized']['solved']}\n"
+            f"- **Active days:** {row['normalized']['active_days']}\n\n"
+            "### Development\n\n"
+            f"- **Contributions:** {row['normalized']['contributions']}\n"
+            f"- **Commits:** {row['normalized']['commits']}\n"
+            f"- **Pull requests:** {row['normalized']['pull_requests']}\n"
+            f"- **Stars:** {row['normalized']['stars']}\n\n"
+            "### How to read this\n\n"
+            "The two sections describe different kinds of effort. Problem-solving totals describe exercises completed, "
+            "while development activity records actions around repositories. Read them side by side; adding the numbers "
+            "would create a score with no useful meaning. The manual snapshot is self-reported and may cover a different "
+            "period from your connected profile.\n\n"
+            "- Use the contribution calendar to spot sustained periods and genuine breaks.\n"
+            "- Pair totals with the projects you shipped; a count alone does not show code quality.\n"
+            "- Review a recent repository and explain one architectural decision in your own words.\n\n"
+            "```text\nA useful next session: choose one recent file, trace its inputs and outputs, then write three questions you would ask in a code review.\n```\n\n"
+            "These are illustrative demo counts, not live imported statistics or proof of skill."
+            "\n\n### Turn the summary into a balanced next session\n\n"
+            "**DSA:** choose a problem from a topic you have already studied. Explain a simple solution first, "
+            "then identify its time and space costs. After improving it, test an empty input, a smallest valid input, "
+            "and an input that stresses your assumptions. Write down the pattern you would recognize next time.\n\n"
+            "**Development:** pick one small change in a real repository. Trace the user action through the relevant "
+            "function and storage layer, make the change, and add a focused check for the behavior. Review the diff "
+            "and explain why the implementation fits the existing architecture before considering it finished.\n\n"
+            "**Review together:** compare what you learned from the exercise with the decisions in the codebase. "
+            "A useful outcome is one explained algorithm and one verified project improvement, not a target contribution count. "
+            "Use the Coding statistics page to inspect each source and its saved date before comparing snapshots. "
+            "A quiet period in the activity graph may reflect time away or missing data; it does not by itself establish lost progress."
             if row
             else "No manual coding snapshot is saved."
         )
@@ -353,6 +488,44 @@ async def reply(message, owner_id, engine):
             )
             or "No project records are saved."
         )
+        if "study room" in re.sub(r"[-–—]", " ", lower):
+            project = next((r for r in rows if "study room" in re.sub(r"[-–—]", " ", r["project"].casefold())), None)
+            if project:
+                answer = (
+                    "## Your Study room finder project\n\n"
+                    f"**{project['project']}** is a campus booking prototype built during a team event. "
+                    f"Your saved role was **{project['role']}** [{project['evidence_id']}].\n\n"
+                    "### What you built\n\n"
+                    f"{project['summary']} The core idea is to help students find a room and see availability before booking.\n\n"
+                    "### Your contribution\n\n"
+                    "The record describes backend work on a booking API, with an availability view as part of the prototype. "
+                    "Your saved technology stack includes **Python, React, and PostgreSQL**. "
+                    "The record does not include source code, so specific endpoints, schemas, and deployment details still need to be verified.\n\n"
+                    "### Outcome and reflection\n\n"
+                    f"**Outcome:** {project['result']}.\n\n"
+                    f"**Your reflection:** {project['reflection']}\n\n"
+                    "### A useful next iteration\n\n"
+                    "1. **Validate bookings:** reject invalid time ranges and missing room details.\n"
+                    "2. **Test overlapping requests:** send two requests for the same room and time, and check that only one succeeds.\n"
+                    "3. **Make conflicts clear:** show a helpful message and refreshed availability when a slot is taken.\n"
+                    "4. **Document the flow:** explain how the UI, booking API, and database coordinate a reservation.\n\n"
+                    "These are suggested improvements, not claims about features already implemented.\n\n"
+                    "### How to present it\n\n"
+                    "Start with the user problem: students need to know whether a room is available before attempting a reservation. "
+                    "Then explain your backend responsibility and the availability view described in the record. "
+                    "Finish with the reliability challenge you identified, rather than listing tools alone.\n\n"
+                    "### Technical discussion to prepare\n\n"
+                    "Be ready to trace one booking from the interface to the database and back. Explain where you would "
+                    "validate a time range, how you would detect an overlap, and what the user should see if another "
+                    "booking takes the slot first. These are useful review questions; the saved record does not specify "
+                    "which mechanisms your prototype currently uses.\n\n"
+                    "A convincing demonstration would include a successful booking, an invalid request, and two "
+                    "simultaneous requests for the same slot. Capture the expected outcome for each case before testing. "
+                    "Attach the repository or reviewed files in Practice to discuss the actual implementation in more depth.\n\n"
+                    "> I worked on the backend of a study-room booking prototype, connecting a booking API with an availability view. "
+                    "My next focus is validation and reliable handling of simultaneous bookings.\n\n"
+                    "This summary uses the illustrative project record in the demo workspace."
+                )
     elif any(term in lower for term in ("paper", "question", "topic")):
         rows = await read("get_topic_frequency", {"subject_id": sid})
         answer = (
@@ -377,7 +550,16 @@ async def reply(message, owner_id, engine):
         )
         answer += "\n\nReference-result dates are declaration dates. The SQL quizzes are illustrative and kept separate from final results."
     else:
-        answer = "This is a local, rule-based demo, so open-ended AI answers are unavailable. Try: ‘Show my DBMS marks’, ‘Compare my DBMS results’, ‘SQL test Friday, two hours’, ‘Show paper topics’, or ‘Show coding activity’."
+        answer = (
+            "## I can help you turn your records into a next step\n\n"
+            "This local demo uses a **rule-based assistant**, so it answers from the preloaded workspace rather than calling a live model. You can still explore the complete evidence-backed flow.\n\n"
+            "### Try one of these\n\n"
+            "- **Plan a session:** `SQL test Friday, two hours`\n"
+            "- **Review performance:** `Compare my DBMS results`\n"
+            "- **Inspect material:** `Show paper topics`\n"
+            "- **Check momentum:** `Show coding activity`\n\n"
+            "For each supported request, Orbit reads the relevant saved records, cites the evidence it used, and keeps suggestions separate from formal marks."
+        )
     refs = set(re.findall(r"\[([a-z]+-\d+)\]", answer))
     # Suggestion reads supply stored refs but their current records remain owner-checked.
     for eid in refs - registry.evidence.keys():

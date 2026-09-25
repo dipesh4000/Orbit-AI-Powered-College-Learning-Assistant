@@ -1,0 +1,395 @@
+.settings-appearance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 0 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.settings-appearance p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.settings-appearance button {
+  min-width: 64px;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+}
+.personal-shell[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #212121;
+  --surface: #262626;
+  --ink: #f0f0f0;
+  --ink-strong: #dedede;
+  --muted: #b0b0b0;
+  --line: #3b3b3b;
+  --accent: #ededed;
+  --brand-pink: #ededed;
+  --promo-pink: #282828;
+  --promo-yellow: #282828;
+  --sidebar-bg: #171717;
+  --placeholder: #aaa;
+  background: var(--canvas);
+  color: var(--ink);
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    .personal-workspace,
+    .workspace-topbar,
+    .personal-chat,
+    .chat-compose-area
+  ) {
+  background: var(--canvas);
+  color: var(--ink);
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    .personal-sidebar,
+    .settings-sidebar,
+    .paper-hero,
+    .chat-message.user .chat-message-body,
+    .practice-feedback,
+    .practice-result,
+    .empty-state,
+    .cd-segments,
+    .subject-tabs,
+    pre,
+    .file-drop
+  ) {
+  background: #252525;
+  color: var(--ink);
+  border-color: var(--line);
+  box-shadow: none;
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    .workspace-card,
+    .settings-modal,
+    .subject-browser,
+    .cd-panel,
+    .cd-metrics article,
+    .paper-list-card,
+    .question-card,
+    .practice-set fieldset,
+    .chat-composer,
+    .subject-tiles button,
+    .chat-starters button
+  ) {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+  box-shadow: none;
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    h1,
+    h2,
+    h3,
+    h4,
+    strong,
+    legend,
+    label,
+    .brand,
+    .chat-heading,
+    .academic-numbers strong,
+    .cd-detail strong,
+    .cd-metrics article strong,
+    .practice-progress,
+    .unit-list details > p
+  ) {
+  color: var(--ink);
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    p,
+    small,
+    .subtle,
+    .eyebrow,
+    .private-label,
+    .cd-muted,
+    .cd-source,
+    .cd-detail span,
+    .cd-metrics article span,
+    .cd-metrics article small,
+    .chat-demo-note,
+    .chat-disclaimer,
+    .chat-history-title,
+    .paper-counts
+  ) {
+  color: var(--muted);
+}
+.personal-shell[data-theme="dark"] :is(button, input, textarea, select) {
+  background: #252525;
+  color: var(--ink);
+  border-color: var(--line);
+}
+.personal-shell[data-theme="dark"] :is(input, textarea)::placeholder {
+  color: #aaa;
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    button:hover,
+    .personal-sidebar nav button.active,
+    .chat-history-item.active,
+    .chat-history-item:hover,
+    .practice-option:hover,
+    .settings-nav-item.active
+  ) {
+  background: #353535;
+  color: #fff;
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    .primary,
+    .primary-button,
+    .subject-tabs button[aria-selected="true"],
+    .cd-segments button[aria-pressed="true"],
+    .settings-appearance button[aria-checked="true"]
+  ) {
+  background: #ededed;
+  color: #171717;
+  border-color: #ededed;
+}
+.personal-shell[data-theme="dark"] :is(.primary:hover, .primary-button:hover) {
+  background: #d5d5d5;
+  color: #171717;
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    .workspace-subtabs button[aria-pressed="true"],
+    .project-create-modes button[aria-pressed="true"],
+    .cd-tabs button[aria-pressed="true"]
+  ) {
+  color: #fff;
+  border-color: #bbb;
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    .chat-history-select,
+    .chat-history-delete,
+    .personal-collapse,
+    .owner-settings-btn,
+    .signout,
+    .chat-composer textarea
+  ) {
+  background: transparent;
+}
+.personal-shell[data-theme="dark"] .chat-composer:focus-within {
+  border-color: #999;
+  box-shadow: 0 0 0 2px #444;
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    .workspace-topbar,
+    .owner-card,
+    .chat-history-section,
+    .unit-list details,
+    .practice-history article,
+    .settings-connection-block,
+    .subject-tabs,
+    .cd-tabs,
+    .material-row
+  ) {
+  border-color: var(--line);
+}
+.personal-shell[data-theme="dark"] .sgpa-chart text {
+  fill: #bdbdbd;
+}
+.personal-shell[data-theme="dark"] .sgpa-chart line {
+  stroke: #3d3d3d;
+}
+.personal-shell[data-theme="dark"] .sgpa-chart polyline {
+  stroke: #dedede;
+}
+.personal-shell[data-theme="dark"] .sgpa-chart circle {
+  fill: #eee;
+  stroke: #202020;
+}
+.personal-shell[data-theme="dark"] :is(.orbit-mark, .chat-heading img) {
+  filter: invert(1);
+}
+.personal-shell[data-theme="dark"] .cd-level-0 {
+  background: #303030;
+}
+.personal-shell[data-theme="dark"] .cd-level-unknown {
+  background: #202020;
+  border-color: #444;
+}
+.personal-shell[data-theme="dark"] .settings-backdrop {
+  background: #0009;
+}
+.personal-shell[data-theme="dark"] :focus-visible {
+  outline-color: #ccc;
+}
+
+/* Theme surfaces explicitly: overlay buttons and nested text must not inherit
+   the generic control background or a conflicting foreground. */
+.personal-shell[data-theme="dark"] .personal-sidebar,
+.personal-shell[data-theme="dark"] .settings-sidebar {
+  background: #171717;
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    .settings-connection-block,
+    .settings-input-row,
+    .evidence-detail,
+    .material-review,
+    .import-review,
+    .record-row,
+    .cd-alert,
+    .paper-notice,
+    .project-context
+  ) {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    .settings-prefix,
+    .settings-connected-badge,
+    .paper-status,
+    .paper-hero-icon,
+    .owner-avatar,
+    .cd-difficulty > div > div
+  ) {
+  background: #353535;
+  color: #eee;
+  border-color: var(--line);
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    .chat-message-body,
+    .chat-message-body p,
+    .chat-message-body li,
+    .practice-feedback p,
+    .practice-result,
+    .settings-appearance strong
+  ) {
+  color: #ececec;
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    .primary,
+    .primary-button,
+    .settings-input-row .primary-button,
+    .chat-composer .primary
+  ) {
+  background: #ececec;
+  color: #171717;
+  border-color: #ececec;
+}
+.personal-shell[data-theme="dark"]
+  :is(.primary, .primary-button)
+  :is(span, strong, small, svg) {
+  color: inherit;
+}
+.personal-shell[data-theme="dark"]
+  :is(
+    a,
+    .evidence-row button,
+    .cd-difficulty,
+    .subject-tiles span,
+    .chat-starters button svg
+  ) {
+  color: #d4d4d4;
+}
+.personal-shell[data-theme="dark"] .personal-scrim {
+  background: #0009;
+}
+.personal-shell[data-theme="dark"] .chat-history-item {
+  color: #ddd;
+}
+.personal-shell[data-theme="dark"] .chat-composer textarea:focus {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.personal-shell[data-theme="dark"] :is(input, textarea, select):focus {
+  box-shadow: 0 0 0 2px #555;
+  border-color: #aaa;
+}
+.personal-shell[data-theme="dark"] :is(.chat-message pre, .chat-message code) {
+  color: #ececec;
+}
+.personal-shell[data-theme="dark"] :is(.chat-message th, .chat-message td) {
+  border-color: #555;
+  background: transparent;
+}
+.personal-shell[data-theme="dark"] button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.personal-shell[data-theme="dark"] .practice-set fieldset:disabled {
+  opacity: 1;
+}
+.personal-shell[data-theme="dark"] input[type="radio"],
+.personal-shell[data-theme="dark"] input[type="checkbox"] {
+  accent-color: #ddd;
+}
+.personal-shell .chat-heading,
+.personal-shell .chat-demo-note,
+.personal-shell .project-context,
+.personal-shell .chat-compose-area {
+  flex-shrink: 0;
+}
+.personal-shell .chat-message-body {
+  width: 100%;
+}
+.personal-shell .chat-message.user .chat-message-body {
+  width: auto;
+}
+.personal-shell .chat-message-body :is(h1, h2, h3) {
+  line-height: 1.35;
+  margin: 24px 0 12px;
+}
+.personal-shell .chat-message-body h1 {
+  font-size: 24px;
+}
+.personal-shell .chat-message-body h2 {
+  font-size: 21px;
+}
+.personal-shell .chat-message-body h3 {
+  font-size: 17px;
+}
+.personal-shell .chat-message-body li + li {
+  margin-top: 6px;
+}
+.personal-shell .chat-message-body pre {
+  white-space: pre;
+  overflow-x: auto;
+}
+.personal-shell .chat-message-body blockquote {
+  margin: 16px 0;
+  padding-left: 16px;
+  border-left: 3px solid var(--line);
+}
+@media (max-width: 600px) {
+  .personal-shell .settings-modal {
+    flex-direction: column;
+    height: min(720px, 92dvh);
+  }
+  .personal-shell .settings-sidebar {
+    width: 100%;
+    padding: 14px 20px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .personal-shell .settings-content {
+    padding: 20px;
+    min-height: 0;
+  }
+  .personal-shell .settings-input-row {
+    flex-wrap: wrap;
+  }
+  .personal-shell .settings-prefix {
+    width: 100%;
+    border-right: 0;
+  }
+  .personal-shell .settings-input-row input {
+    width: 50%;
+  }
+}

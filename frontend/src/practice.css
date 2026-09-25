@@ -7,6 +7,32 @@
 .practice-set {
   margin: 28px 0;
 }
+.practice-progress,
+.practice-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 18px 0;
+}
+.practice-progress {
+  font-size: 13px;
+  color: #595959;
+}
+.practice-progress progress {
+  width: min(180px, 100%);
+  height: 6px;
+  accent-color: #202020;
+}
+.practice-result {
+  padding: 14px 18px;
+  background: #f5f5f5;
+  border: 1px solid #dedede;
+  border-radius: 12px;
+  color: #202020;
+  line-height: 1.6;
+}
 
 .practice-set fieldset {
   border: 1px solid var(--line);
@@ -14,7 +40,7 @@
   padding: 24px;
   margin: 24px 0;
   min-width: 0;
-  background: #FFFFFF;
+  background: #ffffff;
 }
 
 .practice-set legend {
@@ -37,7 +63,7 @@
 }
 
 .personal-shell .practice-option:hover {
-  background: #F4F5F6;
+  background: #f4f5f6;
 }
 
 .personal-shell .practice-option input {
@@ -82,7 +108,7 @@
 .practice-history button {
   border: 1px solid var(--line);
   padding: 8px 16px;
-  background: #FFFFFF;
+  background: #ffffff;
   border-radius: 9999px;
   font-weight: 600;
   font-size: 12px;

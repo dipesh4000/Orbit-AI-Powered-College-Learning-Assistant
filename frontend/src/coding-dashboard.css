@@ -119,7 +119,21 @@
   align-items: start;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 13px;
+  margin-top: 32px;
+}
+.personal-shell .cd-heading h1 {
+  font-size: 24px;
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+  margin: 0 0 8px;
+}
+.cd-heading > .cd-actions {
+  margin-left: auto;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+.cd-heading .cd-segments {
+  width: max-content;
 }
 .cd-actions {
   display: flex;
@@ -313,23 +327,24 @@
   width: 11px;
   height: 11px;
   border-radius: 2px;
-  background: #f1f5f2;
+  background: #ebedf0;
+  box-shadow: inset 0 0 0 1px rgba(27, 31, 36, 0.03);
 }
 .cd-level-unknown {
-  background: #fff;
-  border: 1px solid #e4ebe6;
+  background: #f6f8fa;
+  border: 1px solid #e8ebee;
 }
 .cd-level-1 {
-  background: #b7e4c7;
+  background: #9be9a8;
 }
 .cd-level-2 {
-  background: #74c69d;
+  background: #40c463;
 }
 .cd-level-3 {
-  background: #40916c;
+  background: #30a14e;
 }
 .cd-level-4 {
-  background: #1b6b4a;
+  background: #216e39;
 }
 .cd-language-bar {
   display: flex;

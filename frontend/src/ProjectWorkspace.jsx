@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { FolderGit2, MessageSquare, Plus } from "lucide-react";
+import {
+  Code2,
+  FolderGit2,
+  Github,
+  MessageSquare,
+  Plus,
+  Upload,
+} from "lucide-react";
 import { api, post } from "./api";
 import PracticeWorkspace from "./PracticeWorkspace";
 import PaperWorkspace from "./PaperWorkspace";
@@ -11,6 +18,8 @@ export default function ProjectWorkspace({ subjects, demoMode, onChat }) {
   const [draft, setDraft] = useState(null),
     [editing, setEditing] = useState(null),
     [repo, setRepo] = useState("");
+  const [createMode, setCreateMode] = useState("github"),
+    [pendingFiles, setPendingFiles] = useState([]);
   const [mode, setMode] = useState("Projects"),
     [busy, setBusy] = useState(false),
     [loading, setLoading] = useState(true);
@@ -67,6 +76,9 @@ export default function ProjectWorkspace({ subjects, demoMode, onChat }) {
             setMode("Projects");
             setEditing(null);
             setDraft(blank);
+            setCreateMode("github");
+            setPendingFiles([]);
+            setRepo("");
           }}
         >
           <Plus size={16} />
@@ -106,21 +118,60 @@ export default function ProjectWorkspace({ subjects, demoMode, onChat }) {
               onSubmit={(e) => {
                 e.preventDefault();
                 run(async () => {
-                  const r = await api(
+                  let r = await api(
                     `/projects${editing ? `/${editing}` : ""}`,
                     {
                       method: editing ? "PUT" : "POST",
                       body: JSON.stringify(draft),
                     },
                   );
+                  if (!editing && createMode === "github" && repo.trim()) {
+                    r = await post(`/projects/${r.id}/repository`, {
+                      url: repo.trim(),
+                    });
+                  }
+                  if (!editing && createMode === "files") {
+                    for (const file of pendingFiles) {
+                      const body = new FormData();
+                      body.append("file", file);
+                      r = await api(`/projects/${r.id}/documents`, {
+                        method: "POST",
+                        body,
+                      });
+                    }
+                  }
                   setProject(r);
                   setDraft(null);
                   setMaterial(null);
+                  setPendingFiles([]);
+                  setRepo("");
                 });
               }}
             >
               <fieldset disabled={busy}>
                 <h2>{editing ? "Edit project" : "Add a project"}</h2>
+                {!editing && (
+                  <div
+                    className="project-create-modes"
+                    aria-label="Project source"
+                  >
+                    {[
+                      ["github", Github, "GitHub repository"],
+                      ["files", Upload, "Local files"],
+                      ["blank", Plus, "Start blank"],
+                    ].map(([value, Icon, title]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        aria-pressed={createMode === value}
+                        onClick={() => setCreateMode(value)}
+                      >
+                        <Icon size={17} />
+                        <span>{title}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="form-grid">
                   <label>
                     Project name
@@ -146,35 +197,53 @@ export default function ProjectWorkspace({ subjects, demoMode, onChat }) {
                     />
                   </label>
                 </div>
-                <div className="subject-options">
-                  <span>Practise subjects (optional)</span>
-                  {subjects.length ? (
-                    subjects.map((s) => (
-                      <label key={s.id}>
-                        <input
-                          type="checkbox"
-                          checked={draft.subject_ids.includes(s.id)}
-                          onChange={(e) =>
-                            setDraft((d) => ({
-                              ...d,
-                              subject_ids: e.target.checked
-                                ? [...d.subject_ids, s.id]
-                                : d.subject_ids.filter((id) => id !== s.id),
-                            }))
-                          }
-                        />
-                        {s.name} · {s.semester}
-                      </label>
-                    ))
-                  ) : (
-                    <p>
-                      Add subjects in Dashboard to link their syllabus here.
-                    </p>
-                  )}
-                </div>
+                {!editing && createMode === "github" && (
+                  <label>
+                    Public GitHub repository URL
+                    <input
+                      type="url"
+                      required
+                      value={repo}
+                      onChange={(e) => setRepo(e.target.value)}
+                      placeholder="https://github.com/owner/repository"
+                    />
+                    <small>
+                      Orbit imports a safe, read-only snapshot of the README and
+                      selected source files.
+                    </small>
+                  </label>
+                )}
+                {!editing && createMode === "files" && (
+                  <label className="file-drop project-code-drop">
+                    <Upload size={20} />
+                    <strong>Upload local code or documents</strong>
+                    <span>
+                      {pendingFiles.length
+                        ? `${pendingFiles.length} file${pendingFiles.length === 1 ? "" : "s"} selected`
+                        : "Choose up to 12 source, Markdown, text, PDF, or image files"}
+                    </span>
+                    <input
+                      type="file"
+                      multiple
+                      required
+                      accept=".js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.h,.hpp,.go,.rs,.css,.html,.json,.yaml,.yml,.sql,.sh,.txt,.md,.pdf,.png,.jpg,.jpeg,.webp"
+                      onChange={(e) =>
+                        setPendingFiles(
+                          Array.from(e.target.files || []).slice(0, 12),
+                        )
+                      }
+                    />
+                  </label>
+                )}
                 <div className="form-actions">
                   <button className="primary">
-                    {editing ? "Save project" : "Create project"}
+                    {editing
+                      ? "Save project"
+                      : createMode === "github"
+                        ? "Import repository"
+                        : createMode === "files"
+                          ? "Create and upload"
+                          : "Create project"}
                   </button>
                   <button type="button" onClick={() => setDraft(null)}>
                     Cancel
@@ -251,7 +320,20 @@ export default function ProjectWorkspace({ subjects, demoMode, onChat }) {
                     });
                   }}
                 >
-                  Edit project or subjects
+                  Edit project
+                </button>
+                <button
+                  className="primary"
+                  disabled={!project.materials.length}
+                  onClick={() =>
+                    onChat(
+                      project,
+                      `Create a five-question practice quiz about ${project.name}. Cover its architecture, important files, and implementation choices. Ask one question at a time and wait for my answer before giving feedback.`,
+                    )
+                  }
+                >
+                  <Code2 size={15} />
+                  Quiz me on this codebase
                 </button>
                 <button
                   disabled={busy}

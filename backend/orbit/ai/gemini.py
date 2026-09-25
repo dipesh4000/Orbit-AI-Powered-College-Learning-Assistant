@@ -22,10 +22,29 @@ def media(filename, data):
         "webp": "image/webp",
         "txt": "text/plain",
         "md": "text/plain",
+        "js": "text/plain",
+        "jsx": "text/plain",
+        "ts": "text/plain",
+        "tsx": "text/plain",
+        "py": "text/plain",
+        "java": "text/plain",
+        "c": "text/plain",
+        "cpp": "text/plain",
+        "h": "text/plain",
+        "hpp": "text/plain",
+        "go": "text/plain",
+        "rs": "text/plain",
+        "css": "text/plain",
+        "html": "text/plain",
+        "json": "text/plain",
+        "yaml": "text/plain",
+        "yml": "text/plain",
+        "sql": "text/plain",
+        "sh": "text/plain",
     }
     if suffix not in types or not data or len(data) > MAX_BYTES:
         raise HTTPException(
-            422, "Choose a PDF, PNG, JPG, WebP or text document up to 10 MB."
+            422, "Choose a PDF, image, UTF-8 text document, or source-code file up to 10 MB."
         )
     return types[suffix]
 

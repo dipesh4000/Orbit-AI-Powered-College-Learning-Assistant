@@ -12,6 +12,30 @@ const defaults = {
   target_sgpa: null,
   sgpa_scale: 10,
 };
+
+const subjectTabs = ["Syllabus", "Notes", "PYQs", "Lab", "Videos"];
+
+function syllabusUnits(content) {
+  const text = content?.trim();
+  if (!text) return [];
+  const markers = [
+    ...text.matchAll(/^\s*(UNIT\s+(?:[IVX]+|\d+))\s*[:.\-–—]?\s*(.*)$/gim),
+  ];
+  if (!markers.length)
+    return [{ title: "UNIT I", summary: "Course outline", body: text }];
+  return markers.map((marker, index) => {
+    const start = marker.index + marker[0].length;
+    const end = markers[index + 1]?.index ?? text.length;
+    const inline = marker[2]?.trim();
+    const body = text.slice(start, end).trim();
+    const firstLine = (inline || body.split("\n")[0] || "Unit topics").trim();
+    return {
+      title: marker[1].toUpperCase(),
+      summary: firstLine,
+      body: [inline, body].filter(Boolean).join("\n"),
+    };
+  });
+}
 export function ProfileFields({ value, onChange }) {
   return (
     <div className="form-grid">
@@ -68,8 +92,21 @@ function SgpaChart({ rows, scale }) {
       >
         {[0, scale / 2, scale].map((n) => (
           <g key={n}>
-            <line x1="40" x2="485" y1={y(n)} y2={y(n)} stroke="#ECECEE" strokeDasharray="3 4" />
-            <text x="30" y={y(n) + 4} textAnchor="end" fill="#9B9BA0" fontSize="11">
+            <line
+              x1="40"
+              x2="485"
+              y1={y(n)}
+              y2={y(n)}
+              stroke="#ECECEE"
+              strokeDasharray="3 4"
+            />
+            <text
+              x="30"
+              y={y(n) + 4}
+              textAnchor="end"
+              fill="#9B9BA0"
+              fontSize="11"
+            >
               {n}
             </text>
           </g>
@@ -82,15 +119,35 @@ function SgpaChart({ rows, scale }) {
         />
         {rows.map((r, i) => (
           <g key={r.id}>
-            <circle cx={x(i)} cy={y(r.sgpa)} r="5" fill="#353535" stroke="#fff" strokeWidth="2">
+            <circle
+              cx={x(i)}
+              cy={y(r.sgpa)}
+              r="5"
+              fill="#353535"
+              stroke="#fff"
+              strokeWidth="2"
+            >
               <title>
                 Semester {r.semester}: {r.sgpa}/{scale}
               </title>
             </circle>
-            <text x={x(i)} y={y(r.sgpa) - 12} textAnchor="middle" fill="#1A1A1A" fontWeight="600" fontSize="12">
+            <text
+              x={x(i)}
+              y={y(r.sgpa) - 12}
+              textAnchor="middle"
+              fill="#1A1A1A"
+              fontWeight="600"
+              fontSize="12"
+            >
               {r.sgpa}
             </text>
-            <text x={x(i)} y="216" textAnchor="middle" fill="#9B9BA0" fontSize="11">
+            <text
+              x={x(i)}
+              y="216"
+              textAnchor="middle"
+              fill="#9B9BA0"
+              fontSize="11"
+            >
               Sem {r.semester}
             </text>
           </g>
@@ -114,7 +171,9 @@ export default function AcademicDashboard({ owner, subjects, onChanged }) {
     [sgpa, setSgpa] = useState("");
   const [mode, setMode] = useState("overview"),
     [subject, setSubject] = useState(null),
-    [syllabus, setSyllabus] = useState("");
+    [syllabus, setSyllabus] = useState(""),
+    [subjectTab, setSubjectTab] = useState("Syllabus"),
+    [editingSyllabus, setEditingSyllabus] = useState(false);
   const refresh = () => {
     setVersion((v) => v + 1);
     onChanged();
@@ -154,7 +213,12 @@ export default function AcademicDashboard({ owner, subjects, onChanged }) {
   const currentSubjects = subjects.filter(
     (s) => !current || s.semester === current,
   );
-  if (!data && !error) return <div className="workspace-loading" role="status">Loading your dashboard…</div>;
+  if (!data && !error)
+    return (
+      <div className="workspace-loading" role="status">
+        Loading your dashboard…
+      </div>
+    );
   return (
     <>
       <div className="workspace-intro">
@@ -198,6 +262,13 @@ export default function AcademicDashboard({ owner, subjects, onChanged }) {
               </small>
             </div>
             <div>
+              <span>Subjects this semester</span>
+              <strong>{current ? currentSubjects.length : "—"}</strong>
+              <small>
+                {current ? `Semester ${current}` : "Set your current semester"}
+              </small>
+            </div>
+            <div>
               <span>Target SGPA</span>
               <strong>{data?.profile?.target_sgpa ?? "—"}</strong>
               <small>
@@ -212,7 +283,7 @@ export default function AcademicDashboard({ owner, subjects, onChanged }) {
             {data?.profile ? "Edit academic details" : "Add academic details"}
           </button>
         </section>
-        <section className="workspace-card">
+        <section className="workspace-card academic-chart-card">
           <div className="section-heading">
             <h2>SGPA over semesters</h2>
             <button onClick={() => setEdit(true)}>Add SGPA</button>
@@ -339,6 +410,8 @@ export default function AcademicDashboard({ owner, subjects, onChanged }) {
                 key={s.id}
                 onClick={() => {
                   setSubject(s);
+                  setSubjectTab("Syllabus");
+                  setEditingSyllabus(false);
                   setSyllabus(
                     data?.syllabi.find((r) => r.subject_id === s.id)?.content ||
                       "",
@@ -361,41 +434,108 @@ export default function AcademicDashboard({ owner, subjects, onChanged }) {
           </div>
         )}
         {subject && (
-          <div className="syllabus-editor">
-            <h3>{subject.name}</h3>
-            <p>
-              {subject.latest
-                ? `${subject.latest.title}: ${subject.latest.score}/${subject.latest.max_score} · ${subject.latest.assessed_on}`
-                : "No marks saved yet."}
-            </p>
-            <label>
-              Subject syllabus
-              <textarea
-                rows={7}
-                value={syllabus}
-                maxLength={100000}
-                placeholder="Topics, modules and learning goals…"
-                onChange={(e) => setSyllabus(e.target.value)}
-              />
-            </label>
-            <div className="form-actions">
-              <button
-                className="primary"
-                disabled={busy}
-                onClick={() =>
-                  run(() =>
-                    api(`/academics/syllabus/${subject.id}`, {
-                      method: "PUT",
-                      body: JSON.stringify({ content: syllabus }),
-                    }),
-                  )
-                }
-              >
-                Save syllabus
-              </button>
-              <button onClick={() => setMode("records")}>Manage marks</button>
+          <div className="subject-browser">
+            <div className="subject-browser-heading">
+              <div>
+                <span className="eyebrow">SUBJECT WORKSPACE</span>
+                <h3>{subject.name}</h3>
+                <p>
+                  {subject.code} · Semester {subject.semester}
+                  {subject.latest
+                    ? ` · ${subject.latest.title}: ${subject.latest.score}/${subject.latest.max_score}`
+                    : " · No marks saved yet"}
+                </p>
+              </div>
               <button onClick={() => setSubject(null)}>Close</button>
             </div>
+            <div
+              className="subject-tabs"
+              role="tablist"
+              aria-label={`${subject.name} resources`}
+            >
+              {subjectTabs.map((item) => (
+                <button
+                  key={item}
+                  role="tab"
+                  aria-selected={subjectTab === item}
+                  onClick={() => setSubjectTab(item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            {subjectTab === "Syllabus" ? (
+              <div className="unit-list" role="tabpanel">
+                {editingSyllabus ? (
+                  <label className="syllabus-edit-field">
+                    Subject syllabus
+                    <textarea
+                      rows={10}
+                      value={syllabus}
+                      maxLength={100000}
+                      placeholder={
+                        "UNIT I — Foundations\nTopics, modules and learning goals…"
+                      }
+                      onChange={(e) => setSyllabus(e.target.value)}
+                    />
+                  </label>
+                ) : syllabusUnits(syllabus).length ? (
+                  syllabusUnits(syllabus).map((unit, index) => (
+                    <details key={`${unit.title}-${index}`} open={index === 0}>
+                      <summary>
+                        <span>{unit.title}</span>
+                        <small>{unit.summary}</small>
+                      </summary>
+                      <p>{unit.body}</p>
+                    </details>
+                  ))
+                ) : (
+                  <div className="empty-state">
+                    No syllabus has been added for this subject yet.
+                  </div>
+                )}
+                <div className="form-actions">
+                  {editingSyllabus ? (
+                    <>
+                      <button
+                        className="primary"
+                        disabled={busy}
+                        onClick={() => {
+                          run(() =>
+                            api(`/academics/syllabus/${subject.id}`, {
+                              method: "PUT",
+                              body: JSON.stringify({ content: syllabus }),
+                            }),
+                          );
+                          setEditingSyllabus(false);
+                        }}
+                      >
+                        Save syllabus
+                      </button>
+                      <button onClick={() => setEditingSyllabus(false)}>
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => setEditingSyllabus(true)}>
+                      {syllabus ? "Edit syllabus" : "Add syllabus"}
+                    </button>
+                  )}
+                  <button onClick={() => setMode("records")}>
+                    Manage marks
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="subject-tab-empty" role="tabpanel">
+                <BookOpen size={24} />
+                <h4>{subjectTab}</h4>
+                <p>
+                  Add {subjectTab.toLowerCase()} for {subject.name} as you build
+                  this subject workspace.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </section>

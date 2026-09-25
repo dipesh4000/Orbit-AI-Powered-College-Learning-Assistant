@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Github, Code2, RefreshCw, Unplug, ArrowUpRight } from "lucide-react";
+import {
+  X,
+  Github,
+  Code2,
+  RefreshCw,
+  Unplug,
+  ArrowUpRight,
+} from "lucide-react";
 import { api, post } from "./api";
 
 function CodolioConnection() {
@@ -18,7 +25,9 @@ function CodolioConnection() {
     const c = new AbortController();
     api("/coding", { signal: c.signal })
       .then((r) => setData(r))
-      .catch((e) => { if (!c.signal.aborted) setError(e.message); });
+      .catch((e) => {
+        if (!c.signal.aborted) setError(e.message);
+      });
     return () => c.abort();
   }, [attempt]);
 
@@ -29,8 +38,16 @@ function CodolioConnection() {
   }, [data, busy, refreshing]);
 
   async function run(work) {
-    setBusy(true); setError(""); setNotice("");
-    try { await work(); } catch (e) { setError(e.message); } finally { setBusy(false); }
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      await work();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function doRefresh() {
@@ -50,8 +67,16 @@ function CodolioConnection() {
           <p>Import your problem-solving and development stats.</p>
         </div>
       </div>
-      {error && <p className="form-error" role="alert">{error}</p>}
-      {notice && <p className="coding-notice" role="status">{notice}</p>}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      {notice && (
+        <p className="coding-notice" role="status">
+          {notice}
+        </p>
+      )}
       {!data ? (
         <p className="subtle">Loading…</p>
       ) : data.connection ? (
@@ -63,7 +88,8 @@ function CodolioConnection() {
           <div className="coding-actions">
             <a
               href={`https://codolio.com/profile/${encodeURIComponent(data.connection.handle)}`}
-              target="_blank" rel="noreferrer"
+              target="_blank"
+              rel="noreferrer"
             >
               View profile <ArrowUpRight size={13} />
             </a>
@@ -72,14 +98,24 @@ function CodolioConnection() {
             </button>
             {removing ? (
               <span className="settings-confirm-row">
-                <span className="subtle">Disconnect and remove all snapshots?</span>
-                <button className="danger-button" disabled={busy} onClick={() =>
-                  run(async () => {
-                    setData(await api("/coding/connection", { method: "DELETE" }));
-                    setRemoving(false);
-                    setNotice("Codolio disconnected.");
-                  })
-                }>Confirm</button>
+                <span className="subtle">
+                  Disconnect and remove all snapshots?
+                </span>
+                <button
+                  className="danger-button"
+                  disabled={busy}
+                  onClick={() =>
+                    run(async () => {
+                      setData(
+                        await api("/coding/connection", { method: "DELETE" }),
+                      );
+                      setRemoving(false);
+                      setNotice("Codolio disconnected.");
+                    })
+                  }
+                >
+                  Confirm
+                </button>
                 <button onClick={() => setRemoving(false)}>Cancel</button>
               </span>
             ) : (
@@ -89,7 +125,9 @@ function CodolioConnection() {
             )}
           </div>
           {data.connection.error && (
-            <p className="coding-warning" role="status">{data.connection.error}</p>
+            <p className="coding-warning" role="status">
+              {data.connection.error}
+            </p>
           )}
         </div>
       ) : (
@@ -98,7 +136,9 @@ function CodolioConnection() {
           onSubmit={(e) => {
             e.preventDefault();
             run(async () => {
-              const r = await post("/coding/connection", { handle: handle.trim() });
+              const r = await post("/coding/connection", {
+                handle: handle.trim(),
+              });
               setData(r);
               await post("/coding/refresh", {});
               setAttempt((v) => v + 1);
@@ -138,15 +178,29 @@ function GitHubConnectionPanel() {
   useEffect(() => {
     const c = new AbortController();
     api("/github/profile", { signal: c.signal })
-      .then((r) => { setProfile(r.profile); setHandle(r.profile?.handle || ""); })
-      .catch((e) => { if (!c.signal.aborted) setError(e.message); })
-      .finally(() => { if (!c.signal.aborted) setLoading(false); });
+      .then((r) => {
+        setProfile(r.profile);
+        setHandle(r.profile?.handle || "");
+      })
+      .catch((e) => {
+        if (!c.signal.aborted) setError(e.message);
+      })
+      .finally(() => {
+        if (!c.signal.aborted) setLoading(false);
+      });
     return () => c.abort();
   }, []);
 
   async function run(work) {
-    setBusy(true); setError("");
-    try { await work(); } catch (e) { setError(e.message); } finally { setBusy(false); }
+    setBusy(true);
+    setError("");
+    try {
+      await work();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -158,7 +212,11 @@ function GitHubConnectionPanel() {
           <p>Connect your public profile to enrich projects in Practice.</p>
         </div>
       </div>
-      {error && <p className="form-error" role="alert">{error}</p>}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
       {loading ? (
         <p className="subtle">Loading…</p>
       ) : profile ? (
@@ -166,24 +224,51 @@ function GitHubConnectionPanel() {
           <div>
             <span className="settings-connected-badge">Connected</span>
             <span className="subtle"> · {profile.handle}</span>
-            <span className="subtle"> · {profile.snapshot.public_repos ?? "—"} repos · {profile.snapshot.followers ?? "—"} followers</span>
+            <span className="subtle">
+              {" "}
+              · {profile.snapshot.public_repos ?? "—"} repos ·{" "}
+              {profile.snapshot.followers ?? "—"} followers
+            </span>
           </div>
           <div className="coding-actions">
-            <a href={`https://github.com/${encodeURIComponent(profile.handle)}`} target="_blank" rel="noreferrer">
+            <a
+              href={`https://github.com/${encodeURIComponent(profile.handle)}`}
+              target="_blank"
+              rel="noreferrer"
+            >
               View profile <ArrowUpRight size={13} />
             </a>
-            <form onSubmit={(e) => { e.preventDefault(); run(async () => setProfile((await post("/github/profile", { handle })).profile)); }}>
-              <button className="primary-button" disabled={busy}>{busy ? "Refreshing…" : "Refresh"}</button>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                run(async () =>
+                  setProfile(
+                    (await post("/github/profile", { handle })).profile,
+                  ),
+                );
+              }}
+            >
+              <button className="primary-button" disabled={busy}>
+                {busy ? "Refreshing…" : "Refresh"}
+              </button>
             </form>
             {removing ? (
               <span className="settings-confirm-row">
                 <span className="subtle">Disconnect GitHub profile?</span>
-                <button className="danger-button" disabled={busy} onClick={() =>
-                  run(async () => {
-                    await api("/github/profile", { method: "DELETE" });
-                    setProfile(null); setHandle(""); setRemoving(false);
-                  })
-                }>Confirm</button>
+                <button
+                  className="danger-button"
+                  disabled={busy}
+                  onClick={() =>
+                    run(async () => {
+                      await api("/github/profile", { method: "DELETE" });
+                      setProfile(null);
+                      setHandle("");
+                      setRemoving(false);
+                    })
+                  }
+                >
+                  Confirm
+                </button>
                 <button onClick={() => setRemoving(false)}>Cancel</button>
               </span>
             ) : (
@@ -198,7 +283,9 @@ function GitHubConnectionPanel() {
           className="settings-connect-form"
           onSubmit={(e) => {
             e.preventDefault();
-            run(async () => setProfile((await post("/github/profile", { handle })).profile));
+            run(async () =>
+              setProfile((await post("/github/profile", { handle })).profile),
+            );
           }}
         >
           <div className="settings-input-row">
@@ -222,11 +309,13 @@ function GitHubConnectionPanel() {
   );
 }
 
-export default function SettingsModal({ onClose }) {
+export default function SettingsModal({ onClose, theme, onThemeChange }) {
   const backdropRef = useRef(null);
 
   useEffect(() => {
-    function onKey(e) { if (e.key === "Escape") onClose(); }
+    function onKey(e) {
+      if (e.key === "Escape") onClose();
+    }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
@@ -235,22 +324,51 @@ export default function SettingsModal({ onClose }) {
     <div
       className="settings-backdrop"
       ref={backdropRef}
-      onClick={(e) => { if (e.target === backdropRef.current) onClose(); }}
+      onClick={(e) => {
+        if (e.target === backdropRef.current) onClose();
+      }}
     >
-      <div className="settings-modal" role="dialog" aria-modal="true" aria-label="Settings">
+      <div
+        className="settings-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Settings"
+      >
         <aside className="settings-sidebar">
-          <p className="settings-section-label">CONNECTIONS</p>
-          <button className="settings-nav-item active">Linked accounts</button>
+          <p className="settings-section-label">PREFERENCES</p>
+          <span className="settings-nav-item active">
+            Appearance & accounts
+          </span>
         </aside>
         <div className="settings-content">
           <div className="settings-content-header">
-            <h2>Linked accounts</h2>
-            <button className="settings-close" onClick={onClose} aria-label="Close settings">
+            <h2>Settings</h2>
+            <button
+              className="settings-close"
+              onClick={onClose}
+              aria-label="Close settings"
+            >
               <X size={20} />
             </button>
           </div>
+          <div className="settings-appearance">
+            <div>
+              <strong>Dark mode</strong>
+              <p>Use a darker workspace. Saved on this device.</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={theme === "dark"}
+              aria-label="Dark mode"
+              onClick={() => onThemeChange(theme === "dark" ? "light" : "dark")}
+            >
+              {theme === "dark" ? "On" : "Off"}
+            </button>
+          </div>
           <p className="subtle" style={{ marginBottom: 24 }}>
-            Connect your public profiles to import coding stats and enrich your workspace.
+            Connect your public profiles to import coding stats and enrich your
+            workspace.
           </p>
           <CodolioConnection />
           <GitHubConnectionPanel />

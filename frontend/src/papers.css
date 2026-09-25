@@ -1,29 +1,38 @@
 /* Luma Design System - Papers Workspace */
 .paper-hero {
-  background: linear-gradient(135deg, #202020 0%, #303030 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 32px 36px;
+  background: #fafafa;
+  border: 1px solid #e5e5e5;
+  border-radius: 14px;
+  padding: 22px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 25px;
   margin-top: 24px;
-  color: #FFFFFF;
-  box-shadow: 0 12px 36px rgba(10, 9, 34, 0.25);
+  color: #202020;
+  box-shadow: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.paper-hero > div:first-child {
+  min-width: 0;
+  max-width: 680px;
+  position: relative;
+  z-index: 1;
 }
 
 .paper-hero h2 {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: -1px;
-  color: #FFFFFF;
+  color: #202020;
   margin: 10px 0;
 }
 
 .paper-hero p:last-child {
   margin: 0;
-  color: #9CA3AF;
+  color: #595959;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -34,6 +43,7 @@
   padding: 20px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 50%;
+  flex: 0 0 auto;
 }
 
 .paper-hero-icon > span {
@@ -85,7 +95,7 @@
 .paper-workspace textarea {
   width: 100%;
   min-width: 0;
-  background: #FFFFFF;
+  background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 12px 14px;
@@ -185,7 +195,7 @@
   display: flex;
   gap: 20px;
   padding: 24px;
-  background: #FFFFFF;
+  background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 18px;
   margin: 16px 0;
@@ -235,7 +245,7 @@
   gap: 6px;
   text-transform: capitalize;
   background: #f4f4f4;
-  color: #D97706;
+  color: #d97706;
   font-size: 11px;
   font-weight: 600;
   border-radius: 9999px;
@@ -243,7 +253,7 @@
 }
 
 .paper-status.ready {
-  background: #F1F1F1;
+  background: #f1f1f1;
   color: #454545;
 }
 
@@ -262,15 +272,15 @@
 }
 
 .paper-workspace .paper-remove:hover {
-  color: #DC2626;
-  background: #FEE2E2;
+  color: #dc2626;
+  background: #fee2e2;
 }
 
 .paper-empty {
   text-align: center;
   border: 1px dashed var(--line);
   border-radius: 20px;
-  background: #FFFFFF;
+  background: #ffffff;
   padding: 56px 24px;
 }
 
@@ -334,7 +344,7 @@
 }
 
 .question-card {
-  background: #FFFFFF;
+  background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 24px;

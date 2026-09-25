@@ -34,8 +34,28 @@ class QuizModel:
         }
 
 
+def test_demo_saved_quizzes_can_be_completed_and_reloaded(environment):
+    oid = demo.seed(environment)["id"]
+    rows = personal_practice.listing(oid, environment)
+    ready = next(row for row in rows if row["answered_at"] is None)
+    reviewed = next(row for row in rows if row["answered_at"] is not None)
+    assert reviewed["correct"] == 2
+    assert all("correct_answer" not in q for q in ready["questions"])
+    result = personal_practice.submit(
+        oid, environment, ready["id"],
+        personal_practice.Answers(answers=["HAVING", "LEFT JOIN", "Reduce redundant data"]),
+    )
+    assert result["correct"] == 3
+    saved = next(row for row in personal_practice.listing(oid, environment) if row["id"] == ready["id"])
+    assert saved["answers"] == result["answers"]
+    assert all("explanation" in q for q in saved["questions"])
+
+
 def seed(environment):
     oid = demo.seed(environment)["id"]
+    # Generation tests start with no attempts; demo fixture coverage is separate.
+    for row in personal_practice.listing(oid, environment):
+        personal_practice.remove(oid, environment, row["id"])
     with environment.connect() as conn:
         sid = conn.scalar(
             select(db.subjects.c.id).where(db.subjects.c.code == "CIC-210")
