@@ -33,6 +33,8 @@ import {
 import Login from "./AccountLogin";
 import PersonalWorkspace from "./PersonalWorkspace";
 import Landing from "./Landing";
+import OrbitMark from "./OrbitMark";
+import StartupIntro from "./StartupIntro";
 import { api, post, wakeServer } from "./api";
 
 const pct = (value) =>
@@ -101,6 +103,7 @@ function App() {
     [loading, setLoading] = useState(true),
     [health, setHealth] = useState(null),
     [messages, setMessages] = useState([]),
+    [responding, setResponding] = useState(false),
     [conversations, setConversations] = useState([]),
     [conversationId, setConversationId] = useState(null);
   const [dashboard, setDashboard] = useState(null),
@@ -109,7 +112,12 @@ function App() {
     [busy, setBusy] = useState(false);
   const end = useRef(null),
     inputRef = useRef(null),
-    mainRef = useRef(null);
+    mainRef = useRef(null),
+    responseTimer = useRef(null);
+  useEffect(
+    () => () => window.clearTimeout(responseTimer.current),
+    [],
+  );
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
   }, [view]);
@@ -348,6 +356,9 @@ function App() {
           cache: r.cache_hits,
         },
       ]);
+      setResponding(true);
+      window.clearTimeout(responseTimer.current);
+      responseTimer.current = window.setTimeout(() => setResponding(false), 1100);
       api("/conversations")
         .then(setConversations)
         .catch(() =>
@@ -432,7 +443,7 @@ function App() {
           <X size={18} />
         </button>
         <div className="brand">
-          <span className="brand-icon">◌</span> orbit
+          <OrbitMark className="brand-icon" state={responding ? "responding" : busy ? "thinking" : "idle"} /> orbit
           <span className="tiny">STUDENT</span>
         </div>
         <button className="new-chat" onClick={newChat} disabled={busy}>
@@ -1216,6 +1227,7 @@ function Practice({ courses, health }) {
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
+    <StartupIntro />
     <App />
   </BrowserRouter>,
 );

@@ -211,6 +211,11 @@
 .personal-shell[data-theme="dark"] :is(.orbit-mark, .chat-heading img) {
   filter: invert(1);
 }
+
+.personal-shell[data-theme="dark"] .orbit-ai-mark {
+  filter: none;
+  color: var(--ink);
+}
 .personal-shell[data-theme="dark"] .cd-level-0 {
   background: #303030;
 }

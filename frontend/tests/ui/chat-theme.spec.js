@@ -19,6 +19,9 @@ test("demo reveals words, changes chats safely, and persists an accessible theme
   await page.getByRole("button", { name: "Ask Orbit" }).click();
   const reply = page.locator(".chat-message.assistant");
   await expect(reply).toContainText("Your study plan");
+  await expect(page.locator(".workspace-title .orbit-ai-mark")).toHaveAttribute("data-state", "responding");
+  await expect(page.locator(".chat-heading, .chat-demo-note")).toHaveCount(0);
+  await expect(page.locator(".private-label")).toHaveText("Demo · Offline replies");
   const first = (await reply.innerText()).length;
   expect(first).toBeLessThan(answer.length / 2);
   await expect.poll(async () => (await reply.innerText()).length).toBeGreaterThan(first);

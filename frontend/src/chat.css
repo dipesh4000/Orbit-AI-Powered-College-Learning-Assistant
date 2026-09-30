@@ -185,6 +185,25 @@
   justify-content: flex-end;
 }
 
+.chat-message.assistant {
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.personal-chat .chat-response-mark {
+  width: 28px;
+  height: 28px;
+  margin-top: 2px;
+  color: var(--ink, #171717);
+}
+
+.personal-chat .chat-welcome-mark {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 16px;
+  color: var(--ink, #171717);
+}
+
 .chat-message-body {
   min-width: 0;
   max-width: 100%;

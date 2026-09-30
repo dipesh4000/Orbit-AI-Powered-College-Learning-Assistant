@@ -50,8 +50,8 @@
   white-space: nowrap;
 }
 .orbit-mark {
-  width: 29px;
-  height: 29px;
+  width: 1.25em;
+  height: 1.25em;
   display: block;
   flex: none;
 }
@@ -371,9 +371,9 @@
   gap: 8px;
   font-size: 13px;
 }
-.personal-shell .chat-heading img {
-  width: 22px;
-  height: 22px;
+.personal-shell .chat-heading .orbit-ai-mark {
+  width: 1.25em;
+  height: 1.25em;
 }
 .personal-shell .chat-heading small {
   color: #777;
@@ -497,7 +497,7 @@
 .personal-collapsed {
   grid-template-columns: 68px minmax(0, 1fr);
 }
-.personal-collapsed .personal-sidebar .brand span,
+.personal-collapsed .personal-sidebar .brand span:not(.orbit-ai-mark),
 .personal-collapsed .personal-new-chat span,
 .personal-collapsed .personal-sidebar .eyebrow,
 .personal-collapsed .personal-sidebar nav span,
@@ -573,7 +573,7 @@
   .personal-shell .chat-history-section {
     display: flex;
   }
-  .personal-collapsed .personal-sidebar .brand span,
+  .personal-collapsed .personal-sidebar .brand span:not(.orbit-ai-mark),
   .personal-collapsed .personal-new-chat span,
   .personal-collapsed .personal-sidebar nav span,
   .personal-collapsed .owner-card div,

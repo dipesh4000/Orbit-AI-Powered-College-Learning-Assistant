@@ -8,6 +8,7 @@ import {
   LoaderCircle,
   Sparkles,
 } from "lucide-react";
+import OrbitMark from "./OrbitMark";
 
 export default function Login({
   students,
@@ -25,7 +26,7 @@ export default function Login({
     <div className="login">
       <section className="login-story" aria-labelledby="story-title">
         <a className="brand" href="/login" aria-label="Orbit home">
-          <img className="brand-icon" src="/orbit-mark.svg" alt="" /> Orbit AI{" "}
+          <OrbitMark className="brand-icon" state={loading || busy ? "thinking" : "idle"} /> Orbit AI{" "}
           <span className="brand-tag">YOUR LEARNING SPACE</span>
         </a>
         <div className="story-copy">

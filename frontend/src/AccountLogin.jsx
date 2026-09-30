@@ -2,6 +2,7 @@ import { useState } from "react";
 import Login from "./Login";
 import { post } from "./api";
 import "./personal.css";
+import OrbitMark from "./OrbitMark";
 
 export default function AccountLogin(props) {
   const [mode, setMode] = useState(
@@ -37,7 +38,7 @@ export default function AccountLogin(props) {
     <main className="account-page">
       <section className="account-card">
         <a className="brand" href="/">
-          <img src="/orbit-mark.svg" alt="" /> Orbit AI
+          <OrbitMark state={props.loading || busy ? "thinking" : "idle"} /> Orbit AI
         </a>
         <p className="eyebrow">YOUR PERSONAL LEARNING SPACE</p>
         <h1>{mode === "register" ? "Create your account" : "Welcome back"}</h1>

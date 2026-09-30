@@ -4,10 +4,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { api, post } from "./api";
 import EvidenceList from "./Evidence";
+import OrbitMark from "./OrbitMark";
 import "./chat.css";
 
 export default function PersonalChat({
-  demoMode,
   name,
   project,
   onClearProject,
@@ -15,6 +15,7 @@ export default function PersonalChat({
   onChatChanged,
   initialDraft,
   onInitialDraftUsed,
+  onMotionStateChange,
 }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -23,6 +24,10 @@ export default function PersonalChat({
   const [error, setError] = useState("");
   const [pending, setPending] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const motionState = streaming ? "responding" : busy || loading ? "thinking" : "idle";
+  useEffect(() => {
+    onMotionStateChange?.(motionState);
+  }, [motionState, onMotionStateChange]);
   const generation = useRef(0);
   const createdChat = useRef(null);
   const streamTimer = useRef(null);
@@ -91,6 +96,9 @@ export default function PersonalChat({
     if (!message || busy || loading) return;
     const request = ++generation.current;
     setBusy(true);
+    setPending(message);
+    setInput("");
+    setError("");
     followBottom.current = true;
     // Auto-create a chat session if none exists
     let activeChatId = chatId;
@@ -105,6 +113,8 @@ export default function PersonalChat({
         if (request !== generation.current) return;
         setError(e.message);
         setBusy(false);
+        setPending("");
+        setInput(message);
         return;
       }
     }
@@ -119,7 +129,6 @@ export default function PersonalChat({
       });
       if (request !== generation.current) return;
       const animate =
-        demoMode &&
         !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       setPending("");
       setMessages((m) => [
@@ -137,6 +146,9 @@ export default function PersonalChat({
       if (animate) {
         setStreaming(true);
         const words = r.answer.match(/\S+\s*|\s+/g) || [];
+        // The endpoint returns a complete answer. Reveal it progressively,
+        // with a bounded duration even for long replies.
+        const wordsPerTick = Math.max(1, Math.ceil(words.length / 180));
         let index = 0;
         let text = "";
         streamTimer.current = setInterval(() => {
@@ -144,7 +156,8 @@ export default function PersonalChat({
             clearInterval(streamTimer.current);
             return;
           }
-          text += words[index++] || "";
+          text += words.slice(index, index + wordsPerTick).join("");
+          index += wordsPerTick;
           setMessages((m) =>
             m.map((item, i) =>
               i === m.length - 1 ? { ...item, content: text } : item,
@@ -181,17 +194,6 @@ export default function PersonalChat({
 
   return (
     <section className="personal-chat" aria-label="Chat with Orbit">
-      <div className="chat-heading">
-        <span>
-          <img src="/orbit-mark.svg" alt="" /> Orbit{" "}
-          <small>Your learning assistant</small>
-        </span>
-      </div>
-      {demoMode && (
-        <p className="chat-demo-note">
-          Local demo · rule-based replies · no live AI connection
-        </p>
-      )}
       {project && (
         <div className="project-context">
           <span>
@@ -221,6 +223,7 @@ export default function PersonalChat({
           !messages.length &&
           !pending && (
             <div className="chat-welcome">
+              <OrbitMark className="chat-welcome-mark" />
               <h1>What's on your mind, {name?.split(" ")[0]}?</h1>
               <p>
                 Ask a question, make a study plan, or work through your next
@@ -246,6 +249,12 @@ export default function PersonalChat({
         <div className="chat-thread">
           {messages.map((m, i) => (
             <article key={i} className={`chat-message ${m.role}`}>
+              {m.role === "assistant" && (
+                <OrbitMark
+                  className="chat-response-mark"
+                  state={streaming && i === messages.length - 1 ? "responding" : "rest"}
+                />
+              )}
               <span className="sr-only">
                 {m.role === "user" ? "You" : "Orbit"}
               </span>
@@ -272,6 +281,7 @@ export default function PersonalChat({
                 <div className="chat-message-body">{pending}</div>
               </article>
               <p className="chat-thinking" role="status">
+                <OrbitMark className="chat-response-mark" state="thinking" />
                 Orbit is reading your records…
               </p>
             </>

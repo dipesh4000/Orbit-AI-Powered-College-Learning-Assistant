@@ -26,6 +26,7 @@ import SettingsModal from "./SettingsModal";
 import "./personal.css";
 import "./workspace.css";
 import "./product.css";
+import OrbitMark from "./OrbitMark";
 import "./theme.css";
 
 const navigation = [
@@ -81,6 +82,7 @@ export default function PersonalWorkspace({
   const [chatId, setChatId] = useState(null);
   const [chatsOpen, setChatsOpen] = useState(true);
   const [chatBusy, setChatBusy] = useState(false);
+  const [chatMotion, setChatMotion] = useState("idle");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem("orbit-personal-sidebar") === "collapsed",
@@ -187,7 +189,7 @@ export default function PersonalWorkspace({
       <aside className="personal-sidebar" aria-label="Workspace sidebar">
         <div className="personal-sidebar-head">
           <a className="brand" href="/chat">
-            <img className="orbit-mark" src="/orbit-mark.svg" alt="" />{" "}
+            <OrbitMark className="orbit-mark" />{" "}
             <span>Orbit AI</span>
           </a>
           <button
@@ -336,11 +338,14 @@ export default function PersonalWorkspace({
               <Menu size={19} />
             </button>
             {tab !== "Coding stats" && (
-              <strong>{tab === "Chat" ? "Orbit" : tab}</strong>
+              <strong className="workspace-title">
+                {tab === "Chat" && <OrbitMark state={chatMotion} />}
+                {tab === "Chat" ? "Orbit" : tab}
+              </strong>
             )}
           </span>
-          <span className="private-label">
-            {demoMode ? "Demo workspace" : "Private workspace"}
+          <span className="private-label" title={demoMode ? "Local demo · rule-based replies · no live AI connection" : undefined}>
+            {demoMode ? "Demo · Offline replies" : "Private workspace"}
           </span>
         </header>
         {(error || outerError) && (
@@ -351,7 +356,7 @@ export default function PersonalWorkspace({
         )}
         <div hidden={tab !== "Chat"} className="chat-view">
           <PersonalChat
-            demoMode={demoMode}
+            onMotionStateChange={setChatMotion}
             name={owner.name}
             project={project}
             onClearProject={() => setProject(null)}

@@ -68,9 +68,9 @@
   background-clip: text;
 }
 .lp-brand { background: none; color: #171717; -webkit-text-fill-color: currentColor; font-size: 19px; letter-spacing: -.4px; }
-.lp-brand img { width: 29px; height: 29px; display: block; }
+.lp-brand .orbit-ai-mark { width: 1.25em; height: 1.25em; font-size: inherit; display: block; }
 
-.lp-brand > span {
+.lp-brand > span:not(.orbit-ai-mark) {
   font-size: 32px;
   font-weight: 400;
   line-height: 1;

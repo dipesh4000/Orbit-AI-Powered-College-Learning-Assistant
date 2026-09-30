@@ -44,7 +44,7 @@
   background-clip: text;
   line-height: 1;
 }
-.login-story .brand-icon { width: 31px; height: 31px; background: none; }
+.login-story .brand .orbit-ai-mark { width: 1.25em; height: 1.25em; font-size: inherit; background: none; }
 
 .brand-tag {
   font-size: 9px;

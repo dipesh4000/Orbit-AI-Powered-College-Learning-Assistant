@@ -35,7 +35,7 @@
   background-clip: text;
 }
 .account-card .brand { background: none; color: #171717; -webkit-text-fill-color: currentColor; font-size: 20px; letter-spacing: -.4px; }
-.account-card .brand img { width: 30px; height: 30px; display: block; }
+.account-card .brand .orbit-ai-mark { width: 1.25em; height: 1.25em; display: block; }
 
 .account-card h1,
 .personal-workspace h1 {
