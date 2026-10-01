@@ -6,7 +6,6 @@ import shutil
 import socket
 import subprocess
 import sys
-import tempfile
 import time
 import webbrowser
 from pathlib import Path
@@ -27,33 +26,32 @@ def available(port):
     return True
 
 
-def check(sandbox=False):
+def check():
     if not (ROOT / "frontend/node_modules/vite/bin/vite.js").exists():
         raise RuntimeError(
             "Frontend dependencies missing. Run start.bat to install them."
         )
     if not shutil.which("node"):
         raise RuntimeError("Node.js is not on PATH.")
-    if not sandbox:
-        from orbit.config import settings
+    from orbit.config import settings
 
-        if not settings.database_url or "USER:PASSWORD@HOST" in settings.database_url:
-            target = ROOT / ".env"
-            raise RuntimeError(
-                f"Set DATABASE_URL in {target} (template: backend/.env.example), or use start.bat --sandbox."
-            )
-        if not settings.database_url.startswith(
-            ("postgresql://", "postgresql+psycopg://")
-        ):
-            raise RuntimeError("DATABASE_URL must be a PostgreSQL URL.")
-        if settings.cookie_secure or settings.cookie_samesite == "none":
-            raise RuntimeError(
-                "Local HTTP requires COOKIE_SECURE=false and COOKIE_SAMESITE=lax or strict."
-            )
-        if "http://localhost:5173" not in settings.allowed_origins:
-            raise RuntimeError(
-                "For local development set ALLOWED_ORIGIN=http://localhost:5173."
-            )
+    if not settings.database_url or "USER:PASSWORD@HOST" in settings.database_url:
+        target = ROOT / ".env"
+        raise RuntimeError(
+            f"Set DATABASE_URL in {target} (template: backend/.env.example)."
+        )
+    if not settings.database_url.startswith(
+        ("postgresql://", "postgresql+psycopg://")
+    ):
+        raise RuntimeError("DATABASE_URL must be a PostgreSQL URL.")
+    if settings.cookie_secure or settings.cookie_samesite == "none":
+        raise RuntimeError(
+            "Local HTTP requires COOKIE_SECURE=false and COOKIE_SAMESITE=lax or strict."
+        )
+    if "http://localhost:5173" not in settings.allowed_origins:
+        raise RuntimeError(
+            "For local development set ALLOWED_ORIGIN=http://localhost:5173."
+        )
 
 
 def stop(process):
@@ -77,46 +75,34 @@ def stop(process):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--sandbox", action="store_true")
-    parser.add_argument("--demo", action="store_true")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--no-browser", action="store_true")
     args = parser.parse_args()
-    disposable = args.sandbox or args.demo
-    check(disposable)
+    check()
     if args.check:
         print(
             "Dependencies and local configuration look ready. Database connectivity was not checked; no migrations were run."
         )
         return
-    api_port, web_port = (8011, 4176) if disposable else (8000, 5173)
+    api_port, web_port = 8000, 5173
     for port in (api_port, web_port):
         if not available(port):
             raise RuntimeError(
                 f"Port {port} is in use. Stop the existing server and retry."
             )
-    if disposable:
-        print(
-            "SANDBOX: disposable SQLite database. Records reset on shutdown; AI credentials disabled.",
-            flush=True,
+    print(
+        "Applying personal workspace migrations to the configured PostgreSQL database...",
+        flush=True,
+    )
+    result = subprocess.run(
+        [sys.executable, "-m", "orbit.migrate"], cwd=BACKEND, check=False
+    )
+    if result.returncode:
+        raise RuntimeError(
+            "Migration failed. Check DATABASE_URL and network access. Servers were not started."
         )
-        backend_command = [sys.executable, "-m", "orbit.demo_server"] if args.demo else [sys.executable, "tests/personal_server.py"]
-        if args.demo:
-            print("DEMO: reference marks and labeled sample records are preloaded. Assistant uses local rules; no API keys needed.", flush=True)
-    else:
-        print(
-            "Applying personal workspace migrations to the configured PostgreSQL database...",
-            flush=True,
-        )
-        result = subprocess.run(
-            [sys.executable, "-m", "orbit.migrate"], cwd=BACKEND, check=False
-        )
-        if result.returncode:
-            raise RuntimeError(
-                "Migration failed. Check DATABASE_URL and network access. Servers were not started."
-            )
-        backend_command = [
-            sys.executable,
+    backend_command = [
+        sys.executable,
             "-m",
             "uvicorn",
             "orbit.main:app",
@@ -138,13 +124,7 @@ def main():
         (logs / "dev-backend.log").open("w", encoding="utf-8") as backend_log,
         (logs / "dev-frontend.log").open("w", encoding="utf-8") as frontend_log,
     ):
-        sandbox_directory = None
         try:
-            if disposable:
-                sandbox_directory = Path(
-                    tempfile.mkdtemp(prefix="orbit-sandbox-", dir=BACKEND / "data")
-                )
-                env["ORBIT_SANDBOX_DIR"] = str(sandbox_directory)
             processes.append(
                 subprocess.Popen(
                     backend_command,
@@ -196,7 +176,7 @@ def main():
                 flush=True,
             )
             if not args.no_browser:
-                webbrowser.open(url + ("/demo" if args.demo else ""))
+                webbrowser.open(url)
             while all(p.poll() is None for p in processes):
                 time.sleep(0.5)
             raise RuntimeError(f"A server exited. Check logs in {logs}.")
@@ -205,14 +185,6 @@ def main():
         finally:
             for process in reversed(processes):
                 stop(process)
-            if sandbox_directory is not None:
-                # Verify the absolute owned target before recursive removal on Windows.
-                target = sandbox_directory.resolve()
-                if target.parent != (BACKEND / "data").resolve():
-                    raise RuntimeError(
-                        "Sandbox cleanup target is outside the expected data folder."
-                    )
-                shutil.rmtree(target)
 
 
 if __name__ == "__main__":

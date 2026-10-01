@@ -2,7 +2,7 @@
 setlocal
 cd /d "%~dp0"
 if /i "%~1"=="--help" goto help
-if not "%~1"=="" if /i not "%~1"=="--live" if /i not "%~1"=="--check" if /i not "%~1"=="--sandbox" if /i not "%~1"=="--demo" if /i not "%~1"=="--test" goto help
+if not "%~1"=="" if /i not "%~1"=="--live" if /i not "%~1"=="--check" if /i not "%~1"=="--test" goto help
 where uv >nul 2>nul
 if errorlevel 1 (
   echo Install uv first: https://docs.astral.sh/uv/getting-started/installation/
@@ -17,7 +17,7 @@ where npm.cmd >nul 2>nul
 if errorlevel 1 goto failed
 if /i "%~1"=="--check" (
   if not exist "backend\.venv\Scripts\python.exe" (
-    echo Backend dependencies are missing. Run start.bat or start.bat --sandbox first.
+    echo Backend dependencies are missing. Run start.bat first.
     exit /b 1
   )
   "backend\.venv\Scripts\python.exe" scripts\dev.py --check
@@ -39,10 +39,7 @@ if errorlevel 1 (
 )
 popd
 if /i "%~1"=="--test" goto tests
-set "ORBIT_MODE=%~1"
-if "%ORBIT_MODE%"=="" set "ORBIT_MODE=--demo"
-if /i "%ORBIT_MODE%"=="--live" set "ORBIT_MODE="
-"backend\.venv\Scripts\python.exe" scripts\dev.py %ORBIT_MODE%
+"backend\.venv\Scripts\python.exe" scripts\dev.py
 if errorlevel 1 goto failed
 exit /b 0
 :tests
@@ -73,10 +70,7 @@ echo Orbit could not complete this command. Check the error above and README.md.
 pause
 exit /b 1
 :help
-echo start.bat             Start the preloaded local demo; no API keys or PostgreSQL needed.
-echo start.bat --live      Migrate configured PostgreSQL and start the live application.
-echo start.bat --sandbox   Start with a disposable local database; no .env or API keys needed.
-echo start.bat --demo      Open a preloaded local demo, including reference marks and offline assistant.
+echo start.bat             Migrate configured PostgreSQL and start the live application.
 echo start.bat --check     Read-only dependency/configuration check; no servers or migrations.
 echo start.bat --test      Install dependencies and run backend, build, and browser checks.
 exit /b 0

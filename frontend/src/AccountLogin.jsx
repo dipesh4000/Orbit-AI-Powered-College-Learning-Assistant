@@ -25,15 +25,6 @@ export default function AccountLogin(props) {
       setBusy(false);
     }
   }
-  if (mode === "demo")
-    return (
-      <>
-        <button className="account-back" onClick={() => setMode("login")}>
-          Back to personal login
-        </button>
-        <Login {...props} />
-      </>
-    );
   return (
     <main className="account-page">
       <section className="account-card">
@@ -46,7 +37,6 @@ export default function AccountLogin(props) {
           Keep your subjects, marks, and practice together in your own
           workspace.
         </p>
-        {props.onDemo && <button className="primary" onClick={props.onDemo} disabled={props.busy}>Open preloaded demo</button>}
         {(error || props.error) && (
           <p className="error" role="alert">
             {error || props.error}
@@ -109,15 +99,6 @@ export default function AccountLogin(props) {
             ? "Create an account"
             : "Already have an account? Sign in"}
         </button>
-        {props.health?.demo && (
-          <button
-            className="connection-retry"
-            disabled={busy}
-            onClick={() => setMode("demo")}
-          >
-            Explore demo profiles
-          </button>
-        )}
         {props.error && (
           <button onClick={props.onRetry}>Try connecting again</button>
         )}
