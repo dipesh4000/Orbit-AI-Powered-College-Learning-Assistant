@@ -74,6 +74,24 @@ SPECS = {
 }
 
 
+def _clean_schema(s):
+    s.pop("title", None)
+    for prop in s.get("properties", {}).values():
+        prop.pop("title", None)
+        # Groq rejects anyOf; flatten nullable anyOf into type array
+        if "anyOf" in prop:
+            types = [t["type"] for t in prop["anyOf"] if "type" in t]
+            if types:
+                prop["type"] = types[0] if len(types) == 1 else types
+                del prop["anyOf"]
+            # carry over constraints from the non-null branch
+            for branch in prop.get("anyOf", []):
+                for k, v in branch.items():
+                    if k != "type":
+                        prop.setdefault(k, v)
+    return s
+
+
 def schemas():
     return [
         {
@@ -81,7 +99,7 @@ def schemas():
             "function": {
                 "name": name,
                 "description": description,
-                "parameters": schema.model_json_schema(),
+                "parameters": _clean_schema(schema.model_json_schema()),
             },
         }
         for name, (schema, description) in SPECS.items()

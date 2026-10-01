@@ -1,5 +1,4 @@
 import asyncio
-import json
 from time import monotonic, perf_counter
 
 import httpx
@@ -110,57 +109,7 @@ class Model:
         base_url,
         retry_rate_limit,
     ):
-        if provider == "anthropic":
-            history, system = [], ""
-            for message in messages:
-                role = message["role"]
-                if role == "system":
-                    system += message["content"] + "\n"
-                    continue
-                blocks = []
-                if role == "tool":
-                    blocks.append(
-                        {
-                            "type": "tool_result",
-                            "tool_use_id": message["tool_call_id"],
-                            "content": message["content"],
-                        }
-                    )
-                    role = "user"
-                else:
-                    if message.get("content"):
-                        blocks.append({"type": "text", "text": message["content"]})
-                    for call in message.get("tool_calls", []):
-                        blocks.append(
-                            {
-                                "type": "tool_use",
-                                "id": call["id"],
-                                "name": call["function"]["name"],
-                                "input": json.loads(call["function"]["arguments"]),
-                            }
-                        )
-                history.append({"role": role, "content": blocks})
-            body = {
-                "model": model,
-                "max_tokens": 6000,
-                "system": system,
-                "messages": history,
-            }
-            if tools:
-                body["tools"] = [
-                    {
-                        "name": t["function"]["name"],
-                        "description": t["function"]["description"],
-                        "input_schema": t["function"]["parameters"],
-                    }
-                    for t in tools
-                ]
-            headers = {
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-            }
-            endpoint = base_url.rstrip("/") + "/messages"
-        elif provider in ("openai-compatible", "nvidia"):
+        if provider in ("openai-compatible", "nvidia"):
             body = {
                 "model": model,
                 "messages": messages,
@@ -176,7 +125,7 @@ class Model:
             endpoint = base_url.rstrip("/") + "/chat/completions"
         else:
             raise ModelUnavailable(
-                "Unsupported LLM_PROVIDER; choose anthropic or openai-compatible."
+                "Unsupported LLM_PROVIDER; choose openai-compatible."
             )
         try:
             async with httpx.AsyncClient(
@@ -224,26 +173,6 @@ class Model:
             raise ModelUnavailable(
                 "The model provider is unavailable or rejected the configuration. Please check the local settings and retry."
             ) from exc
-        if provider == "anthropic":
-            return {
-                "usage": result.get("usage", {}),
-                "role": "assistant",
-                "content": "\n".join(
-                    b["text"] for b in result["content"] if b["type"] == "text"
-                ),
-                "tool_calls": [
-                    {
-                        "id": b["id"],
-                        "type": "function",
-                        "function": {
-                            "name": b["name"],
-                            "arguments": json.dumps(b["input"]),
-                        },
-                    }
-                    for b in result["content"]
-                    if b["type"] == "tool_use"
-                ],
-            }
         message = result["choices"][0]["message"]
         if not message.get("content") and not message.get("tool_calls"):
             raise ModelUnavailable(

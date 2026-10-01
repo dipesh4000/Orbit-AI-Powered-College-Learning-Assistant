@@ -12,10 +12,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ROOT.parent / ".env", extra="ignore")
     database_url: str = ""
     dataset_dir: Path = ROOT.parent.parent
-    llm_provider: str = "anthropic"
+    llm_provider: str = "openai-compatible"
     llm_api_key: str = ""
     llm_model: str = ""
-    llm_base_url: str = "https://api.anthropic.com/v1"
+    llm_base_url: str = "https://api.groq.com/openai/v1"
     nvidia_api_key: str = ""
     nvidia_model: str = "nvidia/nemotron-3-nano-30b-a3b"
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
