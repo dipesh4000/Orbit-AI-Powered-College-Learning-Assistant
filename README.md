@@ -1,4 +1,4 @@
-# Orbit
+# Orbit Ai
 
 A personal learning workspace for academic marks, hackathon projects, and coding activity. Each account owns its records. The assistant reads those records through backend tools rather than inventing progress.
 
