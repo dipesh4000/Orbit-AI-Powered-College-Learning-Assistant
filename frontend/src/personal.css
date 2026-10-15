@@ -110,6 +110,27 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
+.account-card .demo-entry {
+  width: 100%;
+  margin-top: 12px;
+  border: 1px solid #ECECEE;
+  border-radius: 12px;
+  background: #FFFFFF;
+  color: #1A1A1A;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.account-card .demo-entry:hover:not(:disabled) {
+  background: #F5F6F8;
+}
+
+.account-card .demo-entry:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .account-back {
   position: fixed;
   top: 16px;

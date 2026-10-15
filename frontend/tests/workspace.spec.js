@@ -7,7 +7,6 @@ const student = {
 };
 const course = {
   id: 1,
-  course_id: "course-1",
   title:
     "Data structures, algorithms, and problem solving with very long course names",
   subject: "Computer science",
@@ -26,14 +25,22 @@ const dashboard = {
   demo_notice: "Demo records",
 };
 
-async function mockApi(page, { signedIn = false, history = [] } = {}) {
+async function mockApi(
+  page,
+  { signedIn = false, history = [], localDemo = false } = {},
+) {
   let session = signedIn;
   await page.route("**/api/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
     let body = {};
     let status = 200;
     if (path === "/api/health")
-      body = { status: "ok", model_configured: true, demo: true };
+      body = {
+        status: "ok",
+        model_configured: true,
+        demo: true,
+        local_demo: localDemo,
+      };
     else if (path === "/api/students") body = [student];
     else if (path === "/api/login") {
       session = true;
@@ -126,6 +133,38 @@ test("failed startup has an actionable retry", async ({ page }) => {
   await expect(
     page.getByRole("button", { name: "Sign in", exact: true }),
   ).toBeEnabled();
+});
+
+
+test("local demo offers password-free sign-in", async ({ page }) => {
+  await mockApi(page, { localDemo: true });
+  let attempts = 0;
+  await page.route("**/api/auth/demo", async (route) => {
+    attempts++;
+    await route.fulfill({
+      status: 503,
+      json: { detail: "Demo is temporarily unavailable." },
+    });
+  });
+  await page.goto("/login");
+  const demoButton = page.getByRole("button", {
+    name: "Explore demo workspace",
+  });
+  await expect(demoButton).toBeVisible();
+  await demoButton.click();
+  await expect(page.getByRole("alert")).toContainText(
+    "Demo is temporarily unavailable.",
+  );
+  await expect(demoButton).toBeEnabled();
+  expect(attempts).toBe(1);
+});
+
+test("personal login does not show the local demo option", async ({ page }) => {
+  await mockApi(page);
+  await page.goto("/login");
+  await expect(
+    page.getByRole("button", { name: "Explore demo workspace" }),
+  ).toHaveCount(0);
 });
 
 test("expired session returns to profile selection", async ({ page }) => {

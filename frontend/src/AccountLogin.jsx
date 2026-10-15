@@ -25,6 +25,17 @@ export default function AccountLogin(props) {
       setBusy(false);
     }
   }
+  async function enterDemo() {
+    setBusy(true);
+    setError("");
+    try {
+      props.onAuthenticated(await post("/auth/demo"));
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <main className="account-page">
       <section className="account-card">
@@ -87,6 +98,16 @@ export default function AccountLogin(props) {
                 : "Sign in"}
           </button>
         </form>
+        {props.health?.local_demo && (
+          <button
+            className="demo-entry"
+            type="button"
+            onClick={enterDemo}
+            disabled={busy || props.loading}
+          >
+            Explore demo workspace
+          </button>
+        )}
         <button
           className="connection-retry"
           disabled={busy}

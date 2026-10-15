@@ -166,20 +166,15 @@ export default function Landing({ signedIn }) {
       <main>
         <section className="lp-hero">
           <div className="lp-hero-copy">
-            <p className="lp-label">THE PERSONAL STUDENT WORKSPACE</p>
+            <p className="lp-label">YOUR COLLEGE WORK, IN CONTEXT</p>
             <h1>
-              A clearer view
-              <br />
-              of the work
-              <br />
-              you put in.
+              Orbit AI
+              <span>for the work behind the grade.</span>
             </h1>
             <p className="lp-intro">
-              Your marks tell one part of the story.
-              <br />
-              Your code, projects, and past papers tell the rest.
-              <br />
-              Bring them together in Orbit.
+              Bring marks, coding practice, projects, and past papers into one
+              workspace. Ask questions against your own records and follow the
+              evidence behind each answer.
             </p>
             <div className="lp-hero-actions">
               {signedIn ? (
@@ -199,13 +194,13 @@ export default function Landing({ signedIn }) {
               </a>
             </div>
             <p className="lp-small">
-              Start with one subject. Add the rest as you go.
+              Built around your real records, not a generic study plan.
             </p>
           </div>
           <div className="lp-hero-product">
             <WorkspacePreview />
             <p className="lp-example-caption">
-              A working preview of the idea. Select a section to explore.
+              Your marks, questions, and sources stay connected.
               <span>01 — 03</span>
             </p>
           </div>
